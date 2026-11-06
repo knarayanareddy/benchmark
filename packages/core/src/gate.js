@@ -1,23 +1,43 @@
 /**
- * The Gate — five deterministic pre-checks on a risk statement.
+ * The Gate — five deterministic pre-checks on a risk statement, separated into
+ * hard structural blockers (`SEVERITY.BLOCKER`) and heuristic authoring
+ * warnings (`SEVERITY.WARNING`).
  *
- * Honest about what mechanical rules can and cannot catch:
- *   1. `window` requires real calendar dates (`from` <= `to`), never arbitrary
- *      strings like risk IDs or status labels.
- *   2. `observable` requires an explicit quantity, official classification, or
- *      discrete verifiable event in the statement or its attached `objective`
- *      — unanchored directional prose ("increased violence", "escalating
- *      insecurity") fails until a resolution criterion is written.
- *   3. `single` catches bundled compound statements (`as well as`, `;`, etc.)
- *      without rejecting ACAPS' standard `Hazard -> Humanitarian Impact`
- *      causal framing ("X leads to Y").
- *   4. `no_leak` catches outcome-leaking phrasing (`expected to`, `further
- *      deterioration`, etc.).
- *   5. `condition` catches statements of actor intent rather than observable
- *      external conditions.
+ *   Blockers (`dispatchable: false` when any fail):
+ *     1. `window` — requires real calendar dates (`from` <= `to`), never
+ *        arbitrary strings like risk IDs or status labels.
+ *     3. `single` — catches bundled compound statements (`as well as`, `;`,
+ *        etc.) without rejecting ACAPS' standard `Hazard -> Impact` framing.
+ *     4. `no_leak` — catches outcome-leaking phrasing (`expected to`, `further
+ *        deterioration`, etc.).
+ *     5. `condition` — catches statements of actor intent rather than
+ *        observable external conditions.
+ *
+ *   Authoring warning (`ok: false`, `dispatchable: true` when only warnings fire):
+ *     2. `observable` — lexical heuristic flagging statements that carry
+ *        neither a numeric threshold (excluding calendar dates and proper-noun
+ *        digits like `COVID-19` or `M23`), an official classification (`IPC
+ *        Phase 4`), nor a discrete named event (`election`, `blockade`,
+ *        `invasion`), unless a concrete `objective` is attached. Surfaced as a
+ *        warning rather than a silent blocker because lexical rules have
+ *        non-zero false-warn and false-pass rates on ACLED/humanitarian prose
+ *        (measured by `evaluateObservable()` on 50 labelled corpus items).
  */
 
 export const CHECKS = ['window', 'observable', 'single', 'no_leak', 'condition'];
+
+export const SEVERITY = Object.freeze({
+  BLOCKER: 'blocker',
+  WARNING: 'warning',
+});
+
+export const CHECK_SEVERITY = Object.freeze({
+  window: SEVERITY.BLOCKER,
+  observable: SEVERITY.WARNING,
+  single: SEVERITY.BLOCKER,
+  no_leak: SEVERITY.BLOCKER,
+  condition: SEVERITY.BLOCKER,
+});
 
 const LEAK = [
   /\bexpected to\b/gi,
@@ -32,8 +52,28 @@ const LEAK = [
 
 const INTENT = [/\bwill continue to\b/i, /\bintends?\b/i, /\bplans? to\b/i, /\baims? to\b/i];
 
+const NON_QUANTITY_TOKENS = [
+  /\b(?:COVID-19|SARS-CoV-2|M23|G7|G20|COP\d+|H\dN\d)\b/gi,
+  /\b\d{1,2}[-/]\d{1,2}[-/](?:19|20)\d{2}\b/g,
+  /\b(?:19|20)\d{2}[-/]\d{1,2}(?:[-/]\d{1,2})?\b/g,
+  /\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(?:,?\s+(?:19|20)\d{2})?\b/gi,
+  /\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)(?:\s+(?:19|20)\d{2})?\b/gi,
+  /\b(?:in|by|before|after|since|during|from|until|through|early|mid|late|january|february|march|april|may|june|july|august|september|october|november|december)\s+(?:19|20)\d{2}\b/gi,
+];
+
+const EMPTY_OBJECTIVE_PLACEHOLDER =
+  /^(?:no|none|n\/?a|nil|tbd|-|\?)\.?$|\bno specific threshold\b/i;
+
 const MEASURABLE_OR_EVENT =
-  /\d|%|per cent|number of|reported|recorded|classified|declared|phase\s?[1-5]|\bIPC\b|\b(?:election|polls|referendum|coup|ceasefire|offensive|siege|blockade|closure|blocked|suspension|ban|freeze|expulsion|deportation|outbreak|epidemic|cholera|measles|ebola|mpox|cyclone|typhoon|hurricane|earthquake|volcan\w+|landslides?|floods?|flooding|drought|harvest|famine)\b/i;
+  /\d|%|per cent|number of|reported|recorded|classified|declared|phase\s?[1-5]|\bIPC\b|\b(?:elections?|polls|referendums?|coups?|ceasefires?|offensives?|invasions?|sieges?|blockades?|closures?|blocked|boycotts?|hartals?|suspensions?|bans?|freezes?|expulsions?|deportations?|outbreaks?|epidemics?|cholera|measles|ebola|mpox|cyclones?|typhoons?|hurricanes?|earthquakes?|volcan\w+|landslides?|floods?|flooding|droughts?|harvests?|famines?)\b/i;
+
+function stripNonQuantityDigits(text) {
+  let out = text;
+  for (const re of NON_QUANTITY_TOKENS) {
+    out = out.replace(re, ' ');
+  }
+  return out;
+}
 
 function parseWindowDate(raw) {
   if (typeof raw !== 'string') return null;
@@ -69,15 +109,36 @@ function parseWindowDate(raw) {
   return null;
 }
 
+export function hasObservableSignal(statement, objective = '') {
+  const s = String(statement || '').trim();
+  if (!s) return false;
+  const obj = String(objective || '').trim();
+  // If ACAPS explicitly recorded "No specific threshold present", treat that
+  // analyst annotation as authoritative over a bare "Number of..." noun phrase.
+  if (/\bno specific threshold\b/i.test(obj)) return false;
+  const usableObj = obj && !EMPTY_OBJECTIVE_PLACEHOLDER.test(obj) ? obj : '';
+  const combined = usableObj ? `${s} ${usableObj}` : s;
+  const scrubbed = stripNonQuantityDigits(combined);
+  return MEASURABLE_OR_EVENT.test(scrubbed);
+}
+
 export function gate(card) {
   const isObj = card !== null && typeof card === 'object';
   const statement = isObj ? card.statement : card;
   if (!String(statement || '').trim()) {
+    const emptyFailure = {
+      check: 'observable',
+      severity: SEVERITY.BLOCKER,
+      reason: 'statement is empty',
+    };
     return {
       ok: false,
+      dispatchable: false,
       problems: ['statement is empty'],
-      failed: [{ check: 'observable', reason: 'statement is empty' }],
-      results: [{ check: 'observable', ok: false, reason: 'statement is empty' }],
+      blockers: [emptyFailure],
+      warnings: [],
+      failed: [emptyFailure],
+      results: [{ check: 'observable', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
     };
   }
   const t = String(statement || '');
@@ -92,18 +153,18 @@ export function gate(card) {
     : toTs < fromTs
     ? 'resolution window ends before it starts'
     : null;
-  results.push(fail('window', windowReason === null, windowReason));
+  results.push(record('window', windowReason === null, windowReason));
 
-  // Observable: requires an explicit measurable quantity, classification, or
-  // discrete verifiable event in either the statement or an attached written
-  // resolution `objective` — never passes merely because vague verbs are absent.
-  const combined = objective ? `${t} ${objective}` : t;
-  const hasObservable = MEASURABLE_OR_EVENT.test(combined);
+  // Observable: authoring warning (SEVERITY.WARNING) when neither statement nor
+  // objective names a numeric threshold, official classification, or discrete
+  // verifiable event. Keeps `ok: false` until an objective is attached, while
+  // allowing `dispatchable: true` with a visible warning banner once blockers pass.
+  const hasObservable = hasObservableSignal(t, objective);
   results.push(
-    fail(
+    record(
       'observable',
       hasObservable,
-      'outcome is not observable — no quantity, defined event, or written objective'
+      'outcome lacks an explicit threshold, event, or written objective (warn: attach objective before resolution)'
     )
   );
 
@@ -112,26 +173,97 @@ export function gate(card) {
   // conjunctions (`as well as`, `alongside`, `;`, `and also`) flag bundled cards.
   const strongConj = /(?:\bas well as\b|\balongside\b|;|\band also\b|\band furthermore\b)/i;
   results.push(
-    fail('single', !strongConj.test(t), 'looks like two risks joined by a strong conjunction')
+    record('single', !strongConj.test(t), 'looks like two risks joined by a strong conjunction')
   );
 
   const leaked = LEAK.find((r) => Boolean(t.match(r)));
-  results.push(fail('no_leak', !leaked, `outcome-leaking language: "${leaked?.source ?? ''}"`));
+  results.push(record('no_leak', !leaked, `outcome-leaking language: "${leaked?.source ?? ''}"`));
 
   const intent = INTENT.find((r) => r.test(t));
   results.push(
-    fail('condition', !intent, `statement of intent rather than condition: "${intent?.source ?? ''}"`)
+    record('condition', !intent, `statement of intent rather than condition: "${intent?.source ?? ''}"`)
   );
 
+  const failed = results
+    .filter((r) => !r.ok)
+    .map((r) => ({ check: r.check, severity: r.severity, reason: r.reason }));
+  const blockers = failed.filter((f) => f.severity === SEVERITY.BLOCKER);
+  const warnings = failed.filter((f) => f.severity === SEVERITY.WARNING);
+
   return {
-    ok: results.every((r) => r.ok),
-    failed: results.filter((r) => !r.ok).map((r) => ({ check: r.check, reason: r.reason })),
+    ok: failed.length === 0,
+    dispatchable: blockers.length === 0,
+    blockers,
+    warnings,
+    failed,
     results,
   };
 }
 
-function fail(check, ok, reason) {
-  return { check, ok, reason: ok ? null : reason };
+function record(check, ok, reason) {
+  return {
+    check,
+    severity: CHECK_SEVERITY[check],
+    ok,
+    reason: ok ? null : reason,
+  };
+}
+
+/**
+ * Evaluate the lexical `observable` heuristic against analyst-labelled items.
+ *
+ * Each item is `{ id, statement, objective?, resolvableAsWritten: boolean }`:
+ *   - `tpWarn`: heuristic warns AND label says needs written criterion (`false`)
+ *   - `fpWarn`: heuristic warns BUT label says resolvable as written (`true`)
+ *   - `tnPass`: heuristic passes AND label says resolvable as written (`true`)
+ *   - `fnPass`: heuristic passes BUT label says needs written criterion (`false`)
+ */
+export function evaluateObservable(examples) {
+  if (!Array.isArray(examples) || examples.length === 0) {
+    throw new TypeError('examples must be a non-empty array of labelled statements');
+  }
+  let tpWarn = 0;
+  let fpWarn = 0;
+  let tnPass = 0;
+  let fnPass = 0;
+  const disagreements = [];
+
+  for (const ex of examples) {
+    if (typeof ex?.resolvableAsWritten !== 'boolean') {
+      throw new TypeError(`example ${ex?.id ?? '<unnamed>'} must declare boolean resolvableAsWritten`);
+    }
+    const predictedPass = hasObservableSignal(ex.statement, ex.objective);
+    if (!predictedPass && !ex.resolvableAsWritten) {
+      tpWarn++;
+    } else if (!predictedPass && ex.resolvableAsWritten) {
+      fpWarn++;
+      disagreements.push({ id: ex.id, kind: 'false_warn', statement: ex.statement });
+    } else if (predictedPass && ex.resolvableAsWritten) {
+      tnPass++;
+    } else {
+      fnPass++;
+      disagreements.push({ id: ex.id, kind: 'false_pass', statement: ex.statement });
+    }
+  }
+
+  const n = examples.length;
+  const totalWarns = tpWarn + fpWarn;
+  const totalPasses = tnPass + fnPass;
+  const totalNeedsObjective = tpWarn + fnPass;
+
+  return {
+    n,
+    tpWarn,
+    fpWarn,
+    tnPass,
+    fnPass,
+    warnPrecision: totalWarns ? tpWarn / totalWarns : null,
+    passPrecision: totalPasses ? tnPass / totalPasses : null,
+    warnRecall: totalNeedsObjective ? tpWarn / totalNeedsObjective : null,
+    falseWarnRate: n - totalNeedsObjective > 0 ? fpWarn / (n - totalNeedsObjective) : null,
+    accuracy: (tpWarn + tnPass) / n,
+    disagreements,
+  };
 }
 
 /**

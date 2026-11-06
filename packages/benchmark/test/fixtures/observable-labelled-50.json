@@ -1,0 +1,402 @@
+[
+  {
+    "id": "R0353",
+    "kind": "risk_headline",
+    "statement": "Taliban attacks on provincial capitals lead to civil war violence levels, resulting in humanitarian needs for the affected population.",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "civil war violence levels requires a numeric battle-death threshold"
+  },
+  {
+    "id": "R0990",
+    "kind": "risk_headline",
+    "statement": "Unsafe return of Afghan nationals from Pakistan causes food, shelter and livelihood shortage upon their arrival at Afghanistan along with risk of persecution.",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "shortage and persecution risk lack measurable cutoffs"
+  },
+  {
+    "id": "R1015",
+    "kind": "risk_headline",
+    "statement": "La Niña in Afghanistan worsens drought and leads to widespread agricultural losses, water scarcity, and acute food insecurity in 2026",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "worsens drought / widespread losses lacks IPC or hectare cutoff"
+  },
+  {
+    "id": "R1062",
+    "kind": "risk_headline",
+    "statement": "Continued attacks between Pakistan and Afghanistan increase protection risks, food security needs, and access constraints in Afghanistan’s border provinces",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "continued attacks / increase protection risks has no event baseline"
+  },
+  {
+    "id": "R1067",
+    "kind": "risk_headline",
+    "statement": "Escalating clashes between Interim Taliban Authority forces and armed opposition groups in Badakhshan deteriorates food security and increases protection risks",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "subnational clashes between named forces in Badakhshan are ACLED-verifiable"
+  },
+  {
+    "id": "R1056",
+    "kind": "risk_headline",
+    "statement": "Resource-related clashes and political tensions in Tindouf camps restrict humanitarian access and increase protection risks for Sahrawi refugees",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "restrict access / increase protection risks lacks measurable cutoff"
+  },
+  {
+    "id": "R0371",
+    "kind": "risk_headline",
+    "statement": "Heavy rains in late August 2022 cause floods that affect previously affected areas, especially in the northeast, and new areas, especially in the southeast, aggravating the humanitarian situation.",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "late-August flood occurrence across named regions is verifiable"
+  },
+  {
+    "id": "R1020",
+    "kind": "risk_headline",
+    "statement": "Intensifying political violence approaching the February 2026 election in Bangladesh increases protection risks and constrains food, healthcare, and livelihood access",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "intensifying violence before election lacks an incident threshold"
+  },
+  {
+    "id": "R1039",
+    "kind": "risk_headline",
+    "statement": "Prolonged fuel shortages in Bangladesh worsen food security and disrupt health, telecommunications, and other essential services",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "prolonged fuel shortages / worsen food security lacks duration/price cutoff"
+  },
+  {
+    "id": "R0510",
+    "kind": "risk_headline",
+    "statement": "High public debt has reduced state capacity to provide public services including health services",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "reduced state capacity from high public debt is an unthresholded condition"
+  },
+  {
+    "id": "R0204",
+    "kind": "risk_headline",
+    "statement": "Increased violence in the capital and borders with Rwanda and DRC",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "increased violence has no baseline or count"
+  },
+  {
+    "id": "R0094",
+    "kind": "risk_headline",
+    "statement": "Increase of violent attacks on civilians and IDP camps in the Far North region",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "increase of violent attacks has no baseline or count"
+  },
+  {
+    "id": "R0116",
+    "kind": "risk_headline",
+    "statement": "Food shortages due to the blocked Douala-Bangui transportation route",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "blockade/closure of the Douala-Bangui corridor is a discrete verifiable event"
+  },
+  {
+    "id": "R0233",
+    "kind": "risk_headline",
+    "statement": "Increasing number of protests and increasingly violent clashes between security forces and demonstrators in urban areas in the lead-up to April’s presidential election.",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "increasing number of protests lacks a numeric baseline"
+  },
+  {
+    "id": "R1043",
+    "kind": "risk_headline",
+    "statement": "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "escalating cross-border insecurity lacks an incident or displacement cutoff"
+  },
+  {
+    "id": "R1066",
+    "kind": "risk_headline",
+    "statement": "Escalating insecurity across the Lake Chad Basin increases displacement, protection risks, and humanitarian access constraints",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "escalating insecurity across Lake Chad Basin lacks a threshold"
+  },
+  {
+    "id": "R0369",
+    "kind": "risk_headline",
+    "statement": "An increase in paramilitary and National Liberation Army violence in areas previously held by the Revolutionary Armed Forces of Colombia lead to displacement and access constraints.",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "an increase in paramilitary/ELN violence lacks a quantitative baseline"
+  },
+  {
+    "id": "R1013",
+    "kind": "risk_headline",
+    "statement": "Intensified territorial disputes among armed groups over illegal mining corridors in southern Bolívar lead to mass displacement and confinement",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "intensified territorial disputes lacks a quantitative threshold"
+  },
+  {
+    "id": "R1019",
+    "kind": "risk_headline",
+    "statement": "La Niña-driven above-normal rainfall and flooding in Colombia cause widespread crop damage, landslides, waterborne diseases, and food insecurity and malnutrition",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "widespread crop damage from flooding lacks a quantitative cutoff"
+  },
+  {
+    "id": "R1059",
+    "kind": "risk_headline",
+    "statement": "Peace talk end and military offensive against armed groups in Colombia escalate conflict and increase civilian casualties and displacement",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "termination of peace talks and launch of military offensive are discrete events"
+  },
+  {
+    "id": "R0348",
+    "kind": "risk_headline",
+    "statement": "Disputed polls lead to conflict intensification in Brazzaville.",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "formally disputed polls in Brazzaville is a discrete electoral event"
+  },
+  {
+    "id": "R1023",
+    "kind": "risk_headline",
+    "statement": "Worsening energy shortages and U.S. pressure lead to essential service disruptions and rising humanitarian needs in Cuba",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "worsening energy shortages and rising needs lack measurable cutoffs"
+  },
+  {
+    "id": "R0529",
+    "kind": "risk_headline",
+    "statement": "Increased intercommunal conflict and militia attacks in southwestern DRC trigger new displacements and worsen the humanitarian crisis",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "increased intercommunal conflict lacks an incident/displacement threshold"
+  },
+  {
+    "id": "R0462",
+    "kind": "risk_headline",
+    "statement": "The intensification of anti-MONUSCO demonstrations leads to recurrent suspensions of humanitarian activities and the inability to meet humanitarian needs for the affected population.",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "recurrent formal suspensions of humanitarian activities are verifiable"
+  },
+  {
+    "id": "R0463",
+    "kind": "risk_headline",
+    "statement": "The deployment of the regional military force leads to more displacement and increased humanitarian needs in eastern Democratic Republic of Congo.",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "official deployment of the regional military force in eastern DRC is binary"
+  },
+  {
+    "id": "R0552",
+    "kind": "risk_headline",
+    "statement": "DRC general elections trigger heightened levels of violence, leading to increasing protection threats, population displacement, and food insecurity",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "heightened levels of violence around elections lacks a numeric cutoff"
+  },
+  {
+    "id": "R0365",
+    "kind": "risk_headline",
+    "statement": "The expansion of the areas under the control of the March 23 Movement (M23) in Nord-Kivu causes increased violence targeting Rwandophone communities, resulting in displacement and protection needs.",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "expansion of M23 control / increased violence lacks territorial/incident cutoff"
+  },
+  {
+    "id": "R0553",
+    "kind": "risk_headline",
+    "statement": "The impact of war in Gaza and the Red Sea blockade on Egypt’s economy limits access to food and increases malnutrition levels among children",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "Red Sea blockade is a discrete maritime interdiction condition"
+  },
+  {
+    "id": "R1026",
+    "kind": "risk_headline",
+    "statement": "Potential Red Sea disruptions from a US–Iran conflict reduce foreign currency earnings, heighten food insecurity, and disrupt services across Egypt",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "potential disruptions reducing foreign currency earnings lacks a cutoff"
+  },
+  {
+    "id": "R0522",
+    "kind": "risk_headline",
+    "statement": "The escalation of conflict in Amhara Region resulting in displacement of people, destruction of infrastructure and fatalities",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "escalation of conflict in Amhara lacks a quantitative threshold"
+  },
+  {
+    "id": "R1045",
+    "kind": "risk_headline",
+    "statement": "Forecast below-average Kiremt rains in Ethiopia threaten food production and livelihoods",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "below-average rains threatening food production lacks a mm/IPC cutoff"
+  },
+  {
+    "id": "R0105",
+    "kind": "risk_headline",
+    "statement": "Deterioration of food security due to COVID-19 and economic crisis",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "deterioration of food security due to COVID-19 lacks an IPC/price threshold"
+  },
+  {
+    "id": "R0349",
+    "kind": "risk_headline",
+    "statement": "Election delays contribute to popular unrest and violence in the capital before spilling into surrounding rural areas, causing delays in the delivery of food aid.",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "official election delay in Haiti is a discrete institutional event"
+  },
+  {
+    "id": "R1018",
+    "kind": "risk_headline",
+    "statement": "La Niña-driven above-normal rainfall and tropical cyclone intensification cause widespread flooding, an increase in water-borne diseases and malnutrition",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "widespread flooding and increase in disease lack numeric thresholds"
+  },
+  {
+    "id": "R1040",
+    "kind": "risk_headline",
+    "statement": "El Niño-driven above-average temperatures and below-average precipitation cause widespread drought in the Central American Dry Corridor (El Salvador, Guatemala, and Honduras), increasing food and health needs",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "widespread drought increasing needs lacks an IPC or rainfall threshold"
+  },
+  {
+    "id": "R0990#T1",
+    "kind": "trigger",
+    "statement": "US fund freeze",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "official US fund freeze is a discrete verifiable donor action"
+  },
+  {
+    "id": "R0990#T2",
+    "kind": "trigger",
+    "statement": "IRAN's Deportation Plan",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "state deportation plan enactment is a discrete policy event"
+  },
+  {
+    "id": "R0371#T1",
+    "kind": "trigger",
+    "statement": "Poor planning and lack of infrastructural integrity",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "poor planning and lack of infrastructural integrity is a chronic condition"
+  },
+  {
+    "id": "R1020#T1",
+    "kind": "trigger",
+    "statement": "Nationwide hartal calls or election boycott by major political parties",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "nationwide hartal call or major-party election boycott is a discrete declaration"
+  },
+  {
+    "id": "R0510#T2",
+    "kind": "trigger",
+    "statement": "Increased IMF borrowing",
+    "objective": "The Executive Board of the International Monetary Fund (IMF) approved a 38-month arrangement under the Extended Credit Facility (ECF) for Burundi.",
+    "resolvableAsWritten": true,
+    "rationale": "attached objective specifies IMF Executive Board approval of a 38-month arrangement"
+  },
+  {
+    "id": "R0553#T1",
+    "kind": "trigger",
+    "statement": "Further escalation of the war in Gaza",
+    "objective": "The trigger is considered materialised once an Israeli ground invasion of Rafah starts.",
+    "resolvableAsWritten": true,
+    "rationale": "attached objective specifies start of an Israeli ground invasion of Rafah"
+  },
+  {
+    "id": "R1030#T3",
+    "kind": "trigger",
+    "statement": "Iranian retaliation following limited US airstrikes",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "interstate Iranian military retaliation following US strikes is binary"
+  },
+  {
+    "id": "R0274#T2",
+    "kind": "trigger",
+    "statement": "Structural economic issues",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "structural economic issues is an open-ended background condition"
+  },
+  {
+    "id": "R1014#T1",
+    "kind": "trigger",
+    "statement": "Exhaustion of strategic fuel reserves",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "exhaustion of national strategic fuel reserves is a discrete stockout event"
+  },
+  {
+    "id": "R0961#T1",
+    "kind": "trigger",
+    "statement": "Number of military junta bases and towns captured by armed resistance groups",
+    "objective": "No specific threshold present for the trigger.",
+    "resolvableAsWritten": false,
+    "rationale": "ACAPS objective explicitly notes no specific threshold is present"
+  },
+  {
+    "id": "R0961#T2",
+    "kind": "trigger",
+    "statement": "Increase in attacks of the military junta on captured bases and towns captured by armed resistance groups.",
+    "objective": "No specific threshold for the trigger.",
+    "resolvableAsWritten": false,
+    "rationale": "increase in attacks with explicit ACAPS note of no specific threshold"
+  },
+  {
+    "id": "R1021#T3",
+    "kind": "trigger",
+    "statement": "Continued restrictions on humanitarian access",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "continued restrictions on humanitarian access lacks a measurable threshold"
+  },
+  {
+    "id": "R1007#T2",
+    "kind": "trigger",
+    "statement": "Al-Shabaab exploiting political instability",
+    "objective": "",
+    "resolvableAsWritten": false,
+    "rationale": "Al-Shabaab exploiting political instability is unthresholded qualitative prose"
+  },
+  {
+    "id": "R1051#T1",
+    "kind": "trigger",
+    "statement": "Extension or enforcement of goods bans",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "extension or enforcement of goods bans is a discrete regulatory action"
+  },
+  {
+    "id": "R1022#T1",
+    "kind": "trigger",
+    "statement": "Disputed election results",
+    "objective": "",
+    "resolvableAsWritten": true,
+    "rationale": "formally disputed election results is a discrete electoral event"
+  }
+]

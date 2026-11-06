@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   STATE,
   ACTION,
@@ -13,6 +14,7 @@ import {
 } from '../src/dissent.js';
 import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
 import { LEVELS } from '../../core/src/anonymity.js';
+import { compose, LOOP_KIND } from '../../shared/loop.js';
 
 test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatch() at weekly cap', () => {
   const d0 = newDissent({
@@ -27,6 +29,7 @@ test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatc
   assert.equal(d0.level, LEVELS.PSEUDONYMOUS);
   assert.match(d0.by, /^Analyst \d{4}$/);
   assert.equal(d0.contactable, true);
+  assert.match(d0.id, /^d_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
   const d1 = route(d0, { queue: 'chad-desk', now: 1200 });
   assert.equal(d1.status, STATE.ROUTED);
@@ -57,6 +60,55 @@ test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatc
   assert.equal(loopLatencyMs(d4), 1100);
 });
 
+test('notify() delegates to shared loop.js compose() with zero duplicated copy strings', () => {
+  const src = fs.readFileSync(new URL('../src/dissent.js', import.meta.url), 'utf8');
+  assert.ok(!src.includes('You said '), 'dissent.js must not duplicate notification copy from shared/loop.js');
+
+  // SPLIT with 2 child cards matches compose(LOOP_KIND.SPLIT, { count: 2, deepLinks })
+  const split = act(
+    route(newDissent({ cardId: 'R1043', expert: 'e1', country: 'TCD', kind: KIND.TWO_RISKS })),
+    ACTION.SPLIT,
+    { newCardIds: ['R1043a', 'R1043b'] }
+  );
+  const splitNotif = notify(split);
+  const wantSplit = compose(LOOP_KIND.SPLIT, { count: 2, deepLinks: ['/c/R1043a', '/c/R1043b'] });
+  assert.equal(splitNotif.body, wantSplit.body);
+  assert.deepEqual(splitNotif.deepLinks, wantSplit.deepLinks);
+
+  // REWRITE with new title passes title through to compose(LOOP_KIND.REWRITE, { title })
+  const rewritten = act(
+    route(newDissent({ cardId: 'R1067', expert: 'e1', country: 'AFG', kind: KIND.WINDOW })),
+    ACTION.REWRITE,
+    { title: 'Armed clashes in Badakhshan exceed 25 ACLED events before 30 June 2027' }
+  );
+  const rewriteNotif = notify(rewritten);
+  const wantRewrite = compose(LOOP_KIND.REWRITE, {
+    title: 'Armed clashes in Badakhshan exceed 25 ACLED events before 30 June 2027',
+  });
+  assert.equal(rewriteNotif.body, wantRewrite.body);
+
+  // RETIRE and RESOLVE_EARLY match shared/loop.js verbatim
+  for (const action of [ACTION.RETIRE, ACTION.RESOLVE_EARLY]) {
+    const d = act(
+      route(newDissent({ cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.ALREADY_HAPPENING })),
+      action
+    );
+    assert.equal(notify(d).body, compose(action).body);
+  }
+});
+
+test('dissent IDs use collision-safe UUIDs rather than a restart-prone counter', () => {
+  const ids = new Set(
+    Array.from({ length: 100 }, () =>
+      newDissent({ cardId: 'R1043', expert: 'e1', kind: KIND.WINDOW }).id
+    )
+  );
+  assert.equal(ids.size, 100);
+  for (const id of ids) {
+    assert.notEqual(id, 'd_1', 'must not emit sequential counter IDs that collide across restarts');
+  }
+});
+
 test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit outbound notifications', () => {
   for (const lvl of [LEVELS.ANONYMOUS, 'ANONYMOUS', 'unknown-privacy-mode']) {
     const anon = newDissent({
@@ -85,9 +137,17 @@ test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit o
   }
 });
 
-test('invalid dissent transitions and kinds throw explicit errors', () => {
+test('invalid dissent transitions and kinds throw explicit errors, including skipping route()', () => {
   assert.throws(() => newDissent({ cardId: 'R1', expert: 'e1', kind: 'bad_kind' }), /unknown dissent kind/);
   const open = newDissent({ cardId: 'R1', expert: 'e1', kind: KIND.WINDOW });
+
+  // B6 regression: OPEN -> ACTIONED skipping route() must fail
+  assert.throws(
+    () => act(open, ACTION.REWRITE),
+    /must be routed first/,
+    'act() must reject unrouted OPEN dissents'
+  );
+
   const routed = route(open);
   assert.throws(() => route(routed), /cannot route/);
   const closed = close(routed);

@@ -4,9 +4,9 @@
 
 ```
 $ npm run verify
-✓ 91 unit tests pass
-✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 47/139 pass text checks
-✓ five-state dissent loop, cap-bypass dispatch and anonymous opt-out verified
+✓ 98 unit tests pass
+✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items)
+✓ five-state dissent loop, shared loop.js copy, cap-bypass dispatch and anonymous opt-out verified
 ```
 
 ---
@@ -17,11 +17,11 @@ $ npm run verify
 |---|---|---|---|
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
 | Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 9 tests |
-| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + intervals, ≥10-seed Brier skill gate, small-panel suppression, ACAPS 5×5 bridge, 25 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 10 tests, **run honestly on the raw export** |
+| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + intervals, ≥10-seed Brier skill gate, static & temporal (`releaseAggregate`) differencing guards, ACAPS 5×5 bridge, 27 tests |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 13 tests |
 | Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 6 tests |
 | Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, 20 tests |
-| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | 5-state lifecycle + anonymous opt-out, 3 tests + journey script |
+| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs + anonymous opt-out, 5 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |
 
@@ -31,7 +31,7 @@ $ npm run verify
 
 Both came from running the code, not from reading.
 
-**1. Raw Risk Radar headlines are not forecast-ready cards until gated.** `risk-radar-export.csv` carries no resolution deadline column on risk rows (`139/139` fail `window` when audited without synthetic inputs), and **91 of 139** headlines describe directional trends (*"increased violence"*, *"escalating insecurity"*) without a measurable threshold or discrete event (`47/139` pass the four text checks once given a date window). That confirms why the gate and the analyst-written resolution `objective` exist.
+**1. Raw Risk Radar headlines are not forecast-ready cards until gated — and lexical observability belongs as a warning, not a silent blocker.** `risk-radar-export.csv` carries no resolution deadline column on risk rows (`139/139` fail the `window` blocker when audited without synthetic inputs). Across the four prose checks, **3 of 139** headlines hit hard structural blockers (`single` / `no_leak`), **49 of 139** pass all four prose checks cleanly, and **89 of 139** trigger an `observable` authoring warning (`dispatchable: true` once given a window, prompting an analyst-written `objective`). Audited against 50 labelled ACAPS statements (`packages/benchmark/test/fixtures/observable-labelled-50.json`), the lexical `observable` check achieves **86.2%** warn precision (`25/29`) with a **22.2%** false-warn rate (`4/18`, e.g. ACLED-resolvable clashes in `R1067`) — which is why `gate()` surfaces `observable` as `SEVERITY.WARNING` rather than blocking valid conflict cards.
 
 **2. The harness reproduces the benchmark independently.** On the 104 resolved blocks, a constant base-rate predictor scores **0.2425** — exactly the naive floor from the earlier calibration work. That is an independent confirmation that the ingest, the outcome mapping and the Brier implementation are all correct.
 
@@ -65,7 +65,7 @@ node scripts/backtest.mjs       # the scoring harness
 ## Hard rules
 
 - **No leaderboard.** Panel scores public, individual scores private.
-- **Two-tier small-cell suppression.** Country panels of 5–10 experts publish internally to analysts and Round-2 panellists at `MIN_PANEL_SIZE = 3` (`aggregate.js`); public outputs enforce `PUBLIC.minCount = 10` (`anonymity.js`), meaning public views show cross-country regional/thematic rollups rather than single-country cells.
+- **Two-tier small-cell & temporal differencing suppression.** Country panels of 5–10 experts publish internally to analysts and Round-2 panellists at `MIN_PANEL_SIZE = 3` (`aggregate.js`), while `releaseAggregate()` releases only at Round-1 close (`on_close`) or in `≥ 3`-respondent cohorts (`batch`, masking `min`/`max`) so consecutive updates cannot be differenced. Public outputs enforce `PUBLIC.minCount = 10` (`anonymity.js`), showing cross-country regional/thematic rollups rather than single-country cells.
 - **Every score renders with its interval.** There is no code path that returns a naked point estimate.
 - **Unobservable ≠ miss.** `scoring.js` excludes `null` outcomes; it never counts them as failures.
 - **The Declaration decides who is told, never how much weight they carry.** Weighting is by seed-variable performance, and only where a domain has ≥10 seed items.
