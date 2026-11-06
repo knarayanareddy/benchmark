@@ -34,7 +34,12 @@ test('two risks wearing one sentence are caught', () => {
 });
 
 test('decontamination keeps the original for audit', () => {
-  const c = decontaminate({ statement: 'Displacement is expected to worsen beyond 500,000.', window: win });
-  assert.ok(!/expected to worsen/i.test(c.statement));
+  const c = decontaminate({ statement: 'Displacement is expected to worsen beyond 500,000 and is expected to increase.', window: win });
+  assert.ok(!/expected to/i.test(c.statement));
   assert.match(c.original, /expected to worsen/i);
+});
+
+test('an empty statement is rejected rather than passing observable', () => {
+  assert.equal(gate('').ok, false);
+  assert.equal(gate({ statement: '   ', window: win }).ok, false);
 });

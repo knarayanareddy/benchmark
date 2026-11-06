@@ -9,20 +9,30 @@
 export const CHECKS = ['window', 'observable', 'single', 'no_leak', 'condition'];
 
 const LEAK = [
-  /\bexpected to\b/i, /\bto worsen\b/i, /\bfurther deterioration\b/i,
-  /\balready deteriorating\b/i, /\bto increase\b/i, /\bto be revised\b/i,
-  /\bcontinued deterioration\b/i, /\blikely to escalate\b/i,
+  /\bexpected to\b/gi, /\bto worsen\b/gi, /\bfurther deterioration\b/gi,
+  /\balready deteriorating\b/gi, /\bto increase\b/gi, /\bto be revised\b/gi,
+  /\bcontinued deterioration\b/gi, /\blikely to escalate\b/gi,
 ];
 
 const INTENT = [/\bwill continue to\b/i, /\bintends?\b/i, /\bplans? to\b/i, /\baims? to\b/i];
 
-const VAGUE = [/\bdeteriorat/i, /\bworsen/i, /\bdestabilis/i, /\bdeteriorat/i];
+const VAGUE = [/\bdeteriorat/i, /\bworsen/i, /\bdestabilis/i];
 
 export function gate(card) {
-  const t = String(card.statement || '');
+  const isObj = card !== null && typeof card === 'object';
+  const statement = isObj ? card.statement : card;
+  if (!String(statement || '').trim()) {
+    return {
+      ok: false,
+      problems: ['statement is empty'],
+      failed: [{ check: 'observable', reason: 'statement is empty' }],
+      results: [{ check: 'observable', ok: false, reason: 'statement is empty' }],
+    };
+  }
+  const t = String(statement || '');
   const results = [];
 
-  const hasWindow = Boolean(card.window?.from && card.window?.to);
+  const hasWindow = Boolean(isObj && card.window?.from && card.window?.to);
   results.push(fail('window', hasWindow, 'no explicit resolution window'));
 
   // Observable: a measurable quantity OR a defined event. A bare claim of
@@ -39,7 +49,7 @@ export function gate(card) {
   const strongConj = /(?:\bas well as\b|\balongside\b|;|\band also\b|\band furthermore\b)/i;
   results.push(fail('single', !strongConj.test(t), 'looks like two risks joined by a strong conjunction'));
 
-  const leaked = LEAK.find((r) => r.test(t));
+  const leaked = LEAK.find((r) => Boolean(t.match(r)));
   results.push(fail('no_leak', !leaked, `outcome-leaking language: "${leaked?.source ?? ''}"`));
 
   const intent = INTENT.find((r) => r.test(t));
@@ -56,7 +66,11 @@ function fail(check, ok, reason) {
   return { check, ok, reason: ok ? null : reason };
 }
 
-/** Remove leaking language from the card the expert sees; keep the original for audit. */
+/**
+ * Redact outcome-leaking phrases from the card the expert sees; keep the
+ * original for audit. Note: this is lexical redaction, not grammatical
+ * rewriting — full sentence rewriting is an analyst action, not a regex pass.
+ */
 export function decontaminate(card) {
   let s = String(card.statement || '');
   for (const r of LEAK) s = s.replace(r, '');

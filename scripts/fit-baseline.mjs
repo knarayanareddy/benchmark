@@ -27,9 +27,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { bootstrapBrier, paired, observed } from '../packages/core/src/scoring.js';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const blocks = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/risk-radar.json'), 'utf8'));
 const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
 
@@ -54,7 +55,7 @@ const M_PROB = meanOr(resolved.map(rawProb));
 const M_LEV = meanOr(resolved.map(rawLevel));
 
 // COLLINEARITY, established from the data and recorded so nobody re-adds it:
-// Risk Level matches a pure function of Probability on 125/125 rows where both
+// Risk Level matches a pure function of Probability on 128/128 rows where both
 // are present (Very Low→Low, Low/Medium→Medium, High/Very High→High), and
 // Impact never changes it. So a model containing Probability AND Risk Level is
 // fitting the same field twice and pretending it has two fields. The earlier

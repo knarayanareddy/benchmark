@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCard, validate, VARIANTS } from './card.js';
+import { buildCard, validate, mount, VARIANTS } from './card.js';
 import { strict, suppress, rate } from './validate.js';
 import { compose, latency, LOOP_KIND } from './loop.js';
-import { longSentences, MAX_SENTENCE_WORDS } from './a11y.js';
+import { longSentences, trapFocus, MAX_SENTENCE_WORDS } from './a11y.js';
 
 /* ---------- card ---------- */
 
@@ -106,4 +106,29 @@ test('plain-language rule catches long sentences', () => {
   assert.ok(longSentences(long).length === 1);
   assert.equal(longSentences('Short one. Also short.').length, 0);
   assert.equal(MAX_SENTENCE_WORDS, 20);
+});
+
+test('mount validates before touching the DOM', () => {
+  let appended = false;
+  const fakeDoc = { createElement: () => ({}), body: { appendChild: () => { appended = true; } } };
+  assert.throws(() => mount({ variant: 'card', headline: '', primary: null }, { doc: fakeDoc }), /invalid card/);
+  assert.equal(appended, false);
+});
+
+test('trapFocus wraps forward Tab on an HTMLElement whose activeElement lives on getRootNode()', () => {
+  let focused = null;
+  const b0 = { disabled: false, focus: () => { focused = 'b0'; } };
+  const b1 = { disabled: false, focus: () => { focused = 'b1'; } };
+  let handler = null;
+  const root = {
+    querySelectorAll: () => [b0, b1],
+    getRootNode: () => ({ activeElement: b1 }),
+    addEventListener: (_ev, fn) => { handler = fn; },
+    removeEventListener: () => {},
+  };
+  trapFocus(root);
+  let prevented = false;
+  handler({ key: 'Tab', shiftKey: false, preventDefault: () => { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(focused, 'b0');
 });

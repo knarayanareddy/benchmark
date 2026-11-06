@@ -59,11 +59,9 @@ export const LEVEL_COPY = Object.freeze({
  * was honoured — callers must never silently upgrade or downgrade.
  */
 export function resolveLevel(requested) {
-  if (Object.prototype.hasOwnProperty.call(LEVELS, String(requested).toUpperCase())) {
-    return { level: requested, honoured: true, why: null };
-  }
-  if (Object.values(LEVELS).includes(requested)) {
-    return { level: requested, honoured: true, why: null };
+  const key = String(requested ?? '').trim().toUpperCase();
+  if (Object.prototype.hasOwnProperty.call(LEVELS, key)) {
+    return { level: LEVELS[key], honoured: true, why: null };
   }
   return {
     level: DEFAULT_LEVEL,
@@ -101,6 +99,18 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
   const kept = { ...contribution };
   delete kept.expertId;
   delete kept.name;
+
+  // Fail closed. An unrecognised level must never resolve to the level that
+  // keeps more data — that is how a privacy setting becomes a leak.
+  const known = Object.values(LEVELS).includes(level);
+  if (!known) {
+    delete kept.country;
+    delete kept.at;
+    kept.by = 'anonymous';
+    kept.level = LEVELS.ANONYMOUS;
+    kept.fellBack = true;
+    return kept;
+  }
 
   if (level === LEVELS.IDENTIFIED) {
     kept.by = name || expertId || 'unknown';

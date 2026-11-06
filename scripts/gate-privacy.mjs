@@ -6,8 +6,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src'].map((d) => path.join(ROOT, d));
 
 const FORBIDDEN = [

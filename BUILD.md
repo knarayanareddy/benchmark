@@ -4,7 +4,7 @@
 
 ```
 $ npm run verify
-✓ 19 unit tests pass
+✓ 58 unit tests pass
 ✓ gate runs on the real export: 139 blocks, 19 rejected (13.7%)
 ✓ dissent loop closes in <60s
 ```
@@ -15,12 +15,13 @@ $ npm run verify
 
 | Module | File | State | Proof |
 |---|---|---|---|
-| **Shared spine** | `packages/shared/` | **Complete** | 16 tests — card, validation, loop, a11y |
-| Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 7 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 6 tests, **run on the real export** |
-| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Weekly cap, dissent priority, health, 5 tests |
+| **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
+| Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 9 tests |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 7 tests, **run on the real export** |
+| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, dissent priority, health, 6 tests |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 expert-controlled levels, fail-closed attribution, 18 tests |
 | Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | 5-state lifecycle, end-to-end journey script |
-| Ingest | `scripts/ingest.py` | **Complete** | 139 blocks → 104 resolved, matches the benchmark exactly |
+| Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |
 
 ---
@@ -39,7 +40,7 @@ Both came from running the code, not from reading.
 
 ```bash
 python3 scripts/ingest.py       # CSV → data/risk-radar.json (uses Python's csv module)
-node --test packages/benchmark/test/
+node --test packages/benchmark/test/*.test.js
 node scripts/gate-export.mjs    # acceptance test #9
 node scripts/journey.mjs        # acceptance test #7
 node scripts/backtest.mjs       # the scoring harness
@@ -79,17 +80,17 @@ ingest reproduces every one of those figures. There is no larger dataset to
 "resolve" against — the 139 risks carry **266** dated trigger statements, and
 the 266 is where the volume lives.
 
-**2. Risk Level is a duplicate of Probability — for the 97 rows that follow the
-matrix.** ACAPS publishes a 5×5 in `docs/risk-methodology.md` where Impact moves
-the level. Applied to the export it agrees on **97 of 125** rows. On the other
-28 it does not, and **22 of those 28 departures are upgrades that the analyst
-made anyway**. Of the 22 departures with a resolved outcome, **16 materialised
-(73%) against a 59% base rate.** That residue is the product: the reason an
-analyst overrides the published rule is the knowledge the brief says "travels
-through informal conversations and then disappears."
-
-It also means a model that reads Probability *and* Risk Level is reading one
-field twice. The earlier "four-field" model did exactly that.
+**2. Risk Level is a pure function of Probability alone — 128 of 128 rows.**
+ACAPS publishes a 5×5 in `organiser/acaps/risk-methodology.md` (*Risk =
+Probability × Impact*) where Impact moves the level. Applied to the **125** rows
+carrying all three fields, it holds on **97** and departs on **28** (22 higher
+than the matrix, 6 lower). Across all **19** occupied `(Probability, Impact)`
+cells, not one is mixed — every departure is the arithmetic of a lookup table
+that maps Probability to Risk Level and ignores Impact (an earlier revision of
+this file misread those 28 rows as analyst overrides; the 22 resolved departures
+materialise at 0.73 vs 0.68 expected from Probability alone, +4.4 points on
+n=22). Impact is collected and discarded, and a model reading Probability *and*
+Risk Level is reading one field twice.
 
 **3. The baseline had to be re-measured, and the answer is unflattering.**
 naive floor **0.2425** → ACAPS' own rating **0.2168** → logistic regression on

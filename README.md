@@ -2,10 +2,10 @@
 
 A ninety-second elicitation that turns each of ACAPS' own risk statements into a probability, without asking any expert to read more than one card — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
 
-**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 50 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
+**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 58 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
 
 ```bash
-npm run verify     # 50 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
+npm run verify     # 58 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
 npm run ladder     # regenerates the three baseline figures from data/
 ```
 
@@ -32,7 +32,7 @@ npm run ladder     # regenerates the three baseline figures from data/
 
 ## The thesis in three numbers
 
-- **266** dated trigger statements across **139** risks — statements are the unit with volume, not risks. **104** resolved.
+- **266** date-stamped trigger statements across **139** risks — statements are the unit with volume, while **104 of the 139 risks** have resolved outcomes.
 - **~17%** is the one published response rate for this behaviour: ACAPS surveyed *more than 60* external experts for its Afghanistan risk report and **ten replied**. That is the closest thing to a baseline for the exact behaviour a panel depends on, and it is a survey response rate — not matrix completion, a figure earlier drafts of this file got wrong.
 - **101 of the 139 triggers that carry a completion rate carry no written resolution criterion** — 73% of ACAPS's own progress tracking is measured against something unstated.
 - **31 of 139 risks have no triggers at all**, **11 have no probability rating** and **7 have no status**. The corpus is a working export, and every one of those gaps is a place where an expert could add something in ninety seconds.

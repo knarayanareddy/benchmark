@@ -149,18 +149,18 @@
 <h2 id="f3">03 — ACAPS's own risk matrix does not reproduce the data</h2>
 
 <div class="finding">
-  <div class="finding-head"><span class="finding-n">F3</span><h4>78% of rated risks contradict the published Probability × Impact grid</h4><span class="finding-w">medium impact</span></div>
+  <div class="finding-head"><span class="finding-n">F3</span><h4>28 of 125 rated risks depart from the published Probability × Impact grid — because Risk Level ignores Impact</h4><span class="finding-w">medium impact</span></div>
   <div class="finding-body">
-    <p><code>docs/risk-methodology.md</code> publishes the exact 5×5 matrix ACAPS uses to derive Risk Level from Probability and Impact. I checked every row in the export against it. <b>97 of 125 checkable rows match (78%). 28 do not.</b></p>
+    <p><code>docs/risk-methodology.md</code> publishes the exact 5×5 matrix ACAPS uses to derive Risk Level from Probability and Impact (<i>Risk = Probability × Impact</i>). Checked across all <b>125</b> rows carrying all three fields: <b>97 match, 28 depart</b> (22 higher than the matrix, 6 lower).</p>
     <table style="margin:14px 0 12px">
       <tr><th>Example</th><th>In the data</th><th>Per ACAPS's own matrix</th></tr>
-      <tr><td>Probability High, Impact 3</td><td>Risk Level <b>High</b></td><td>Medium</td></tr>
-      <tr><td>Probability Medium, Impact 5</td><td>Risk Level <b>Medium</b></td><td>High</td></tr>
-      <tr><td>Probability Low, Impact 2</td><td>Risk Level <b>Medium</b></td><td>Low</td></tr>
+      <tr><td>Probability High, Impact 3 (13/13)</td><td>Risk Level <b>High</b></td><td>Medium</td></tr>
+      <tr><td>Probability Medium, Impact 5 (6/6)</td><td>Risk Level <b>Medium</b></td><td>High</td></tr>
+      <tr><td>Probability Low, Impact 2 (3/3)</td><td>Risk Level <b>Medium</b></td><td>Low</td></tr>
     </table>
-    <p><b>Two readings.</b> Either the export spans multiple versions of the methodology and the matrix changed, or analysts override the derived level with judgement — which the methodology supports ("analysts use professional judgement and peer review").</p>
-    <p><b>Why you should care.</b> Any model that treats <code>Risk Level</code> as a clean function of Probability × Impact will be wrong ~1 time in 5, and more importantly: <b>it tells you ACAPS analysts already override the formula.</b> That is an argument <i>for</i> expert input, and a caution against building scoring on Risk Level alone. Use Probability as the continuous signal; treat Risk Level as a label with noise.</p>
-    <p class="small" style="margin-bottom:0">Worth raising with Alexander Harper as a genuine question, not a gotcha: "we noticed 22% of ratings don't follow the published matrix — is that version drift or analyst override?" Either answer tells you something about whether expert judgement is welcome upstream.</p>
+    <p><b>What actually drives it.</b> Across all <b>128 of 128</b> rows carrying both Probability and Risk Level, <code>Risk Level</code> is a deterministic function of Probability alone (Very Low → Low, Low/Medium → Medium, High/Very High → High), and across all <b>19 occupied (Probability, Impact) cells</b> not a single cell is mixed. These are not case-by-case analyst overrides — they are the arithmetic of a lookup table that uses Probability and discards Impact.</p>
+    <p><b>Why you should care.</b> Any model that includes both <code>Probability</code> and <code>Risk Level</code> is reading one field twice. Use Probability as the signal; drop Risk Level as collinear; and note that Impact neither changes the published Risk Level nor moves the realised outcome once Probability is known.</p>
+    <p class="small" style="margin-bottom:0">Worth raising with Alexander Harper as a genuine question, not a gotcha: "we noticed Risk Level in the export maps 128/128 from Probability alone rather than the published Probability × Impact 5×5 — is Impact intentionally excluded from the radar lookup?"</p>
   </div>
 </div>
 
@@ -288,7 +288,7 @@
   <tr><th style="width:24%">Document</th><th style="width:34%">Was</th><th>Now</th></tr>
   <tr><td><b>BENCHMARK §1</b></td><td>"No dates anywhere; you cannot compute a track record."</td><td>Dates exist inside the trigger text on 266/266 blocks (Feb 2024 – Oct 2026), with dated completion-rate history on 140. Reframe as <i>excavation</i>, not fabrication.</td></tr>
   <tr><td><b>BENCHMARK §1</b></td><td>Completion rate "may be a baseline".</td><td>Completion rate <b>is</b> a working predictive signal (AUC .745 vs ACAPS .777 on n=35). Two baselines per trigger, and their disagreement is a product feature.</td></tr>
-  <tr><td><b>BENCHMARK §1</b></td><td>Risk Level treated as a clean composite.</td><td>22% of ratings contradict ACAPS's own matrix. Use Probability as the signal; treat Risk Level as a noisy label. Raise it with the challenge owner.</td></tr>
+  <tr><td><b>BENCHMARK §1</b></td><td>Risk Level treated as a clean composite.</td><td>Risk Level in the export is 128/128 a function of Probability alone (97/125 match the 5×5; 28 depart across deterministic cells). Drop Risk Level from models as collinear with Probability.</td></tr>
   <tr><td><b>BENCHMARK §12</b></td><td>Rubric assumed at 40/20/15/15/5/5.</td><td>Three rubrics in circulation. Pitch to the union; confirm the live one on site.</td></tr>
   <tr><td><b>BENCHMARK §14</b></td><td>3-minute pitch.</td><td>3 minutes <b>+ 2 minutes Q&amp;A</b>. Script five anticipated answers; the guide names them for UNICRI and they translate to ACAPS.</td></tr>
   <tr><td><b>Directions A1</b></td><td>Score against the completion-rate baseline.</td><td>Score against <b>both</b> baselines. Where they diverge, that divergence is the most interesting thing to show an expert.</td></tr>
@@ -303,7 +303,7 @@
 <ol>
   <li><b>"We parsed all 266 trigger blocks, including <code>Date entered</code>, <code>Last update</code> and the dated completion-rate history — most people only use the titles. Was that meant to be available to us?"</b> Frames you as the team that went deeper, and confirms you are not reading a field you were not supposed to have.</li>
   <li><b>"What does <code>Completion rate</code> mean exactly — your confidence the trigger fires, or progress toward it?"</b> Empirically it behaves like a probability (AUC .745), but confirm. <span class="small">Still the highest-value question in the room.</span></li>
-  <li><b>"22% of rated risks don't follow your published Probability × Impact matrix. Version drift, or analyst override?"</b> Genuine curiosity, and the answer tells you whether expert judgement is welcome upstream — which is the premise of your whole project.</li>
+  <li><b>"Risk Level in the export follows Probability alone on 128/128 rows rather than the published Probability × Impact 5×5 (28 of 125 rows depart, with zero mixed cells). Is Impact intentionally left out of the Risk Radar formula?"</b> Genuine curiosity about how the two axes are combined in practice.</li>
   <li><b>"Which rubric is live for this track? The platform page says Concept 40%, the repo says weights may vary."</b> Ask plainly. Nobody will be offended and you may save yourself a misallocated weekend.</li>
   <li><b>"Is there a pitch guide and a one-pager template for ACAPS, like the UNICRI track has?"</b> If not, you have just found your submission format — and the opportunity to set the standard.</li>
 </ol>

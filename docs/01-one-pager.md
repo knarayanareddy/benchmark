@@ -2,7 +2,7 @@
 
 ## The problem
 
-ACAPS publishes **139 risks**, carrying **266 dated trigger statements** with resolution windows, of which **104 are resolved**. Every resolved statement can be scored against what actually happened — and nobody is scoring them.
+ACAPS' Risk Radar export contains **139 risks** (**104 resolved**: 61 materialised, 43 not) carrying **266 date-stamped trigger statements**. Every resolved risk can be scored against what actually happened — and nobody is scoring them.
 
 And the demand side is already measured. For its Afghanistan risk report, ACAPS sent a short risk survey to **more than 60 external experts and got 10 responses** — roughly **17%**. That is the only published figure for the exact behaviour a panel depends on, and it is the number to beat.
 
@@ -12,19 +12,39 @@ check that in ten seconds, so we say it first.)*
 
 ## The finding the data gave us
 
-ACAPS publishes a **5×5 matrix** deriving Risk Level from Probability × Impact. We applied it to every row in the export that carries all three fields — **125 rows**. It agrees on **97 (78%)**.
+ACAPS publishes a **5×5 matrix** deriving Risk Level from Probability × Impact, and
+states the rule in their own methodology: *Risk = Probability × Impact*.
 
-On the other **28**, an analyst looked at a risk, looked at a matrix that would place it in Low or Medium, and wrote something else. **Twenty-two of those departures are upgrades, and of the 22 with a resolved outcome, 16 materialised (73% against a 59% base rate).** The human overrode the rule — and on this sample the human was right more often than not.
+We applied that matrix to every row in the export carrying all three fields —
+**125 rows**. It holds on **97**. On the other **28** the export's rating sits higher
+(22) or lower (6) than the published matrix puts it.
 
-**On what our scoring does and does not claim.** ACAPS' own position is that
-risk scores "support comparison and prioritisation; they do not mean an event is
-certain." We are not contradicting that — we are measuring something they
-explicitly disclaim. A Brier score is a comparison device, and every figure we
-report carries an interval that spans zero. Where our treatment differs from
-ACAPS' published method, we label it a reinterpretation rather than a
-restatement.
+Then we looked for the reason, and did not find what we expected. **Risk Level in the
+export is exactly a function of Probability alone — 128 rows out of 128.** Departure
+from the matrix is likewise a deterministic function of the Probability/Impact cell:
+across 19 occupied cells, not one contains both an agreement and a departure.
+`(Probability = High, Impact = 3)` is rated High in all 13 cases; the matrix says
+Medium. `(Probability = Medium, Impact = 5)` is rated Medium in all 6; the matrix says
+High.
 
-That is the product, stated in one sentence: **the departure from the published method is the knowledge, and today it is recorded nowhere.** ACAPS' brief says analyst knowledge "travels through informal conversations with peers and then disappears." It does not disappear. It leaves a 28-row trace in the export, and nobody has ever read it. A structured loop's job is to elicit that reason *at the moment of the judgement*, attach it to the sentence, and let it be scored.
+**These are not analyst overrides. They are the arithmetic of a table that uses
+Probability and ignores Impact.** An earlier revision of this document described them
+as tacit analyst knowledge, and quoted a 73% hit rate. That reading does not survive
+the data: the 22 resolved departures have an expected materialisation of 0.68 from
+their Probability mix alone, against an observed 0.73 — about one item on n=22.
+
+**The finding that survives, and is worth ACAPS' time:** the matrix collects Impact,
+publishes a rule that multiplies by it, and then rates on Probability alone. Impact
+does not move the outcome once probability is known — among Medium-probability risks,
+those rated Impact 3, 4 and 5 materialise at 0.45, 0.55 and 0.33. The field is
+collected and discarded.
+
+That is the gap this product fills, and it is not a scoring problem. A number cannot
+carry the reason an analyst had. **The reason has to be elicited from a person, at the
+moment of the judgement, and attached to the statement it changed.** ACAPS' brief says
+analyst knowledge "travels through informal conversations with peers and then
+disappears." The export shows the cost of that: a rating that is reproducible from one
+field, and a second field that is filled in and never used.
 
 The supply side is where the loop is starving: **101 of the 139 triggers that carry a completion rate carry no written objective** — 73% of ACAPS's own progress tracking is measured against a criterion nobody wrote down. **31 risks have no triggers at all.** **11 have no probability rating.** Each is a ninety-second question with a named owner and a real consequence for a published risk level.
 
@@ -52,7 +72,7 @@ determines whether the judgement is any good. Ninety seconds, one thumb, phone-f
 
 | Figure | Value | What it means |
 |---|---|---|
-| Naive floor | 0.2425 | Predicting "materialises" every time |
+| Naive floor | 0.2425 | Predicting the constant base rate (58.7%) on every row |
 | **ACAPS' own judgement** | **0.2168** | **The incumbent. It is the best of the three.** |
 | Logistic regression on the same fields, out of sample | 0.2177 | The model. It does *not* beat the experts. |
 
@@ -70,7 +90,7 @@ No leaderboard. No prediction market. No LLM as the forecaster (o3 at 0.1352 tra
 
 ## The ask
 
-A pre-registered test of one hypothesis: **the panel sees the sentence, and the four fields do not.** That is the whole argument, it is falsifiable, and it is the reason this is a submission rather than a claim.
+A pre-registered test of one hypothesis: **the panel sees the sentence, and the structured fields do not.** That is the whole argument, it is falsifiable, and it is the reason this is a submission rather than a claim.
 
 ---
 

@@ -19,7 +19,8 @@ export function trapFocus(root) {
     if (e.key !== 'Tab') return;
     const f = [].slice.call(root.querySelectorAll(sel)).filter((el) => !el.disabled);
     if (!f.length) return;
-    const i = f.indexOf(root.activeElement);
+    const active = (root.getRootNode?.() ?? globalThis.document)?.activeElement ?? globalThis.document?.activeElement;
+    const i = f.indexOf(active);
     if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
     else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
   };

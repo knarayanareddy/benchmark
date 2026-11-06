@@ -104,3 +104,38 @@ test('alias derivation is deterministic across runs and salts', () => {
   assert.equal(aliasFor('e-001', 'TCD'), aliasFor('e-001', 'TCD'));
   assert.notEqual(aliasFor('e-001', 'TCD', 'v2'), aliasFor('e-001', 'TCD', 'v1'));
 });
+
+test('every casing of anonymous resolves to the anonymous level', () => {
+  for (const req of ['anonymous', 'ANONYMOUS', 'Anonymous', ' AnOnYmOuS ']) {
+    // .trim() is load-bearing — without it a padded value fails closed to
+    // anonymous, which is safe but reports honoured:false for a valid choice.
+    const r = resolveLevel(req);
+    assert.equal(r.level, LEVELS.ANONYMOUS, `${req} must normalise`);
+    assert.equal(r.honoured, true);
+  }
+  for (const req of ['identified', 'IDENTIFIED', 'Identified']) {
+    assert.equal(resolveLevel(req).level, LEVELS.IDENTIFIED);
+  }
+});
+
+test('a capitalised ANONYMOUS really removes country and timestamp', () => {
+  // The bug: resolveLevel returned the raw string, attribute() matched neither
+  // branch, and fell through to pseudonymous — keeping country and at.
+  const c = { expertId: 'e1', name: 'A Person', country: 'NL', at: '2026-11-06T10:00:00Z',
+              region: 'Sahel', theme: 'health' };
+  const r = resolveLevel('ANONYMOUS');
+  const out = attribute(c, r.level);
+  assert.equal(out.level, LEVELS.ANONYMOUS);
+  assert.equal(out.country, undefined, 'country must be absent, not blank');
+  assert.equal(out.at, undefined, 'timestamp must be absent, not blank');
+  assert.equal(out.by, 'anonymous');
+});
+
+test('an unrecognised level fails closed, not open', () => {
+  const c = { expertId: 'e1', name: 'A Person', country: 'NL', at: '2026-11-06T10:00:00Z',
+              region: 'Sahel', theme: 'health' };
+  const out = attribute(c, 'public');           // not a level at all
+  assert.equal(out.level, LEVELS.ANONYMOUS, 'unknown input must not fall back to pseudonymous');
+  assert.equal(out.country, undefined);
+  assert.equal(out.at, undefined);
+});

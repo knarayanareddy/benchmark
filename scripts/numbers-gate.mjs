@@ -21,9 +21,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { LADDER } from '../packages/core/src/scoring.js';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 // Figures that were published here and are now known to be wrong. Their
 // reappearance means someone restored an old draft, or a generator overwrote a
@@ -34,6 +35,8 @@ const RETIRED = [
   ['17% completion', 'a survey response rate (10 of 60), never a matrix completion rate'],
   ['125-cell analyst matrix', 'the 125 rows are 125 risks with complete ratings, not cells to fill'],
   ['four-field logistic', 'the model reads two independent fields; Risk Level duplicates Probability'],
+  ['16 of the 22 materialised', 'the departures from the 5×5 are a deterministic table, not analyst overrides — see scoring.js'],
+  ['73% against a 59% base rate', 'the excess is +4.4 points on n=22; the rest is the probability mix'],
 ];
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'data']);
@@ -101,18 +104,42 @@ if (hits.length) {
 // ── 3. counts vs the ingest ────────────────────────────────────────────────
 const blocks = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'risk-radar.json'), 'utf8'));
 const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
+const allTriggers = blocks.flatMap((b) => b.triggerList || []);
+const scoredTriggers = allTriggers.filter((t) => Boolean(t.completionRate));
 const counts = {
   blocks: blocks.length,
   resolved: resolved.length,
   materialised: resolved.filter((b) => b.outcome === 1).length,
   notMaterialised: resolved.filter((b) => b.outcome === 0).length,
   active: blocks.filter((b) => b.status === 'Active').length,
+  triggers: allTriggers.length,
+  scoredTriggers: scoredTriggers.length,
+  unwrittenObjective: scoredTriggers.filter((t) => !t.objective).length,
+  noTriggers: blocks.filter((b) => (b.triggerCount ?? 0) === 0).length,
+  noProbability: blocks.filter((b) => !b.probability).length,
+  noStatus: blocks.filter((b) => !b.status).length,
 };
-const EXPECT = { blocks: 139, resolved: 104, materialised: 61, notMaterialised: 43, active: 28 };
+const EXPECT = {
+  blocks: 139,
+  resolved: 104,
+  materialised: 61,
+  notMaterialised: 43,
+  active: 28,
+  triggers: 266,
+  scoredTriggers: 139,
+  unwrittenObjective: 101,
+  noTriggers: 31,
+  noProbability: 11,
+  noStatus: 7,
+};
 for (const k of Object.keys(EXPECT)) {
   if (counts[k] !== EXPECT[k]) fail(`data says ${k}=${counts[k]}, the repo claims ${EXPECT[k]}`);
 }
-if (!failures) console.log(`✓ counts match: ${counts.blocks} blocks / ${counts.resolved} resolved / ${counts.active} active`);
+if (!failures) {
+  console.log(
+    `✓ counts match: ${counts.blocks} blocks / ${counts.resolved} resolved / ${counts.active} active / ${counts.triggers} triggers (${counts.unwrittenObjective}/${counts.scoredTriggers} without objective)`
+  );
+}
 
 if (failures) {
   console.error(`\n${failures} problem(s). A number without a script attached is how this repo`);

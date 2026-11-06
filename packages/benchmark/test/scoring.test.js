@@ -71,3 +71,11 @@ test('calibration returns a curve an expert can read back', () => {
   assert.ok(c.length > 0);
   for (const b of c) assert.ok(b.meanPredicted >= 0 && b.meanPredicted <= 1);
 });
+
+test('paired refuses unlabelled items and outcome mismatches', () => {
+  assert.throws(() => paired([{ p: 0.5, y: 1 }], [{ p: 0.4, y: 1 }]), /requires an id/);
+  assert.throws(
+    () => paired([{ id: 'r1', p: 0.5, y: 1 }], [{ id: 'r1', p: 0.4, y: 0 }]),
+    /different outcomes/
+  );
+});

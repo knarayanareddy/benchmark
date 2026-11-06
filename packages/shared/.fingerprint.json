@@ -2,9 +2,9 @@
   "note": "sha256 of each file in this directory, committed so CI can prove this copy has not drifted from the other repo's copy.",
   "files": {
     "README.md": "10408c66548315bc0b450d6387e1a01e67e1d2062e8defbf9ace0e1140ae5a12",
-    "a11y.js": "8a3925f7da739a296af9bb5606ed10bf05974cce99393d09ace7281dc718bc93",
-    "card.js": "cdefe0d64f8e7d532763ab5eac5989e7af1aa8dca645d38183bb9136726967b2",
-    "core.test.js": "9de6de8f57d3ce42b43f1fdbee816b1dc731bde5d041db003f0f98ca9849ce9e",
+    "a11y.js": "8d4d28fdbe79a47f791a303837dbd3b5548386c970e67c824c9317aac1198513",
+    "card.js": "61b2ac7ace7774610d160307fa1abdc302a65f02d6d12ac2b87469dd3993fcb1",
+    "core.test.js": "7ab6b6436c03e249ecdf21ff76a5e9172e25d85445092c97491549ee5a5c14de",
     "index.js": "b62d7f4fef182b68f662762079b5a46f4f022f661796d973fc59f612e6ecc64f",
     "loop.js": "315d13ac3c54db86a2cf76504680273654cdbb631a0b8afe3b7e0f5a6cac5d28",
     "validate.js": "c2451d7504c1b27671484c8899229e72edab6c08f5c6c9cac5b6111a4f13cd06"
