@@ -6,11 +6,23 @@ ACAPS publishes **139 risks**, carrying **266 dated trigger statements** with re
 
 And the demand side is already measured. For its Afghanistan risk report, ACAPS sent a short risk survey to **more than 60 external experts and got 10 responses** — roughly **17%**. That is the only published figure for the exact behaviour a panel depends on, and it is the number to beat.
 
+*(The export this rests on was supplied by ACAPS for this hackathon. It is not one
+of the 42 datasets in the public catalogue at `acaps.org/en/data` — a juror can
+check that in ten seconds, so we say it first.)*
+
 ## The finding the data gave us
 
 ACAPS publishes a **5×5 matrix** deriving Risk Level from Probability × Impact. We applied it to every row in the export that carries all three fields — **125 rows**. It agrees on **97 (78%)**.
 
 On the other **28**, an analyst looked at a risk, looked at a matrix that would place it in Low or Medium, and wrote something else. **Twenty-two of those departures are upgrades, and of the 22 with a resolved outcome, 16 materialised (73% against a 59% base rate).** The human overrode the rule — and on this sample the human was right more often than not.
+
+**On what our scoring does and does not claim.** ACAPS' own position is that
+risk scores "support comparison and prioritisation; they do not mean an event is
+certain." We are not contradicting that — we are measuring something they
+explicitly disclaim. A Brier score is a comparison device, and every figure we
+report carries an interval that spans zero. Where our treatment differs from
+ACAPS' published method, we label it a reinterpretation rather than a
+restatement.
 
 That is the product, stated in one sentence: **the departure from the published method is the knowledge, and today it is recorded nowhere.** ACAPS' brief says analyst knowledge "travels through informal conversations with peers and then disappears." It does not disappear. It leaves a 28-row trace in the export, and nobody has ever read it. A structured loop's job is to elicit that reason *at the moment of the judgement*, attach it to the sentence, and let it be scored.
 
@@ -22,7 +34,15 @@ The obvious product is "get more experts to fill in more cells." The evidence sa
 
 **Benchmark** turns each risk statement into a ninety-second card, puts it in front of the expert who can judge it, and — the part nobody builds — closes the loop back to them.
 
-**The Card.** One statement, its window, the historical base rate, the model baseline, a slider, one optional sentence. No peers' numbers before submission: anchoring and herding are the two best-documented failure modes in expert elicitation and both are caused by the interface. Ninety seconds, one thumb, phone-first.
+**The Card.** One statement, its window, the historical base rate, the model baseline, a slider, one optional sentence. No peers' numbers before submission: anchoring and herding are the two best-documented failure modes in expert elicitation and both are caused by the interface.
+
+This is the interface ACAPS' own cognitive-bias brief (March 2016) argues for.
+That document is organised as bias → mitigation strategy, and most of its named
+biases are properties of how a question is asked rather than of the person
+answering it. Independent round one addresses anchoring and herding. Suppressing
+counts below ten addresses availability and social proof. "Make sense, not data"
+is the same position: the judgement is the product, and the interface is what
+determines whether the judgement is any good. Ninety seconds, one thumb, phone-first.
 
 **The Dispatch.** Experts declare the regions and themes they actually know. When a statement lands in one of them, they are told — instead of having to remember to go looking. Judgement becomes a **matching problem rather than a supply problem**. Capped at three notifications a week, ever; a bounded promise is what makes a push notification acceptable rather than another app to mute.
 
