@@ -18,6 +18,7 @@ import {
 } from '../packages/benchmark/src/dissent.js';
 import { dispatch, DEFAULT_CAP, TYPES } from '../packages/core/src/dispatch.js';
 import { LEVELS } from '../packages/core/src/anonymity.js';
+import { compose, LOOP_KIND } from '../packages/shared/loop.js';
 
 const d = newDissent({
   cardId: 'R1043',
@@ -28,6 +29,18 @@ const d = newDissent({
 });
 console.log(`1  raised      ${d.id}  state=${d.status}  by="${d.by}"`);
 
+// Verify strict routing invariant: cannot jump OPEN -> ACTIONED directly
+let skippedThrew = false;
+try {
+  act(d, ACTION.SPLIT);
+} catch {
+  skippedThrew = true;
+}
+if (!skippedThrew) {
+  console.error('✗ act() allowed OPEN -> ACTIONED without routing');
+  process.exit(1);
+}
+
 const routed = route(d, { queue: 'analyst' });
 console.log(`2  routed      state=${routed.status}  queue=${routed.queue}`);
 
@@ -35,6 +48,10 @@ const actioned = act(routed, ACTION.SPLIT, { newCardIds: ['R1043a', 'R1043b'] })
 console.log(`3  actioned    state=${actioned.status}  action=${actioned.action}`);
 
 const n = notify(actioned);
+if (n.body !== compose(LOOP_KIND.SPLIT, { count: 2 }).body) {
+  console.error('✗ notify() drifted from shared packages/shared/loop.js compose()');
+  process.exit(1);
+}
 const cappedHistory = Array.from({ length: DEFAULT_CAP.perWeek }, () => ({
   type: TYPES.new_statement,
   expert: 'e_8f21',

@@ -35,7 +35,7 @@ if (!fs.existsSync(file)) {
 const blocks = JSON.parse(fs.readFileSync(file, 'utf8'));
 
 // ACAPS publishes the percentage bands behind their five-point scale in
-// docs/references/acaps-risk-methodology-infographic.png:
+// organiser/acaps/references/acaps-risk-methodology-infographic.png:
 //   Very Low 0-20 · Low 21-40 · Medium 41-60 · High 61-80 · Very High 81-100
 // We use the band midpoint. This is their mapping, not our guess — an earlier
 // revision divided the ordinal 1-5 by 5, which put "Medium" at 0.60 when their

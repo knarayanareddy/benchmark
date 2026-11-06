@@ -1,23 +1,34 @@
 /**
  * The dissent loop — the actual product.
  *
- * An objection is a first-class object with a five-state lifecycle
+ * An objection is a first-class object with a strict five-state lifecycle
  * (OPEN -> ROUTED -> ACTIONED -> NOTIFIED -> CLOSED), integrated with
- * expert-controlled anonymity:
+ * expert-controlled anonymity and the shared return-path module
+ * (`packages/shared/loop.js`):
+ *   - Notification copy and loop-latency calculation come exclusively from
+ *     `packages/shared/loop.js` (`compose()`, `latency()`), eliminating drift
+ *     between the shared spine and Benchmark's dissent flow.
+ *   - Dissent IDs use `crypto.randomUUID()` so restarts or multi-worker
+ *     processes never collide on sequential counters.
+ *   - `act()` requires `STATE.ROUTED` (`OPEN -> ACTIONED` without routing is
+ *     rejected).
  *   - IDENTIFIED / PSEUDONYMOUS dissenters are contactable by ACAPS and
- *     receive a loop-closing notification (`dissent_actioned`) that bypasses
- *     the weekly dispatch cap.
+ *     receive a `dissent_actioned` notification that bypasses the weekly cap.
  *   - ANONYMOUS dissenters have their `expert` identifier stripped at creation
- *     (`expert: null, contactable: false`), honouring LEVEL_COPY[ANONYMOUS]'s
- *     promise that they cannot be contacted or traced in analysis; their
- *     objection still routes, actions, and closes on the card.
+ *     (`expert: null, contactable: false`) and never emit outbound recipients.
  */
+import crypto from 'node:crypto';
 import {
   LEVELS,
   DEFAULT_LEVEL,
   resolveLevel,
   attribute,
 } from '../../core/src/anonymity.js';
+import {
+  LOOP_KIND,
+  compose,
+  latency,
+} from '../../shared/loop.js';
 
 export const STATE = Object.freeze({
   OPEN: 'open',
@@ -28,10 +39,10 @@ export const STATE = Object.freeze({
 });
 
 export const ACTION = Object.freeze({
-  REWRITE: 'rewrite',
-  SPLIT: 'split',
-  RETIRE: 'retire',
-  RESOLVE_EARLY: 'resolve_early',
+  REWRITE: LOOP_KIND.REWRITE,
+  SPLIT: LOOP_KIND.SPLIT,
+  RETIRE: LOOP_KIND.RETIRE,
+  RESOLVE_EARLY: LOOP_KIND.RESOLVE_EARLY,
 });
 
 export const KIND = Object.freeze({
@@ -41,9 +52,8 @@ export const KIND = Object.freeze({
   INTENT_NOT_CONDITION: 'intent_not_condition',
 });
 
-let seq = 0;
-
 export function newDissent({
+  id,
   cardId,
   expert,
   name,
@@ -58,6 +68,9 @@ export function newDissent({
   if (!Object.values(KIND).includes(kind)) {
     throw new Error(`unknown dissent kind: ${kind}`);
   }
+  if (id !== undefined && (typeof id !== 'string' || !id.trim())) {
+    throw new Error('dissent id, when provided, must be a non-empty string');
+  }
   const resolved = resolveLevel(level);
   // Fail closed to ANONYMOUS when an unrecognised privacy level is passed.
   const effectiveLevel = resolved.honoured ? resolved.level : LEVELS.ANONYMOUS;
@@ -69,9 +82,10 @@ export function newDissent({
 
   const isAnonymous = effectiveLevel === LEVELS.ANONYMOUS;
   const createdAt = now ?? Date.now();
+  const dissentId = id ? id.trim() : `d_${crypto.randomUUID()}`;
 
   return {
-    id: `d_${++seq}`,
+    id: dissentId,
     cardId,
     expert: isAnonymous ? null : (expert ?? null),
     by: attributed.by,
@@ -98,18 +112,24 @@ export function route(dissent, { queue = 'analyst', now } = {}) {
   };
 }
 
-/** Analyst acts. Returns the dissent plus the downstream cards it produced. */
-export function act(dissent, action, { newCardIds = [], note = '', now } = {}) {
+/**
+ * Analyst acts on a routed dissent (`STATE.ROUTED -> STATE.ACTIONED`).
+ * Rejects unrouted (`STATE.OPEN`) dissents so queue triage cannot be bypassed.
+ */
+export function act(dissent, action, { newCardIds = [], title = '', note = '', now } = {}) {
   if (!Object.values(ACTION).includes(action)) {
     throw new Error(`unknown action: ${action}`);
   }
-  if (!dissent || (dissent.status !== STATE.OPEN && dissent.status !== STATE.ROUTED)) {
-    throw new Error(`cannot act on dissent in state ${dissent?.status}`);
+  if (!dissent || dissent.status !== STATE.ROUTED) {
+    throw new Error(
+      `cannot act on dissent in state ${dissent?.status} (must be routed first)`
+    );
   }
   return {
     ...dissent,
     action,
     status: STATE.ACTIONED,
+    title: String(title || ''),
     note,
     newCardIds,
     actionedAt: now ?? Date.now(),
@@ -117,7 +137,8 @@ export function act(dissent, action, { newCardIds = [], note = '', now } = {}) {
 }
 
 /**
- * Emit the loop-closing notification for contactable dissenters.
+ * Emit the loop-closing notification for contactable dissenters, composed
+ * exclusively via `packages/shared/loop.js` (`compose()`).
  *
  * Returns `null` if the dissent is not in `ACTIONED` state or if the expert
  * opted into `ANONYMOUS` (`contactable: false`), preventing accidental
@@ -128,20 +149,22 @@ export function notify(dissent, { now } = {}) {
   if (!dissent || dissent.status !== STATE.ACTIONED) return null;
   if (!dissent.contactable || !dissent.expert) return null;
 
-  const body = {
-    [ACTION.REWRITE]: 'You said the wording was wrong. It has been rewritten.',
-    [ACTION.SPLIT]: 'You said this was two risks. It has been split. Here are both.',
-    [ACTION.RETIRE]: 'You said this could not be resolved. It has been retired.',
-    [ACTION.RESOLVE_EARLY]: 'You said this had already happened. It has been resolved early.',
-  }[dissent.action];
+  const deepLinks = dissent.newCardIds.map((id) => `/c/${id}`);
+  const msg = compose(dissent.action, {
+    title: dissent.title || undefined,
+    count: dissent.newCardIds.length || undefined,
+    deepLinks,
+  });
 
   return {
     to: dissent.expert,
     expert: dissent.expert,
     type: 'dissent_actioned',
     dissentId: dissent.id,
-    body,
-    deepLinks: dissent.newCardIds.map((id) => `/c/${id}`),
+    kind: msg.kind,
+    body: msg.body,
+    deepLinks: msg.deepLinks,
+    honesty: msg.honesty,
     _next: { ...dissent, status: STATE.NOTIFIED, notifiedAt: now ?? Date.now() },
   };
 }
@@ -160,10 +183,10 @@ export function close(dissent, { reason = '', now } = {}) {
   };
 }
 
-/** Elapsed ms from creation to loop completion (notification or anonymous closure). */
+/** Elapsed ms from creation to loop completion, delegated to `packages/shared/loop.js`. */
 export function loopLatencyMs(dissent) {
   if (!dissent) return null;
   const end = dissent.notifiedAt ?? dissent.closedAt;
   if (end === undefined || end === null) return null;
-  return Math.max(0, end - dissent.createdAt);
+  return latency(dissent.createdAt, end);
 }

@@ -1,32 +1,52 @@
 # Benchmark — ACAPS, *Ground Truth*
 
-A ninety-second elicitation that turns each of ACAPS' own risk statements into a probability, without asking any expert to read more than one card — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
+A single-question elicitation card (designed for a ninety-second target budget on a phone) that turns each of ACAPS' own risk statements into a probability — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
 
-**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 91 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
+**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 98 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see [`BUILD.md`](BUILD.md). Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
 
 ```bash
-npm run verify     # 91 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
+npm run verify     # 98 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
 npm run ladder     # regenerates the three baseline figures from data/
 ```
 
 ---
 
-## Read in this order
+## Start here — code & runnable entrypoints
+
+| Entrypoint | What it is |
+|---|---|
+| [`BUILD.md`](BUILD.md) | **Build status, runnable commands, module table, and empirical audit findings.** |
+| [`packages/core/src/`](packages/core/src/) | Pure domain modules: [`scoring.js`](packages/core/src/scoring.js) (Brier + paired bootstrap), [`aggregate.js`](packages/core/src/aggregate.js) (pooling, intervals, ACAPS 5×5 bridge, static & temporal `releaseAggregate` differencing guards), [`gate.js`](packages/core/src/gate.js) (structural blockers vs calibrated `observable` warning), [`dispatch.js`](packages/core/src/dispatch.js) (weekly cap + dissent bypass), [`anonymity.js`](packages/core/src/anonymity.js) (3-level allowlist attribution + 9,000-slot / collision-free aliases). |
+| [`packages/benchmark/src/dissent.js`](packages/benchmark/src/dissent.js) | Strict 5-state dissent lifecycle (`open → routed → actioned → notified → closed`), wired to [`packages/shared/loop.js`](packages/shared/loop.js) (`compose()`, `latency()`) and `anonymity.js`. |
+| [`packages/shared/`](packages/shared/) | Integrity-checked shared spine (`card.js`, `validate.js`, `loop.js`, `a11y.js`). |
+| [`scripts/`](scripts/) | Reproducible audit & verification scripts: `ingest.py`, `measure-baseline.mjs`, `fit-baseline.mjs`, `gate-export.mjs`, `check-methodology.mjs`, `journey.mjs`, `numbers-gate.mjs`. |
+| [`mockups/benchmark-expert-flow.html`](mockups/benchmark-expert-flow.html) | Six-screen static mockup wired live to `anonymity.js` and `releaseAggregate()`. |
+| [`organiser/acaps/`](organiser/acaps/) | Canonical read-only ACAPS challenge brief, data dictionary, and risk methodology reference. |
+
+## Active submission & methodology documents
 
 | # | Document | What it is | Read time |
 |---|---|---|---|
-| 1 | [`design/BENCHMARK-blueprint.html`](design/BENCHMARK-blueprint.html) | **The build blueprint.** Architecture, schemas, dissent lifecycle, dispatch layer, scoring module, repo tree, build order, acceptance tests, pitch script. Sections 07–10 and 14–17 are ACAPS-specific. | 45 min |
-| 2 | [`research/market-landscape.html`](research/market-landscape.html) | **The market analysis.** Four layers, the nine ways this dies, the methods literature, and §08 (revised) on the UNICRI layer. | 40 min |
-| 3 | [`research/00-challenge-analysis.html`](research/00-challenge-analysis.html) | The original end-to-end read of the ACAPS challenge and its data. | 20 min |
-| 4 | [`research/02-repo-audit.html`](research/02-repo-audit.html) | What is actually in the ACAPS starter repo, file by file. | 15 min |
-| 5 | [`design/01-project-directions.html`](design/01-project-directions.html) | Fourteen possible directions, scored. Context for why Benchmark is shaped the way it is. | 20 min |
-| 6 | [`design/03-product-blueprint.html`](design/03-product-blueprint.html) | The earlier product design. **Partly superseded** by the blueprint — kept for the reasoning, and because the earlier framing had the Brier benchmark wrong. | 20 min |
-| 7 | [`planning/BENCHMARK-plan.html`](planning/BENCHMARK-plan.html) | The original planning document. Superseded by the blueprint; retained for the build-order reasoning. | 20 min |
-| 8 | [`planning/product-audit.html`](planning/product-audit.html) | The 17-finding audit of both products. §09 is the ACAPS audit and contains the finding that reshaped the pitch. | 25 min |
-| 9 | [`mockups/benchmark-expert-flow.html`](mockups/benchmark-expert-flow.html) | The expert flow, as a mockup. | 5 min |
-| 10 | [`design/04-adoption-review.md`](design/04-adoption-review.md) | **What ACAPS' own methodology tells us, and what we adopt.** Five adoptions, one correction to our weighting design, one refusal. | 14 min |
-| 11 | [`docs/01-one-pager.md`](docs/01-one-pager.md) | The submission one-pager. | 2 min |
-| 12 | [`docs/03-the-gap-to-real.md`](docs/03-the-gap-to-real.md) | **Read this before claiming it works.** | 10 min |
+| 1 | [`docs/01-one-pager.md`](docs/01-one-pager.md) | **The submission one-pager.** | 2 min |
+| 2 | [`docs/03-the-gap-to-real.md`](docs/03-the-gap-to-real.md) | **Read this before claiming it works.** Honest audit of statistical power, prospective trigger evaluation, and operational gaps. | 10 min |
+| 3 | [`docs/02-scoring-rules.md`](docs/02-scoring-rules.md) | The eight non-negotiable scoring and aggregation rules (`R1`–`R8`). | 4 min |
+| 4 | [`design/04-adoption-review.md`](design/04-adoption-review.md) | **What ACAPS' own methodology tells us, and what we adopt.** Five adoptions, one correction to our weighting design, one refusal. | 14 min |
+| 5 | [`design/BENCHMARK-blueprint.html`](design/BENCHMARK-blueprint.html) | **The build blueprint.** Architecture, schemas, dissent lifecycle, dispatch layer, scoring module, repo tree, acceptance tests. | 45 min |
+| 6 | [`research/market-landscape.html`](research/market-landscape.html) | **The market analysis.** Four layers, the nine ways this dies, the methods literature, and §08 on the UNICRI layer. | 40 min |
+
+<details>
+<summary><b>Archive — earlier working notes &amp; superseded drafts</b> (retained for audit trail)</summary>
+
+| Document | Note |
+|---|---|
+| [`research/00-challenge-analysis.html`](research/00-challenge-analysis.html) | Initial end-to-end read of the ACAPS challenge and its data. |
+| [`research/02-repo-audit.html`](research/02-repo-audit.html) | File-by-file audit of the ACAPS starter repo. |
+| [`design/01-project-directions.html`](design/01-project-directions.html) | Fourteen candidate directions scored. |
+| [`design/03-product-blueprint.html`](design/03-product-blueprint.html) | **Partly superseded** by `BENCHMARK-blueprint.html`. |
+| [`planning/BENCHMARK-plan.html`](planning/BENCHMARK-plan.html) | **Superseded** by `BENCHMARK-blueprint.html`; retained for build-order reasoning. |
+| [`planning/product-audit.html`](planning/product-audit.html) | 17-finding audit (§09 contains the ACAPS finding that reshaped the pitch). |
+
+</details>
 
 ---
 
@@ -43,9 +63,9 @@ npm run ladder     # regenerates the three baseline figures from data/
 
 ## The five design commitments
 
-1. A dissent state machine routes, actions and notifies contactable dissenters (while stripping IDs for `ANONYMOUS` dissenters), bypassing the weekly dispatch cap.
-2. Every score on screen has an interval beside it.
-3. The gate audits raw statements from the export without synthetic windows, rejecting every unwindowed or unmeasurable row with an explicit reason.
+1. A strict 5-state dissent machine (`open → routed → actioned → notified → closed`) composes notifications via `packages/shared/loop.js`, bypasses the weekly dispatch cap for contactable dissenters, and strips IDs for `ANONYMOUS` dissenters.
+2. Every score on screen has an interval beside it, and `releaseAggregate()` withholds live updates until Round-1 close or `≥ 3`-respondent cohorts so consecutive medians cannot be differenced.
+3. The gate separates hard structural blockers (`window`, `single`, `no_leak`, `condition`) from the lexical `observable` authoring warning (calibrated at **86.2%** warn precision across 50 labelled corpus items).
 4. Target budget of ninety seconds per recurring question card (`E3`), one thumb, phone-first (design budget, unmeasured until live user testing).
 5. Somebody can say "the bar is ACAPS' 0.2168, and our regression lost" without hesitating — and can show the two scripts that compute it.
 
@@ -56,10 +76,10 @@ npm run ladder     # regenerates the three baseline figures from data/
 ACAPS' second Must Have: each expert chooses their own level — known to ACAPS,
 pseudonymous to peers, or fully anonymous. Implemented in
 `packages/core/src/anonymity.js` with strict allowlist attribution, 9,000-slot /
-collision-free panel aliases, and two-tier small-cell suppression (`n ≥ 3`
+collision-free panel aliases, two-tier small-cell suppression (`n ≥ 3`
 analyst/panel view in `aggregate.js`; `PUBLIC.minCount = 10` for public
-regional/thematic rollups), held by `npm run gate:anonymity` in CI and 20 tests.
-See `BUILD.md`.
+regional/thematic rollups), and close/cohort release batching (`releaseAggregate`),
+held by `npm run gate:anonymity` in CI and 20 tests. See [`BUILD.md`](BUILD.md).
 
 ## What this is not
 

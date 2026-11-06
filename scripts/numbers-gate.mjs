@@ -21,8 +21,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { LADDER } from '../packages/core/src/scoring.js';
+import { gate, evaluateObservable } from '../packages/core/src/gate.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -138,6 +140,105 @@ for (const k of Object.keys(EXPECT)) {
 if (!failures) {
   console.log(
     `✓ counts match: ${counts.blocks} blocks / ${counts.resolved} resolved / ${counts.active} active / ${counts.triggers} triggers (${counts.unwrittenObjective}/${counts.scoredTriggers} without objective)`
+  );
+}
+
+// ── 4. live test counts vs README.md and BUILD.md (B5) ───────────────────────
+const TEST_MAP = [
+  ['packages/shared/', 'packages/shared/core.test.js'],
+  ['packages/core/src/scoring.js', 'packages/benchmark/test/scoring.test.js'],
+  ['packages/core/src/aggregate.js', 'packages/benchmark/test/aggregate.test.js'],
+  ['packages/core/src/gate.js', 'packages/benchmark/test/gate.test.js'],
+  ['packages/core/src/dispatch.js', 'packages/benchmark/test/dispatch.test.js'],
+  ['packages/core/src/anonymity.js', 'packages/benchmark/test/anonymity.test.js'],
+  ['packages/benchmark/src/dissent.js', 'packages/benchmark/test/dissent.test.js'],
+];
+
+const perModuleTests = new Map();
+let totalTests = 0;
+for (const [modLabel, relTest] of TEST_MAP) {
+  const full = path.join(ROOT, relTest);
+  if (!fs.existsSync(full)) {
+    fail(`missing test file ${relTest} mapped to ${modLabel}`);
+    continue;
+  }
+  const run = spawnSync(process.execPath, ['--test', full], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  const m = /^# tests (\d+)$/m.exec(run.stdout || '');
+  if (run.status !== 0 || !m) {
+    fail(`could not measure test count from ${relTest} (exit=${run.status})`);
+    continue;
+  }
+  const n = Number(m[1]);
+  perModuleTests.set(modLabel, n);
+  totalTests += n;
+}
+
+const readmeSrc = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+const buildSrc = fs.readFileSync(path.join(ROOT, 'BUILD.md'), 'utf8');
+
+for (const m of readmeSrc.matchAll(/\b(\d+)\s+tests\b/g)) {
+  const claimed = Number(m[1]);
+  const ctx = readmeSrc.slice(Math.max(0, m.index - 120), m.index + 40);
+  const want = /gate:anonymity/.test(ctx)
+    ? perModuleTests.get('packages/core/src/anonymity.js')
+    : totalTests;
+  if (claimed !== want) {
+    fail(`README.md claims "${m[0]}" in "${ctx.trim().replace(/\s+/g, ' ')}" — actual count is ${want}`);
+  }
+}
+
+const bannerMatch = /✓\s*(\d+)\s+unit tests pass/.exec(buildSrc);
+if (!bannerMatch || Number(bannerMatch[1]) !== totalTests) {
+  fail(`BUILD.md banner claims ${bannerMatch?.[1] ?? 'missing'} unit tests — actual suite has ${totalTests}`);
+}
+
+for (const [modLabel, want] of perModuleTests.entries()) {
+  const escaped = modLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rowRe = new RegExp(`\\|\\s*\`${escaped}\`\\s*\\|[^\\n]*?(\\d+)\\s+tests`);
+  const rowMatch = rowRe.exec(buildSrc);
+  if (!rowMatch) {
+    fail(`BUILD.md module table has no test count for ${modLabel}`);
+  } else if (Number(rowMatch[1]) !== want) {
+    fail(`BUILD.md claims ${rowMatch[1]} tests for ${modLabel} — actual file has ${want}`);
+  }
+}
+
+// ── 5. gate export & 50-item observable precision vs BUILD.md / README.md ────
+const titledBlocks = blocks.filter((b) => b.title);
+const gateRuns = titledBlocks.map((b) => gate({ statement: b.title }));
+const textClean = gateRuns.filter((g) =>
+  g.results.filter((r) => r.check !== 'window').every((r) => r.ok)
+).length;
+const textBlocked = gateRuns.filter((g) =>
+  g.blockers.some((b) => b.check !== 'window')
+).length;
+const obsWarnCount = gateRuns.filter((g) =>
+  g.warnings.some((w) => w.check === 'observable')
+).length;
+const labelled50 = JSON.parse(
+  fs.readFileSync(
+    path.join(ROOT, 'packages/benchmark/test/fixtures/observable-labelled-50.json'),
+    'utf8'
+  )
+);
+const obsEval = evaluateObservable(labelled50);
+const wantWarnPct = `${(obsEval.warnPrecision * 100).toFixed(1)}%`;
+
+if (!buildSrc.includes(`${textClean}/139`) || !buildSrc.includes(`${textBlocked}/139`) || !buildSrc.includes(`${obsWarnCount}/139`)) {
+  fail(
+    `BUILD.md gate counts drifted — measured ${textClean}/139 clean, ${textBlocked}/139 structural blockers, ${obsWarnCount}/139 observable warnings`
+  );
+}
+if (!buildSrc.includes(wantWarnPct) || !readmeSrc.includes(wantWarnPct)) {
+  fail(`prose observable warn precision drifted — measured ${wantWarnPct} on n=${obsEval.n}`);
+}
+
+if (!failures) {
+  console.log(
+    `✓ prose test & gate counts match: ${totalTests} total tests (${[...perModuleTests.values()].join('+')} across ${TEST_MAP.length} suites), ${wantWarnPct} observable warn precision (n=${obsEval.n})`
   );
 }
 

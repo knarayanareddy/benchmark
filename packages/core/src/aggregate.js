@@ -47,8 +47,14 @@ export const METHODS = Object.freeze({
 
 export const DEFAULT_METHOD = METHODS.MEDIAN;
 export const MIN_PANEL_SIZE = 3;
+export const MIN_COHORT_STEP = 3;
 export const MIN_SEEDS_FOR_WEIGHTING = 10;
 export const MAX_ROUNDS = 2;
+
+export const RELEASE_POLICIES = Object.freeze({
+  ON_CLOSE: 'on_close',
+  BATCH: 'batch',
+});
 
 /**
  * Uninformative coin-flip Brier benchmark on binary outcomes:
@@ -221,14 +227,17 @@ export function extremise(p, { d = 1.0 } = {}) {
  * Validate and deduplicate Round-1 / Round-2 estimates per Rule R6.
  *
  * Keeps each expert's latest round (up to MAX_ROUNDS = 2) and rejects
- * duplicate submissions by the same expert within the same round. Unrecognised
- * anonymity levels fail closed to ANONYMOUS, matching anonymity.js.
+ * duplicate submissions by the same expert within the same round. Supports
+ * card-scoped unlinkable `ballotToken` keys for ANONYMOUS submissions so
+ * transport layers can deduplicate or update Round-2 anonymous ballots without
+ * retaining `expertId`. Unrecognised anonymity levels fail closed to ANONYMOUS.
  */
-export function deduplicateRounds(estimates) {
+export function deduplicateRounds(estimates, opts = {}) {
   if (!Array.isArray(estimates)) {
     throw new TypeError('estimates must be an array');
   }
-  const byExpert = new Map();
+  const requireBallotKey = Boolean(opts.requireBallotKey);
+  const byKey = new Map();
   const unkeyed = [];
   let maxRound = 1;
 
@@ -258,26 +267,41 @@ export function deduplicateRounds(estimates) {
       ? String(rawId).trim()
       : null;
 
-    if (expertId === null) {
+    const rawToken = raw.ballotToken;
+    const ballotToken =
+      rawToken !== undefined && rawToken !== null && String(rawToken).trim() !== ''
+        ? String(rawToken).trim()
+        : null;
+
+    const dedupeKey =
+      expertId !== null ? `id:${expertId}` : ballotToken !== null ? `ballot:${ballotToken}` : null;
+
+    if (dedupeKey === null) {
+      if (requireBallotKey) {
+        throw new Error(
+          `estimates[${i}] lacks both expertId and ballotToken (required when requireBallotKey=true)`
+        );
+      }
       if (round > 1) {
-        throw new Error(`estimates[${i}] is round ${round} without an expertId to replace round 1`);
+        throw new Error(`estimates[${i}] is round ${round} without an expertId or ballotToken to replace round 1`);
       }
       unkeyed.push({ expertId: null, p: raw.p, round, level });
       continue;
     }
 
-    const entry = byExpert.get(expertId) || {};
+    const entry = byKey.get(dedupeKey) || {};
     if (entry[round] !== undefined) {
-      throw new Error(`duplicate estimate from expert "${expertId}" in round ${round}`);
+      const label = expertId !== null ? `expert "${expertId}"` : `ballot "${ballotToken}"`;
+      throw new Error(`duplicate estimate from ${label} in round ${round}`);
     }
     entry[round] = { expertId, p: raw.p, round, level };
-    byExpert.set(expertId, entry);
+    byKey.set(dedupeKey, entry);
   }
 
   const active = [];
   let revisedCount = 0;
   let round2Count = 0;
-  for (const rounds of byExpert.values()) {
+  for (const rounds of byKey.values()) {
     if (rounds[2] !== undefined) {
       round2Count++;
       if (rounds[1] !== undefined && rounds[2].p !== rounds[1].p) revisedCount++;
@@ -557,7 +581,9 @@ export function aggregate(estimates, opts = {}) {
   }
 
   const parsedImpact = opts.impact === undefined ? null : parseImpact(opts.impact);
-  const { active, roundsUsed, round2Count, revisedCount } = deduplicateRounds(estimates);
+  const { active, roundsUsed, round2Count, revisedCount } = deduplicateRounds(estimates, {
+    requireBallotKey: opts.requireBallotKey,
+  });
   const n = active.length;
 
   // Fail closed when panel size is too small to hide individual positions.
@@ -684,6 +710,132 @@ export function aggregate(estimates, opts = {}) {
     out.acaps = acapsRiskLevel(out, parsedImpact);
   }
   return out;
+}
+
+/**
+ * Temporal-differencing release gate around `aggregate()`.
+ *
+ * A static `n >= 3` floor stops one-shot subtraction, NOT sequential
+ * observation: if a view refreshes as `n = 3 -> 4 -> 5`, diffing consecutive
+ * medians or sample extremes (`min`/`max`) can isolate a single newcomer's
+ * probability. `releaseAggregate()` enforces two release policies:
+ *
+ *   - `RELEASE_POLICIES.ON_CLOSE` (default — Round-1 -> Round-2 reveal):
+ *     withholds all numerical statistics while `closed === false`; publishes
+ *     once when `closed === true` (subject to `n >= effectiveMin` and pinning
+ *     `previousSnapshot` if a prior snapshot existed within `< MIN_COHORT_STEP`
+ *     respondents).
+ *   - `RELEASE_POLICIES.BATCH` (long-horizon live triggers):
+ *     publishes the first snapshot once `n >= effectiveMin` with exact sample
+ *     extremes masked (`min: null, max: null, spread: null`), and pins
+ *     `previousSnapshot` (`stale: true, releaseHeld: true`) until at least
+ *     `minStep >= MIN_COHORT_STEP` (3) additional respondents arrive.
+ */
+export function releaseAggregate(estimates, opts = {}) {
+  const policy = opts.policy === undefined ? RELEASE_POLICIES.ON_CLOSE : opts.policy;
+  if (!Object.values(RELEASE_POLICIES).includes(policy)) {
+    throw new RangeError(`unknown release policy ${JSON.stringify(policy)}`);
+  }
+
+  const closed = Boolean(opts.closed);
+  const requestedStep = opts.minStep === undefined ? MIN_COHORT_STEP : opts.minStep;
+  if (!Number.isInteger(requestedStep) || requestedStep < 1) {
+    throw new RangeError(`minStep must be a positive integer, got ${JSON.stringify(requestedStep)}`);
+  }
+  const minStep = Math.max(MIN_COHORT_STEP, requestedStep);
+  const prev = opts.previousSnapshot && !opts.previousSnapshot.suppressed ? opts.previousSnapshot : null;
+
+  const base = aggregate(estimates, opts);
+  if (base.suppressed) {
+    return {
+      ...base,
+      policy,
+      closed,
+      releaseHeld: true,
+      stale: false,
+      heldBackCount: 0,
+      neededForNextBatch: Math.max(0, base.needed - base.n),
+    };
+  }
+
+  if (prev !== null && typeof prev.n === 'number') {
+    if (base.n < prev.n) {
+      throw new RangeError(
+        `panel size ${base.n} regressed below previousSnapshot.n (${prev.n})`
+      );
+    }
+    const delta = base.n - prev.n;
+    if (delta < minStep) {
+      return {
+        ...prev,
+        policy,
+        closed,
+        releaseHeld: delta > 0,
+        stale: delta > 0,
+        heldBackCount: delta,
+        neededForNextBatch: delta === 0 ? minStep : minStep - delta,
+        reason:
+          delta > 0
+            ? `holding ${delta} new response(s) until cohort step ${minStep} is reached to prevent sequential differencing`
+            : null,
+      };
+    }
+  }
+
+  if (policy === RELEASE_POLICIES.ON_CLOSE && !closed) {
+    const withheld = {
+      suppressed: true,
+      estimate: null,
+      lo: null,
+      hi: null,
+      q25: null,
+      q75: null,
+      iqr: null,
+      min: null,
+      max: null,
+      spread: null,
+      n: base.n,
+      needed: base.needed,
+      visibility: base.visibility,
+      method: base.method,
+      weightsMode: null,
+      sharedSeeds: 0,
+      extremised: false,
+      extremiseD: 1.0,
+      roundsUsed: 0,
+      round2Count: 0,
+      revisedCount: 0,
+      contested: null,
+      outlierCount: null,
+      acaps: base.acaps !== null ? acapsRiskLevel({ suppressed: true }, base.acaps.impact) : null,
+      policy,
+      closed: false,
+      releaseHeld: true,
+      stale: false,
+      heldBackCount: base.n,
+      neededForNextBatch: 0,
+      reason:
+        'round is still open; policy "on_close" withholds interim panel statistics to prevent sequential differencing',
+    };
+    return withheld;
+  }
+
+  // In live BATCH mode (before round close), mask exact sample extremes so a
+  // newly arriving outlier cannot be read off `min` or `max` even across a
+  // 3-person cohort; bootstrap [lo, hi] and [q25, q75] remain intact.
+  const maskExtremes = policy === RELEASE_POLICIES.BATCH && !closed;
+  return {
+    ...base,
+    min: maskExtremes ? null : base.min,
+    max: maskExtremes ? null : base.max,
+    spread: maskExtremes ? null : base.spread,
+    policy,
+    closed,
+    releaseHeld: false,
+    stale: false,
+    heldBackCount: 0,
+    neededForNextBatch: minStep,
+  };
 }
 
 /**

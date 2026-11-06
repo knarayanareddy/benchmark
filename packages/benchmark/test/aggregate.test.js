@@ -5,11 +5,14 @@ import {
   METHODS,
   DEFAULT_METHOD,
   MIN_PANEL_SIZE,
+  MIN_COHORT_STEP,
   MIN_SEEDS_FOR_WEIGHTING,
   MAX_ROUNDS,
+  RELEASE_POLICIES,
   SKILL_CUTOFF_BRIER,
   ACAPS_MATRIX,
   aggregate,
+  releaseAggregate,
   deduplicateRounds,
   seedWeights,
   extremise,
@@ -727,4 +730,115 @@ test('end-to-end backtest integration: aggregate() outputs pipe cleanly into boo
   assert.equal(cmp.n, 104);
   assert.ok(cmp.lo <= cmp.diff && cmp.diff <= cmp.hi);
 });
+
+// ── 7. Temporal differencing guard & anonymous ballot-token dedupe (U4) ─────
+
+test('releaseAggregate() prevents sequential temporal differencing via on_close and >=3 cohort batching', () => {
+  assert.equal(MIN_COHORT_STEP, 3);
+  const p3 = mkPanel([0.50, 0.60, 0.70]);
+  const p4 = mkPanel([0.50, 0.60, 0.70, 0.90]);
+  const p5 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65]);
+  const p6 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65, 0.55]);
+
+  // 1. Default policy is ON_CLOSE: interim snapshots while open are suppressed
+  const openHold = releaseAggregate(p4, { closed: false, impact: 4 });
+  assert.equal(openHold.policy, RELEASE_POLICIES.ON_CLOSE);
+  assert.equal(openHold.suppressed, true);
+  assert.equal(openHold.releaseHeld, true);
+  assert.equal(openHold.estimate, null);
+  assert.equal(openHold.acaps.suppressed, true);
+
+  // Once the round closes, the full aggregate releases cleanly
+  const closedSnap = releaseAggregate(p4, { closed: true, impact: 4 });
+  assert.equal(closedSnap.suppressed, false);
+  assert.equal(closedSnap.releaseHeld, false);
+  assert.ok(Math.abs(closedSnap.estimate - 0.65) < 1e-12);
+  assert.equal(closedSnap.max, 0.90);
+
+  // 2. Live BATCH mode: releases at n=3 with min/max/spread masked, then pins
+  //    previousSnapshot across n=4 and n=5 (blocking 1- and 2-person deltas)
+  //    until n=6 clears MIN_COHORT_STEP=3 (even if caller passes minStep: 1).
+  const snap3 = releaseAggregate(p3, { policy: RELEASE_POLICIES.BATCH, closed: false, minStep: 1 });
+  assert.equal(snap3.suppressed, false);
+  assert.equal(snap3.estimate, 0.60);
+  assert.equal(snap3.min, null, 'live batch mode masks sample min to prevent extreme-value differencing');
+  assert.equal(snap3.max, null, 'live batch mode masks sample max to prevent extreme-value differencing');
+  assert.equal(snap3.spread, null);
+
+  const snap4 = releaseAggregate(p4, {
+    policy: RELEASE_POLICIES.BATCH,
+    closed: false,
+    minStep: 1, // floor must clamp to MIN_COHORT_STEP = 3
+    previousSnapshot: snap3,
+  });
+  assert.equal(snap4.estimate, snap3.estimate, '4th answer must not shift released median');
+  assert.equal(snap4.n, 3, 'released count stays pinned at previous cohort');
+  assert.equal(snap4.stale, true);
+  assert.equal(snap4.releaseHeld, true);
+  assert.equal(snap4.heldBackCount, 1);
+  assert.equal(snap4.neededForNextBatch, 2);
+
+  const snap5 = releaseAggregate(p5, {
+    policy: RELEASE_POLICIES.BATCH,
+    closed: false,
+    previousSnapshot: snap3,
+  });
+  assert.equal(snap5.n, 3);
+  assert.equal(snap5.heldBackCount, 2);
+  assert.equal(snap5.neededForNextBatch, 1);
+
+  const snap6 = releaseAggregate(p6, {
+    policy: RELEASE_POLICIES.BATCH,
+    closed: false,
+    previousSnapshot: snap3,
+  });
+  assert.equal(snap6.n, 6, 'new cohort releases once >=3 additional respondents arrive');
+  assert.equal(snap6.stale, false);
+  assert.equal(snap6.releaseHeld, false);
+  assert.equal(snap6.heldBackCount, 0);
+  assert.equal(snap6.max, null);
+
+  // Regressing panel size or invalid policy throws explicitly
+  assert.throws(
+    () => releaseAggregate(p3, { policy: RELEASE_POLICIES.BATCH, previousSnapshot: snap6 }),
+    /regressed/
+  );
+  assert.throws(() => releaseAggregate(p3, { policy: 'every_click' }), /unknown release policy/);
+});
+
+test('card-scoped ballotToken deduplicates anonymous Round-1/Round-2 ballots without retaining expertId', () => {
+  const ballots = [
+    { ballotToken: 'tok_a', p: 0.30, round: 1, level: LEVELS.ANONYMOUS },
+    { ballotToken: 'tok_a', p: 0.55, round: 2, level: LEVELS.ANONYMOUS }, // replaces round 1
+    { ballotToken: 'tok_b', p: 0.60, round: 1, level: LEVELS.ANONYMOUS },
+    { ballotToken: 'tok_c', p: 0.70, round: 1, level: LEVELS.ANONYMOUS },
+  ];
+  const deduped = deduplicateRounds(ballots, { requireBallotKey: true });
+  assert.equal(deduped.active.length, 3);
+  assert.equal(deduped.round2Count, 1);
+  assert.equal(deduped.revisedCount, 1);
+  assert.ok(deduped.active.every((x) => x.expertId === null), 'expertId must stay null on anonymous ballots');
+
+  const agg = aggregate(ballots, { requireBallotKey: true });
+  assert.equal(agg.suppressed, false);
+  assert.equal(agg.estimate, 0.60);
+  assert.ok(!JSON.stringify(agg).includes('tok_'), 'ballotToken must never leak into aggregate() output');
+
+  // Duplicate ballotToken in the same round throws
+  assert.throws(
+    () =>
+      deduplicateRounds([
+        { ballotToken: 'tok_dup', p: 0.4, round: 1, level: LEVELS.ANONYMOUS },
+        { ballotToken: 'tok_dup', p: 0.5, round: 1, level: LEVELS.ANONYMOUS },
+      ]),
+    /duplicate estimate from ballot/
+  );
+
+  // requireBallotKey rejects completely unkeyed estimates so anonymous ballot stuffing cannot slip in
+  assert.throws(
+    () => aggregate([{ p: 0.5 }, { p: 0.6 }, { p: 0.7 }], { requireBallotKey: true }),
+    /lacks both expertId and ballotToken/
+  );
+});
+
 
