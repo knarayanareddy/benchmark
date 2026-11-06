@@ -1,10 +1,10 @@
 # BUILD.md — start here
 
-**Scaffolded and verified, not finished.** The scoring, gate and dispatch logic is written and tested against the real export; the interface is not written.
+**Scaffolded and verified, not finished.** The scoring, aggregation, gate and dispatch logic is written and tested against the real export; the interface is not written.
 
 ```
 $ npm run verify
-✓ 58 unit tests pass
+✓ 83 unit tests pass
 ✓ gate runs on the real export: 139 blocks, 19 rejected (13.7%)
 ✓ dissent loop closes in <60s
 ```
@@ -17,6 +17,7 @@ $ npm run verify
 |---|---|---|---|
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
 | Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 9 tests |
+| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + intervals, ≥10-seed Brier skill gate, small-panel suppression, ACAPS 5×5 bridge, 25 tests |
 | The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 7 tests, **run on the real export** |
 | Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, dissent priority, health, 6 tests |
 | Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 expert-controlled levels, fail-closed attribution, 18 tests |

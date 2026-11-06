@@ -14,7 +14,7 @@ python3 scripts/ingest.py && npm run verify
 
 ## Where logic goes
 
-- **Pure, testable → `packages/core/src/`** — scoring, gate, dispatch. Reviewed hardest.
+- **Pure, testable → `packages/core/src/`** — scoring, aggregation, gate, dispatch, anonymity. Reviewed hardest.
 - **Stateful flows → `packages/benchmark/src/`** — dissent lifecycle.
 - **Data → `data/risk-radar.json`**, produced only by `scripts/ingest.py`.
 
