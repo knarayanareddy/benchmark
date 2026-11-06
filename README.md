@@ -2,10 +2,10 @@
 
 A ninety-second elicitation that turns each of ACAPS' own risk statements into a probability, without asking any expert to read more than one card — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
 
-**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 35 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
+**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 50 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
 
 ```bash
-npm run verify     # 35 tests, privacy gate, numbers gate, gate on the real export, baselines, dissent journey
+npm run verify     # 50 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
 npm run ladder     # regenerates the three baseline figures from data/
 ```
 
@@ -50,6 +50,13 @@ npm run ladder     # regenerates the three baseline figures from data/
 5. Somebody can say "the bar is ACAPS' 0.2168, and our regression lost" without hesitating — and can show the two scripts that compute it.
 
 ---
+
+## Expert-controlled anonymity — built
+
+ACAPS' second Must Have: each expert chooses their own level — known to ACAPS,
+pseudonymous to peers, or fully anonymous. Implemented in
+`packages/core/src/anonymity.js` with the copy the expert actually reads, held by
+`npm run gate:anonymity` in CI and 15 tests. See `BUILD.md`.
 
 ## What this is not
 

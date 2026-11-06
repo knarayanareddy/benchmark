@@ -55,5 +55,6 @@ The study design ships with the product. The most recent systematic review of di
 | **~17%** | Response rate when ACAPS surveyed 60+ experts (10 replied) — the behaviour baseline |
 | **73%** | Share of scored triggers with no written resolution criterion (101 of 139) |
 | **0.2168** | ACAPS' own probability rating — **the bar to beat** |
+| 0.2171 | *check:* the same rating read off ACAPS' published percentage bands (midpoints). Differs by 0.0003 — the bar does not move with the reading. |
 | 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar** |
 | **0.04–0.05** | Standard error on a Brier score at this n |

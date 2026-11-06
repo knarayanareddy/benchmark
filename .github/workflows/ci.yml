@@ -16,6 +16,8 @@ jobs:
         run: node --test packages/shared/core.test.js packages/benchmark/test/
       - name: Privacy gate
         run: node scripts/gate-privacy.mjs
+      - name: Anonymity Must Have
+        run: node scripts/gate-anonymity.mjs
       - name: Ingest the real export
         run: python3 scripts/ingest.py
       - name: Check the export against ACAPS' published 5x5

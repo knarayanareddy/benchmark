@@ -155,9 +155,10 @@
           <h2 class="q">How anonymous do you want to be?</h2>
           <p class="provenance">You can change this at any time. Changing it applies to everything not yet published.</p>
 
-          <div class="opt"><b>Known to ACAPS</b><br><span style="font-size:12px;color:var(--muted)">ACAPS can see this came from you. Nobody else, ever. We can follow up.</span></div>
-          <div class="opt"><b>Pseudonymous to peers</b><br><span style="font-size:12px;color:var(--muted)">ACAPS knows it's you. Other panelists see "Expert B". The public sees nothing.</span></div>
-          <div class="opt"><b>Fully anonymous</b><br><span style="font-size:12px;color:var(--muted)">ACAPS does not know this came from you — the link is destroyed on receipt. We cannot follow up, and cannot credit you. That is the trade.</span></div>
+          <div id="anon-options">
+            <noscript><div class="opt">Known to ACAPS — ACAPS can see this came from you. Nobody else, ever.</div></noscript>
+          </div>
+          <div id="anon-detail" style="display:none"></div>
           <div class="skipopt">Nothing is recorded until you choose.</div>
           <div class="cta" style="margin-top:auto">Continue</div>
         </div>
@@ -307,5 +308,55 @@
   </footer>
 
 </div>
+
+<style>
+  #anon-options .opt { cursor: pointer; }
+  #anon-options .opt.sel { border-color: #8b1a1a; box-shadow: 0 0 0 1px #8b1a1a inset; }
+  #anon-options .opt .nm { color: var(--muted); font-size: 12px; }
+  #anon-detail { margin-top: 8px; padding: 10px 12px; border-left: 2px solid #8b1a1a;
+                 background: #fff8f7; font-size: 12px; line-height: 1.5; }
+  #anon-detail b { display: block; margin-bottom: 3px; }
+</style>
+<script type="module">
+  // Rendered from packages/core/src/anonymity.js so the screen the jury sees and
+  // the model that enforces the promise cannot drift apart. If the served path
+  // 404s (file opened directly, no server), the static noscript copy stands.
+  import { LEVELS, LEVEL_COPY, DEFAULT_LEVEL } from '../packages/core/src/anonymity.js';
+
+  const box = document.getElementById('anon-options');
+  const detail = document.getElementById('anon-detail');
+  const order = [LEVELS.IDENTIFIED, LEVELS.PSEUDONYMOUS, LEVELS.ANONYMOUS];
+
+  box.innerHTML = order.map((lvl) => {
+    const c = LEVEL_COPY[lvl];
+    const badge = lvl === DEFAULT_LEVEL ? ' <span class="nm">· recommended</span>' : '';
+    return `<div class="opt" data-level="${lvl}" role="button" tabindex="0">
+      <b>${c.label}</b>${badge}<br>
+      <span style="font-size:12px;color:var(--muted)">${c.toPeers}</span>
+    </div>`;
+  }).join('');
+
+  function select(lvl) {
+    for (const el of box.querySelectorAll('.opt')) el.classList.toggle('sel', el.dataset.level === lvl);
+    const c = LEVEL_COPY[lvl];
+    detail.style.display = 'block';
+    detail.innerHTML =
+      `<b>${c.label} — what this means</b>
+       <div><strong>ACAPS sees:</strong> ${c.toAcaps}</div>
+       <div><strong>Other panellists see:</strong> ${c.toPeers}</div>
+       <div style="margin-top:6px;color:#8b1a1a">${c.warn}</div>`;
+  }
+
+  box.addEventListener('click', (e) => {
+    const el = e.target.closest('.opt');
+    if (el) select(el.dataset.level);
+  });
+  box.addEventListener('keydown', (e) => {
+    const el = e.target.closest('.opt');
+    if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(el.dataset.level); }
+  });
+
+  select(DEFAULT_LEVEL);
+</script>
 </body>
 </html>

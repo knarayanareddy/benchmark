@@ -80,10 +80,14 @@ export function mount(d, { onOutcome, doc = globalThis.document } = {}) {
   };
   const finish = (o) => { if (outcome === 'timeout') outcome = o; close(); };
 
+  // Report BEFORE acting. A primary action is usually a navigation, and a
+  // navigation that unloads the page swallows both the outcome callback and the
+  // counter beacon — which silently deletes the one number the whole product is
+  // measured on. The order here is load-bearing, not stylistic.
   const p = root.querySelector('[data-act="primary"]');
-  if (p) p.addEventListener('click', () => { if (d.primary.onSelect) d.primary.onSelect(); finish('primary'); });
+  if (p) p.addEventListener('click', () => { finish('primary'); if (d.primary.onSelect) d.primary.onSelect(); });
   const s = root.querySelector('[data-act="secondary"]');
-  if (s) s.addEventListener('click', () => { if (d.secondary.onSelect) d.secondary.onSelect(); finish('secondary'); });
+  if (s) s.addEventListener('click', () => { finish('secondary'); if (d.secondary.onSelect) d.secondary.onSelect(); });
   const x = root.querySelector('[data-act="dismiss"]');
   if (x) x.addEventListener('click', () => finish('dismiss'));
 

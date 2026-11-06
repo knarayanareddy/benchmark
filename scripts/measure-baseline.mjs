@@ -32,7 +32,29 @@ if (!fs.existsSync(file)) {
 }
 
 const blocks = JSON.parse(fs.readFileSync(file, 'utf8'));
-const SCALE = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
+
+// ACAPS publishes the percentage bands behind their five-point scale in
+// docs/references/acaps-risk-methodology-infographic.png:
+//   Very Low 0-20 · Low 21-40 · Medium 41-60 · High 61-80 · Very High 81-100
+// We use the band midpoint. This is their mapping, not our guess — an earlier
+// revision divided the ordinal 1-5 by 5, which put "Medium" at 0.60 when their
+// own band says 41-60%. The two readings differ by 0.0003 Brier, so nothing
+// downstream moves, but the midpoint is the one that can be defended from a
+// document in this repo.
+const BANDS = {
+  'Very Low': [0, 20],
+  Low: [21, 40],
+  Medium: [41, 60],
+  High: [61, 80],
+  'Very High': [81, 100],
+};
+const SCALE = Object.fromEntries(
+  Object.entries(BANDS).map(([k, [a, b]]) => [k, (a + b) / 200])
+);
+// The adopted reading stays the ordinal n/5 (0.2168) because that is what
+// data/baseline-fit.json and every document in this repo quote. The band
+// midpoint is reported alongside it so the difference is visible, not hidden.
+const ORDINAL = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 
 const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
 const baseRate = resolved.reduce((a, b) => a + b.outcome, 0) / resolved.length;
@@ -43,7 +65,7 @@ const fmt = (r) =>
 // ── the adopted reading ────────────────────────────────────────────────────
 const adopted = resolved.map((b) => ({
   id: b.id,
-  p: SCALE[b.probability] ? SCALE[b.probability] / 5 : baseRate,
+  p: ORDINAL[b.probability] ? ORDINAL[b.probability] / 5 : baseRate,
   y: b.outcome,
 }));
 
@@ -66,9 +88,10 @@ calibration(adopted, 5).forEach((b) =>
 // ── the readings that do NOT reproduce, kept visible ───────────────────────
 console.log('\nother readings of "ACAPS as a forecast" (not adopted, for completeness):');
 const variants = [
-  ['drop blank Probability', resolved.filter((b) => SCALE[b.probability]).map((b) => ({ p: SCALE[b.probability] / 5, y: b.outcome }))],
-  ['blank Probability = 0.5', resolved.map((b) => ({ p: SCALE[b.probability] ? SCALE[b.probability] / 5 : 0.5, y: b.outcome }))],
-  ['Probability / 6', resolved.map((b) => ({ p: SCALE[b.probability] ? SCALE[b.probability] / 6 : baseRate, y: b.outcome }))],
+  ['band midpoint (their published %s)', resolved.map((b) => ({ p: SCALE[b.probability] ?? baseRate, y: b.outcome }))],
+  ['drop blank Probability', resolved.filter((b) => ORDINAL[b.probability]).map((b) => ({ p: ORDINAL[b.probability] / 5, y: b.outcome }))],
+  ['blank Probability = 0.5', resolved.map((b) => ({ p: ORDINAL[b.probability] ? ORDINAL[b.probability] / 5 : 0.5, y: b.outcome }))],
+  ['band lower edge', resolved.map((b) => { const n = BANDS[b.probability]; return { p: n ? n[0] / 100 : baseRate, y: b.outcome }; })],
   ['Intensity of hazard / 5', resolved.filter((b) => Number(b.intensity)).map((b) => ({ p: Number(b.intensity) / 5, y: b.outcome }))],
   ['Risk Level Low/Med/High /3', resolved.filter((b) => ['Low', 'Medium', 'High'].includes(b.riskLevel)).map((b) => ({ p: { Low: 1, Medium: 2, High: 3 }[b.riskLevel] / 3, y: b.outcome }))],
 ];

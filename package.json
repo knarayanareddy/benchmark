@@ -12,7 +12,7 @@
     "test": "node --test packages/shared/core.test.js packages/*/test/",
     "backtest": "node scripts/backtest.mjs",
     "gate:export": "node scripts/gate-export.mjs",
-    "verify": "node scripts/check-spine.mjs && npm run test && npm run gate:privacy && npm run gate:numbers && node scripts/gate-export.mjs && node scripts/check-methodology.mjs && node scripts/measure-baseline.mjs && node scripts/journey.mjs",
+    "verify": "node scripts/check-spine.mjs && npm run test && npm run gate:anonymity && npm run gate:privacy && npm run gate:numbers && node scripts/gate-export.mjs && node scripts/check-methodology.mjs && node scripts/measure-baseline.mjs && node scripts/journey.mjs",
     "test:core": "node --test packages/shared/core.test.js",
     "gate:privacy": "node scripts/gate-privacy.mjs",
     "baseline": "node scripts/measure-baseline.mjs",
@@ -20,6 +20,7 @@
     "ladder": "node scripts/measure-baseline.mjs && node scripts/fit-baseline.mjs",
     "check:method": "node scripts/check-methodology.mjs",
     "gate:numbers": "node scripts/numbers-gate.mjs",
-    "check:spine": "node scripts/check-spine.mjs"
+    "check:spine": "node scripts/check-spine.mjs",
+    "gate:anonymity": "node scripts/gate-anonymity.mjs"
   }
 }

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_metadata/
+
+# IDE and AI tools
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node (if teams use JS/TS)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Data artifacts (keep original data, ignore generated)
+*.tmp
+*.bak
+
+# Secrets
+.env
+.env.local
+*.key
+*.pem
