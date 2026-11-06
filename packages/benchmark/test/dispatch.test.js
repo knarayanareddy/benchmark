@@ -34,6 +34,27 @@ test('dissent feedback is never suppressed by the cap', () => {
   const history = Array.from({ length: 3 }, () => ({ type: TYPES.new_statement, expert: 'e1' }));
   const out = dispatch([{ type: TYPES.dissent_actioned, card, expert: 'e1' }], { perWeek: 3 }, history);
   assert.equal(out[0].decision, 'send');
+
+  // Also verify string type ('dissent_actioned') and `to` key as emitted by dissent.js notify(),
+  // plus ensuring historical 'dissent_actioned' items never consume weekly cap slots.
+  const stringHistory = [
+    { type: 'dissent_actioned', to: 'e1' },
+    { type: 'dissent_actioned', expert: 'e1' },
+    { type: TYPES.new_statement, expert: 'e1' },
+    { type: TYPES.new_statement, expert: 'e1' },
+  ];
+  const fromNotifyShape = dispatch(
+    [
+      { type: 'dissent_actioned', to: 'e1', body: 'Split.' },
+      { type: TYPES.new_statement, card, expert: 'e1' },
+      { type: TYPES.new_statement, card, expert: 'e1' },
+    ],
+    { perWeek: 3 },
+    stringHistory
+  );
+  assert.equal(fromNotifyShape[0].decision, 'send', 'string dissent_actioned must bypass cap');
+  assert.equal(fromNotifyShape[1].decision, 'send', 'prior dissent_actioned history must not consume cap (2/3 used -> 3/3)');
+  assert.equal(fromNotifyShape[2].decision, 'defer', 'fourth regular notification defers at cap');
 });
 
 test('dissent feedback outranks everything else', () => {

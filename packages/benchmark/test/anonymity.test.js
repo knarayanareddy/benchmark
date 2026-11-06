@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  LEVELS, DEFAULT_LEVEL, LEVEL_COPY,
-  resolveLevel, aliasFor, attribute, leaksBy, publicable, PUBLIC,
+  LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
+  resolveLevel, aliasFor, panelAliases, attribute, leaksBy, publicable, PUBLIC,
 } from '../../core/src/anonymity.js';
 
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
@@ -22,7 +22,7 @@ test('pseudonymous attribution gives a stable alias and drops the name', () => {
   const a = attribute(A, LEVELS.PSEUDONYMOUS);
   const b = attribute(A, LEVELS.PSEUDONYMOUS);
   assert.equal(a.by, b.by, 'the alias must be stable across contributions');
-  assert.match(a.by, /^Analyst \d\d$/);
+  assert.match(a.by, /^Analyst \d{4}$/);
   assert.equal(a.name, undefined);
   assert.equal(a.expertId, undefined);
 });
@@ -139,3 +139,54 @@ test('an unrecognised level fails closed, not open', () => {
   assert.equal(out.country, undefined);
   assert.equal(out.at, undefined);
 });
+
+test('attribute() enforces an allowlist — email, IP, role and org never leak at any level', () => {
+  const rich = {
+    expertId: 'e-99',
+    name: 'Amina Okoro',
+    email: 'amina@agency.org',
+    ip: '196.201.14.8',
+    role: 'Country Director',
+    org: 'Humanitarian NGO',
+    sessionToken: 'tok_secret_123',
+    country: 'TCD',
+    at: '2026-11-06T10:00:00Z',
+    cardId: 'R1043',
+    p: 0.72,
+    text: 'Border trade is disrupted.',
+  };
+
+  for (const lvl of [...Object.values(LEVELS), 'unrecognised-level']) {
+    const out = attribute(rich, lvl);
+    for (const pii of ['email', 'ip', 'role', 'org', 'sessionToken', 'expertId', 'name']) {
+      assert.ok(!(pii in out), `${lvl} leaked disallowed field "${pii}"`);
+    }
+    assert.equal(out.cardId, 'R1043');
+    assert.equal(out.p, 0.72);
+    assert.equal(out.text, 'Border trade is disrupted.');
+  }
+});
+
+test('9,000-slot alias space avoids small-panel collisions and panelAliases() guarantees a bijection', () => {
+  assert.equal(ALIAS_SPACE, 9000);
+
+  // Reject missing, short or public default salts on production panel assignment
+  assert.throws(() => panelAliases(['e1', 'e2'], 'TCD', {}), /deployment salt/);
+  assert.throws(() => panelAliases(['e1', 'e2'], 'TCD', { salt: 'v1' }), /deployment salt/);
+  assert.throws(() => panelAliases(['e1', 'e2'], 'TCD', { salt: 'short' }), /deployment salt/);
+
+  // 60 experts in one country -> 60 distinct aliases, independent of input order
+  const ids = Array.from({ length: 60 }, (_, i) => `expert_${i + 1}`);
+  const mapA = panelAliases(ids, 'SDN', { salt: 'deploy-secret-2026-sdn' });
+  const mapB = panelAliases([...ids].reverse(), 'SDN', { salt: 'deploy-secret-2026-sdn' });
+  assert.deepEqual(mapA, mapB, 'panel alias assignment must be order-independent');
+  assert.equal(new Set(Object.values(mapA)).size, 60, 'zero collisions across 60 panellists');
+
+  const attributed = attribute(
+    { expertId: 'expert_1', country: 'SDN', text: 'Note' },
+    LEVELS.PSEUDONYMOUS,
+    { panelAliases: mapA }
+  );
+  assert.equal(attributed.by, mapA.expert_1);
+});
+

@@ -35,12 +35,11 @@ So the product has to argue something narrow and testable: *the regression sees 
 
 | Phase | Duration | What it produces |
 |---|---|---|
-| Build | 4–6 weeks, 1–2 engineers | Ingest, gate, card, dispatch, dissent, scoring. |
-| Backtest | 3 weeks | Run the panel on the 104 already-resolved risks. **This is the fastest possible answer and it should have been the first thing built** — and the baselines it must beat are now measured, not quoted. |
-| Pilot | 6 months | Live elicitation on new statements, with a research partner. |
-| Publication | 9 months | The first paired comparison of expert panel against a metadata model on humanitarian risk statements. |
+| Build | 4–6 weeks, 1–2 engineers | Ingest, gate, card, dispatch, dissent, aggregation, scoring. |
+| Rolling pilot | 3–6 months | Prospective elicitation on the **28 Active risks** and **266 dated triggers** as 30–90 day windows close (avoiding hindsight contamination on already-resolved crises). |
+| Powered evaluation | 6–9 months | Accumulate **n ≈ 445** resolved trigger/risk statements — the sample needed at `paired SD = 0.1505` (`scripts/measure-baseline.mjs`) to detect a `0.02` Brier improvement at 80% power (`n = 104` only detects `~0.041`). |
 
-**The backtest is the unlock.** 104 resolved risks already have outcomes. If the panel can be recruited to score them retrospectively, the question of whether it beats ACAPS' 0.2168 is answerable in weeks rather than a year — and it is answerable *before* anyone commits to a pilot. A full-fledged product would do this in month one.
+**Why prospective triggers rather than retrospective risks.** The 104 already-resolved risks establish the incumbent baselines (`0.2425` floor, `0.2168` ACAPS, `0.2177` LOO logistic), but asking human country experts today to "forecast" historical 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) is contaminated by hindsight — experts already know what happened. And at `n = 104` the smallest paired difference detectable at 80% power is `0.0413` Brier. Scoring rolling 30–90 day trigger statements prospectively solves both hindsight contamination and sample size.
 
 ---
 
@@ -67,10 +66,10 @@ If an expert's objection can rewrite an ACAPS risk statement, someone has to dec
 
 The accurate framing, which is also the strongest:
 
-> **A specified product built on a falsifiable hypothesis, with the backtest designed and not yet run.**
+> **A specified product built on a falsifiable hypothesis, with incumbent baselines measured and a prospective trigger-level evaluation designed.**
 
 And if a juror asks whether it works, the answer is the one written into the blueprint:
 
-> "We fitted the baseline rather than quoting one. A logistic regression on ACAPS' own structured fields scores 0.2177 out of sample; ACAPS' own analysts score 0.2168 on the same 104 risks. **The model loses.** Neither gap from the base rate is significant at n=104 — ACAPS' judgement is a real signal sitting just under this sample's noise floor. So the bar for any panel is ACAPS, not the regression, and our claim is specific: the model reads the fields, the panel reads the sentence, and the sentence contains what the fields do not. We can test that on 104 resolved risks in weeks, paired, with intervals."
+> "We fitted the baseline rather than quoting one. A logistic regression on ACAPS' own structured fields scores 0.2177 out of sample; ACAPS' own analysts score 0.2168 on the same 104 risks. **The model loses.** Neither gap from the base rate is significant at n=104 (paired SD 0.1505, 80%-power MDE 0.0413) — ACAPS' judgement is a real signal sitting just under this sample's noise floor, and retrospective human scoring on resolved crises would be contaminated by hindsight. So the bar for any panel is ACAPS, not the regression, and our claim is specific: the model reads the fields, the panel reads the sentence, and prospective elicitation across ACAPS' rolling dated triggers (~266 per cycle; ~445 needed to power a 0.02 Brier test) can test that cleanly, paired, with intervals."
 
 That is a strong answer. It is not the same as a working product, and saying so is cheaper than being caught.

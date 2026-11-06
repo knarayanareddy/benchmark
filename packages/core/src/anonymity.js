@@ -70,61 +70,138 @@ export function resolveLevel(requested) {
   };
 }
 
-/**
- * Deterministic alias, stable per (expert, country, salt).
- *
- * Not cryptographic and not meant to be: it lives in the organiser's own
- * database, next to the record that already says who the expert is. Its job is
- * to stop a name reaching the page, not to resist a subpoena.
- */
-export function aliasFor(expertId, country, salt = 'v1') {
-  const s = `${salt}:${country}:${expertId}`;
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
+export const ALIAS_SPACE = 9000;
+export const DEFAULT_DEV_SALT = 'dev-unsalted';
+
+function hashSlot(input) {
+  let h1 = 0x811c9dc5;
+  let h2 = 0x9e3779b9;
+  for (let i = 0; i < input.length; i++) {
+    const c = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ (c + i), 0x85ebca6b);
   }
-  return `Analyst ${(Math.abs(h) % 90) + 10}`;
+  h1 ^= h1 >>> 16;
+  h2 ^= h2 >>> 13;
+  const mixed = (Math.imul(h1, 0xc2b2ae35) ^ h2) >>> 0;
+  return (mixed % ALIAS_SPACE) + 1000;
 }
 
 /**
- * Strip a contribution down to what the chosen level permits.
+ * Deterministic alias, stable per (expert, country, salt).
+ *
+ * Uses a 9,000-slot space (Analyst 1000..9999) rather than 90 slots so
+ * uncoordinated panels of 10 collide ~0.5% of the time instead of 40.5%.
+ * Production panels should pass a deployment secret to `panelAliases()`, which
+ * guarantees zero collisions across the panel and rejects public default salts.
+ */
+export function aliasFor(expertId, country, salt = DEFAULT_DEV_SALT) {
+  return `Analyst ${hashSlot(`${salt}:${country}:${expertId}`)}`;
+}
+
+/**
+ * Assign guaranteed collision-free aliases across a country panel, using a
+ * deployment-specific secret salt so an attacker with the roster cannot
+ * precompute aliases from a public repository constant.
+ */
+export function panelAliases(expertIds = [], country = '', { salt } = {}) {
+  if (typeof salt !== 'string' || salt.trim().length < 8 || salt === 'v1' || salt === DEFAULT_DEV_SALT) {
+    throw new Error('panelAliases() requires a non-public deployment salt of at least 8 characters');
+  }
+  const unique = [...new Set(expertIds.filter((id) => id !== undefined && id !== null && String(id).trim() !== '').map(String))].sort();
+  if (unique.length > ALIAS_SPACE) {
+    throw new RangeError(`panel size ${unique.length} exceeds alias space ${ALIAS_SPACE}`);
+  }
+  const taken = new Set();
+  const map = {};
+  for (const id of unique) {
+    let attempt = 0;
+    let candidate = aliasFor(id, country, salt);
+    while (taken.has(candidate)) {
+      attempt++;
+      candidate = `Analyst ${hashSlot(`${salt}:${country}:${id}#${attempt}`)}`;
+    }
+    taken.add(candidate);
+    map[id] = candidate;
+  }
+  return Object.freeze(map);
+}
+
+/**
+ * Explicit allowlists for `attribute()`.
+ *
+ * Never use a blacklist on privacy boundaries: any field added to a profile or
+ * request context later (email, ip, role, organisation, session token) would
+ * otherwise survive into `ANONYMOUS` output by default.
+ */
+const CONTENT_FIELDS = Object.freeze([
+  'id',
+  'cardId',
+  'statementId',
+  'round',
+  'p',
+  'estimate',
+  'text',
+  'kind',
+  'dissentKind',
+]);
+
+const CONTEXT_FIELDS = Object.freeze(['country', 'region', 'theme', 'at']);
+
+function pickAllowed(source, keys) {
+  const out = {};
+  for (const k of keys) {
+    if (Object.prototype.hasOwnProperty.call(source, k) && source[k] !== undefined) {
+      out[k] = source[k];
+    }
+  }
+  return out;
+}
+
+/**
+ * Strip a contribution down to ONLY what the chosen level explicitly permits.
  *
  * `contribution` is { expertId, name, country, text, at, ... }.
- * Everything not permitted is REMOVED, not blanked — a blanked field is still a
- * field, and it leaks through the shape of the object.
+ * Unlisted attributes (email, ip, role, organisation, etc.) are dropped at
+ * every level; omitted attributes stay absent rather than blanked.
  */
 export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
+  if (!contribution || typeof contribution !== 'object') {
+    throw new TypeError('contribution must be an object');
+  }
   const { expertId, name, country } = contribution;
-  const kept = { ...contribution };
-  delete kept.expertId;
-  delete kept.name;
 
-  // Fail closed. An unrecognised level must never resolve to the level that
-  // keeps more data — that is how a privacy setting becomes a leak.
+  // Fail closed. An unrecognised level must never resolve to a level that
+  // keeps context metadata — that is how a privacy setting becomes a leak.
   const known = Object.values(LEVELS).includes(level);
   if (!known) {
-    delete kept.country;
-    delete kept.at;
+    const kept = pickAllowed(contribution, CONTENT_FIELDS);
     kept.by = 'anonymous';
     kept.level = LEVELS.ANONYMOUS;
     kept.fellBack = true;
     return kept;
   }
 
+  if (level === LEVELS.ANONYMOUS) {
+    // Country + timestamp or role in a panel of 5–10 is an identity.
+    const kept = pickAllowed(contribution, CONTENT_FIELDS);
+    kept.by = 'anonymous';
+    kept.level = LEVELS.ANONYMOUS;
+    return kept;
+  }
+
+  const kept = pickAllowed(contribution, [...CONTENT_FIELDS, ...CONTEXT_FIELDS]);
   if (level === LEVELS.IDENTIFIED) {
     kept.by = name || expertId || 'unknown';
     kept.level = LEVELS.IDENTIFIED;
     return kept;
   }
-  if (level === LEVELS.ANONYMOUS) {
-    delete kept.country;             // a country plus a timestamp is an identity in a panel of 5
-    delete kept.at;
-    kept.by = 'anonymous';
-    kept.level = LEVELS.ANONYMOUS;
-    return kept;
-  }
-  kept.by = aliasFor(expertId, country, opts.salt);
+
+  const preassigned =
+    opts.panelAliases instanceof Map
+      ? opts.panelAliases.get(expertId)
+      : opts.panelAliases?.[expertId];
+  kept.by = preassigned || aliasFor(expertId, country, opts.salt);
   kept.level = LEVELS.PSEUDONYMOUS;
   return kept;
 }

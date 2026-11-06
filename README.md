@@ -2,10 +2,10 @@
 
 A ninety-second elicitation that turns each of ACAPS' own risk statements into a probability, without asking any expert to read more than one card — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
 
-**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 83 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
+**Status: runnable scaffold, not a product.** The pure core, the shared spine, the gate, the dissent loop and 91 tests are real and green, and they run against the real 139-risk export. The interface layer is not built — see `BUILD.md`. Note that Benchmark carries one risk Doorway does not: its central claim is unproven and cannot be proven this weekend.
 
 ```bash
-npm run verify     # 83 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
+npm run verify     # 91 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
 npm run ladder     # regenerates the three baseline figures from data/
 ```
 
@@ -37,16 +37,16 @@ npm run ladder     # regenerates the three baseline figures from data/
 - **101 of the 139 triggers that carry a completion rate carry no written resolution criterion** — 73% of ACAPS's own progress tracking is measured against something unstated.
 - **31 of 139 risks have no triggers at all**, **11 have no probability rating** and **7 have no status**. The corpus is a working export, and every one of those gaps is a place where an expert could add something in ninety seconds.
 - The performance ladder: naive floor **0.2425** → **ACAPS' own judgement 0.2168** → a logistic regression **0.2177** out of sample. **Lower is better, so the regression lost to the experts.** All three rungs are measured by scripts in this repo (`npm run ladder`); none is quoted.
-- At n ≈ 104 the standard error on a Brier score is **0.04–0.05**, so neither gap in that ladder is distinguishable from zero.
+- At n ≈ 104 the standard error on a Brier score is **0.04–0.05** (paired SD **0.1505**, 80%-power MDE **0.0413**, requiring **n ≈ 445** resolved items to detect a **0.02** Brier gain), so neither gap in that ladder is distinguishable from zero — and prospective evaluation must run on the rolling **266** trigger statements rather than hindsight-contaminated historical crises.
 
 ---
 
-## The five things that must be true
+## The five design commitments
 
-1. A dissent can be raised, actioned and notified in under sixty seconds.
+1. A dissent state machine routes, actions and notifies contactable dissenters (while stripping IDs for `ANONYMOUS` dissenters), bypassing the weekly dispatch cap.
 2. Every score on screen has an interval beside it.
-3. The gate rejects at least one real statement from the export, with a reason.
-4. The card completes in ninety seconds on a phone, one thumb.
+3. The gate audits raw statements from the export without synthetic windows, rejecting every unwindowed or unmeasurable row with an explicit reason.
+4. Target budget of ninety seconds per recurring question card (`E3`), one thumb, phone-first (design budget, unmeasured until live user testing).
 5. Somebody can say "the bar is ACAPS' 0.2168, and our regression lost" without hesitating — and can show the two scripts that compute it.
 
 ---
@@ -55,8 +55,11 @@ npm run ladder     # regenerates the three baseline figures from data/
 
 ACAPS' second Must Have: each expert chooses their own level — known to ACAPS,
 pseudonymous to peers, or fully anonymous. Implemented in
-`packages/core/src/anonymity.js` with the copy the expert actually reads, held by
-`npm run gate:anonymity` in CI and 15 tests. See `BUILD.md`.
+`packages/core/src/anonymity.js` with strict allowlist attribution, 9,000-slot /
+collision-free panel aliases, and two-tier small-cell suppression (`n ≥ 3`
+analyst/panel view in `aggregate.js`; `PUBLIC.minCount = 10` for public
+regional/thematic rollups), held by `npm run gate:anonymity` in CI and 20 tests.
+See `BUILD.md`.
 
 ## What this is not
 

@@ -81,6 +81,18 @@ console.log('ACAPS rating /5   :', fmt(bootstrapBrier(adopted)), '   ← adopted
 const p = paired(adopted, constant);
 console.log('paired vs floor   :', `${p.diff.toFixed(4)}  [${p.lo.toFixed(4)}, ${p.hi.toFixed(4)}]  ${p.note}`);
 
+const itemDiffs = adopted.map((d, i) => (d.p - d.y) ** 2 - (constant[i].p - constant[i].y) ** 2);
+const meanDiff = itemDiffs.reduce((a, b) => a + b, 0) / itemDiffs.length;
+const pairedSd = Math.sqrt(
+  itemDiffs.reduce((a, x) => a + (x - meanDiff) ** 2, 0) / (itemDiffs.length - 1)
+);
+const zTwoSided80Power = 1.959964 + 0.841621; // z_{0.975} + z_{0.80} = 2.8016
+const mde104 = (zTwoSided80Power * pairedSd) / Math.sqrt(adopted.length);
+const nFor002 = Math.ceil(((zTwoSided80Power * pairedSd) / 0.02) ** 2);
+console.log(
+  `paired power      : SD=${pairedSd.toFixed(4)}  MDE(80% power, n=${adopted.length})=${mde104.toFixed(4)}  n(for 0.02)=${nFor002}`
+);
+
 console.log('\ncalibration of the ACAPS rating:');
 calibration(adopted, 5).forEach((b) =>
   console.log(`  predicted ${b.meanPredicted.toFixed(2)} → observed ${b.observedRate.toFixed(2)}   (n=${b.n})`)

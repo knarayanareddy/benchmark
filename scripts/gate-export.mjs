@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 /**
- * Runs the deterministic gate over the real Risk Radar blocks and reports the
- * failure list. Acceptance test #9: "the gate rejects at least one real
- * statement, with a reason."
+ * Audit the real Risk Radar blocks against the deterministic gate — WITHOUT
+ * fabricating synthetic resolution windows.
  *
- * Reads data/risk-radar.json — produced by scripts/ingest.py, which uses
- * Python's csv module because the export contains quoted multi-line fields.
+ * Reports two honest views:
+ *   1. Raw export rows (`gate({ statement: b.title })`): 0 of 139 pass as-is,
+ *      because `risk-radar-export.csv` carries no resolution deadline column
+ *      (`139/139` fail `window`) and 91 of 139 headlines state directional
+ *      trends without a measurable threshold or discrete event.
+ *   2. Statement-only breakdown (the 4 text checks apart from `window`): shows
+ *      exactly which headlines already carry a concrete event/quantity (47/139)
+ *      and which require an analyst-written resolution `objective` before a
+ *      card can open.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,23 +26,34 @@ if (!fs.existsSync(file)) {
 }
 
 const blocks = JSON.parse(fs.readFileSync(file, 'utf8')).filter((b) => b.title);
-const results = blocks.map((b) => ({ b, g: gate({ statement: b.title, window: { from: b.id, to: b.status || 'open' } }) }));
+const results = blocks.map((b) => ({ b, g: gate({ statement: b.title }) }));
 const failed = results.filter((x) => !x.g.ok);
 
 const byCheck = {};
-for (const f of failed) for (const k of f.g.failed) byCheck[k.check] = (byCheck[k.check] || 0) + 1;
+for (const f of failed) {
+  for (const k of f.g.failed) byCheck[k.check] = (byCheck[k.check] || 0) + 1;
+}
 
-console.log(`blocks      : ${blocks.length}`);
-console.log(`passed      : ${results.length - failed.length}`);
-console.log(`failed      : ${failed.length}  (${((failed.length / blocks.length) * 100).toFixed(1)}%)`);
-console.log(`by check    :`, byCheck);
+const textOnlyPass = results.filter((x) =>
+  x.g.results.filter((r) => r.check !== 'window').every((r) => r.ok)
+).length;
 
-// A gate that rejects almost everything is as useless as one that rejects nothing.
-const rate = failed.length / blocks.length;
-if (rate > 0.4) console.warn('\n⚠ rejection rate above 40% — this is probably a false-positive problem, not a quality problem.');
+console.log(`blocks                  : ${blocks.length}`);
+console.log(`pass raw (as exported)  : ${results.length - failed.length}  (export has no resolution end-date column)`);
+console.log(`rejected raw            : ${failed.length}  (${((failed.length / blocks.length) * 100).toFixed(1)}%)`);
+console.log(`pass 4 text checks      : ${textOnlyPass}/${blocks.length}  (once an analyst supplies a resolution window)`);
+console.log(`failures by check       :`, byCheck);
 
-console.log('\nfirst five rejections (read these aloud in the pitch):');
-failed.slice(0, 5).forEach(({ b, g }) => {
+if (failed.length === 0) {
+  console.error('\n✗ gate failed to reject any raw statement from the export');
+  process.exit(1);
+}
+
+console.log('\nfirst five text-level rejections (beyond the missing CSV window column):');
+const textFailed = results.filter((x) => x.g.failed.some((f) => f.check !== 'window'));
+textFailed.slice(0, 5).forEach(({ b, g }) => {
   console.log(`  · ${b.id}  ${b.title.slice(0, 84)}…`);
-  g.failed.forEach((f) => console.log(`      - ${f.check}: ${f.reason}`));
+  g.failed
+    .filter((f) => f.check !== 'window')
+    .forEach((f) => console.log(`      - ${f.check}: ${f.reason}`));
 });
