@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BENCHMARK — Full Build &amp; Win Plan (ACAPS, HFG #8)</title>
+<style>
+  :root{
+    --ink:#12161c; --ink2:#3b444f; --muted:#6b7480; --rule:#dcd8d0;
+    --paper:#f8f6f2; --card:#fff; --accent:#a8321c; --teal:#0d6567;
+    --gold:#8a6a1f; --good:#1e7a4a; --deep:#0b1118;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16.5px;line-height:1.64;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 28px 140px}
+  header.hero{padding:70px 0 40px;border-bottom:3px solid var(--ink);margin-bottom:14px}
+  .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
+  h1{font-size:46px;line-height:1.06;margin:0 0 6px;letter-spacing:-.028em;font-weight:800}
+  .prodname{font-size:46px;line-height:1.06;margin:0 0 20px;letter-spacing:-.028em;font-weight:800;color:var(--accent)}
+  .sub{font-size:19.5px;color:var(--ink2);max-width:46em;margin:0 0 26px}
+  .metaline{display:flex;flex-wrap:wrap;gap:10px 26px;font-size:13px;color:var(--muted)}
+  .metaline b{color:var(--ink);font-weight:600}
+  h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--accent);
+     margin:70px 0 8px;padding-top:24px;border-top:1px solid var(--rule)}
+  h3{font-size:26px;line-height:1.22;margin:10px 0 14px;letter-spacing:-.014em;font-weight:750}
+  h4{font-size:17.5px;margin:30px 0 8px;font-weight:700;letter-spacing:-.005em}
+  h5{font-size:13px;margin:22px 0 6px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.08em}
+  p{margin:0 0 15px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:7px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em;background:#eceae5;padding:1.5px 5px;border-radius:3px}
+  .lede{font-size:19px;color:var(--ink2)}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;margin:22px 0}
+  table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.2px;background:#fff}
+  th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;
+     border-bottom:2px solid var(--ink);padding:9px 10px;vertical-align:bottom}
+  td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.46}
+  tr:last-child td{border-bottom:1px solid var(--ink)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .tbl-note{font-size:12.5px;color:var(--muted);margin:-12px 0 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:820px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+  .stat{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+  .stat .n{font-size:29px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-top:5px}
+  .stat .s{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.42}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;
+       padding:3px 8px;border-radius:4px;background:#eceae5;color:var(--ink2);margin-right:6px}
+  .tag.red{background:#f6e3de;color:var(--accent)}
+  .tag.green{background:#dff0e6;color:var(--good)}
+  .tag.blue{background:#dde9ea;color:var(--teal)}
+  .tag.gold{background:#f3ead4;color:var(--gold)}
+  .verdict{border-left:4px solid var(--accent);background:#fff;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0}
+  .verdict.ok{border-left-color:var(--good)}
+  .verdict.teal{border-left-color:var(--teal)}
+  .verdict p:last-child{margin-bottom:0}
+  .callout{background:var(--deep);color:#f4f2ee;border-radius:10px;padding:24px 26px;margin:26px 0}
+  .callout h4{color:#fff;margin-top:0}
+  .callout code{background:#2a323c;color:#e8e4dc}
+  .callout .small{color:#a9b0b8}
+  .small{font-size:13.5px;color:var(--muted)}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:20px 24px;margin:26px 0 8px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px;font-size:14px}
+  .toc li{margin-bottom:5px}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  .toc a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+  @media(max-width:760px){.toc ol{columns:1}}
+  .bars{margin:10px 0 18px}
+  .barrow{display:grid;grid-template-columns:158px 1fr 78px;align-items:center;gap:10px;margin-bottom:7px;font-size:13.5px}
+  .barsvg{height:22px;display:block;width:100%}
+  .bnum{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;text-align:right;color:var(--ink2)}
+  .loop{counter-reset:step;margin:22px 0}
+  .loopstep{position:relative;padding:0 0 18px 46px;border-left:2px solid var(--rule);margin-left:14px}
+  .loopstep:last-child{border-left-color:transparent;padding-bottom:0}
+  .loopstep::before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:-2px;
+    width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;font-size:13px;
+    display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,monospace}
+  .loopstep.hl::before{background:var(--accent)}
+  .loopstep h5{margin:0 0 3px;font-size:14px;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:750}
+  .loopstep p{margin:0;font-size:14.2px;color:var(--ink2)}
+  .phase{background:#fff;border:1px solid var(--rule);border-radius:10px;margin:16px 0;overflow:hidden}
+  .phase-head{display:flex;gap:14px;align-items:baseline;padding:14px 20px;background:#fcfbf9;border-bottom:1px solid var(--rule)}
+  .phase-id{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-weight:800;color:#fff;background:var(--ink);border-radius:5px;padding:3px 8px;flex:none}
+  .phase-head h4{margin:0;font-size:17px;flex:1}
+  .phase-when{font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;flex:none}
+  .phase-body{padding:14px 20px 18px}
+  .phase-body p{margin:0 0 10px}
+  .phase-body p:last-child{margin:0}
+  .exit{background:#f2f6f3;border-left:3px solid var(--good);padding:10px 14px;border-radius:0 6px 6px 0;font-size:14px;margin-top:12px}
+  .exit b{color:var(--good)}
+  footer{margin-top:80px;padding-top:22px;border-top:3px solid var(--ink);font-size:12.5px;color:var(--muted)}
+  .scorewalk td:first-child{font-weight:700}
+  .scorewalk .num{font-weight:800;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">Maximum-capability plan · Hackathon for Good #8 · ACAPS Ground Truth</div>
+  <h1>The best project this brief</h1>
+  <div class="prodname">can possibly produce</div>
+  <p class="sub">Unlimited time. One goal: the highest-probability win. This is the plan for <b>BENCHMARK</b> — a calibrated expert forecasting instrument for humanitarian risk that proves its own validity before it asks a single expert to trust it, and ships with the evidence, the trust engineering, the pilot and the business model already in place.</p>
+  <div class="metaline">
+    <span><b>Track</b> ACAPS — Ground Truth</span>
+    <span><b>Horizon</b> 0–44 weeks</span>
+    <span><b>Rubric target</b> 92–95 / 100</span>
+    <span><b>Companion plan</b> OFFRAMP (UNICRI) — §15</span>
+  </div>
+</header>
+
+<div class="toc">
+  <div class="small" style="margin-bottom:10px"><b>Contents</b></div>
+  <ol>
+    <li><a href="#s0">What unlimited time actually changes</a></li>
+    <li><a href="#s1">The scientific foundation</a></li>
+    <li><a href="#s2">The decision, and why not UNICRI</a></li>
+    <li><a href="#s3">The product: the closed loop</a></li>
+    <li><a href="#s4">The five hard problems, solved</a></li>
+    <li><a href="#s5">Architecture</a></li>
+    <li><a href="#s6">Phase plan P0–P7</a></li>
+    <li><a href="#s7">The Research Programme</a></li>
+    <li><a href="#s8">Trust engineering</a></li>
+    <li><a href="#s9">Pilot operations</a></li>
+    <li><a href="#s10">Metrics that define success</a></li>
+    <li><a href="#s11">Business model</a></li>
+    <li><a href="#s12">Brief compliance matrix</a></li>
+    <li><a href="#s13">Risks &amp; kill criteria</a></li>
+    <li><a href="#s14">Why this wins</a></li>
+    <li><a href="#s15">The parallel track: OFFRAMP</a></li>
+    <li><a href="#s16">Team &amp; operating cadence</a></li>
+    <li><a href="#s17">The next ten working days</a></li>
+    <li><a href="#s18">What we would need to be wrong about</a></li>
+  </ol>
+</div>
+
+<h2 id="s0">00 — What unlimited time actually changes</h2>
+
+<p class="lede">With a weekend, the question is "what can we finish." With unlimited time, the question becomes much more dangerous and much more interesting: <b>"what is actually true?"</b></p>
+
+<p>Almost every hackathon project is built on an untested assumption dressed as a premise. For this brief the premise is: <i>a small panel of experts, given a well-designed interface, will produce forecasts that beat what ACAPS's public-source analysis already achieves.</i> Nobody in the room will have checked that. Most submissions will assume it, build a beautiful interface on top of it, and hope.</p>
+
+<div class="verdict">
+  <p><b>The winning strategy under unlimited time is to make that assumption the thing you test first.</b> Not because rigour is virtuous, but because of what happens to your pitch if you can say: <i>"Before we asked a single expert for their time, we built the benchmark their forecasts must beat — and here it is, measured on 104 resolved ACAPS risks."</i> That sentence is worth more than any feature you could build in the same hours. It converts your project from a proposal into a finding.</p>
+</div>
+
+<p>Three things change concretely when the clock stops mattering:</p>
+
+<table>
+  <tr><th style="width:24%">Dimension</th><th style="width:38%">Weekend version</th><th>Unlimited-time version</th></tr>
+  <tr><td><b>Order of work</b></td><td>Build → demo → (never) validate.</td><td>Validate → build only what the validation licenses → validate again with real users.</td></tr>
+  <tr><td><b>What the prototype proves</b></td><td>That the UI renders and the buttons work.</td><td>That the mechanism produces measurably better forecasts than the expert-free baseline, on real historical outcomes.</td></tr>
+  <tr><td><b>What you are actually delivering</b></td><td>A demo.</td><td>A pilot-ready instrument, a validity dossier, a trust model, and a costed operating plan.</td></tr>
+</table>
+
+<p>The rubric rewards this disproportionately. <b>Concept is 40%</b> — "a real solution, and more than just an idea." A team that arrives with a measured result and a falsifiable design is not competing on the same axis as a team with a nicer gradient.</p>
+
+<h2 id="s1">01 — The scientific foundation</h2>
+
+<p>I ran the numbers on the supplied <code>risk-radar-export.csv</code> (139 risks, 104 resolved) to find out what BENCHMARK actually has to beat. These four results shape every design decision that follows.</p>
+
+<h4>Result 1 — ACAPS's own probability ratings are miscalibrated, and in a specific direction</h4>
+<div class="card">
+<table style="margin:0">
+  <tr><th>ACAPS rating</th><th class="num">n</th><th class="num">Nominal (scale midpoint)</th><th class="num">Observed materialisation</th><th class="num">Gap</th></tr>
+  <tr><td>Very Low</td><td class="num">3</td><td class="num">5%</td><td class="num">33.3%</td><td class="num">+28.3</td></tr>
+  <tr><td>Low</td><td class="num">14</td><td class="num">20%</td><td class="num">42.9%</td><td class="num">+22.9</td></tr>
+  <tr><td>Medium</td><td class="num">44</td><td class="num">50%</td><td class="num">47.7%</td><td class="num">−2.3</td></tr>
+  <tr><td>High</td><td class="num">30</td><td class="num">75%</td><td class="num">83.3%</td><td class="num">+8.3</td></tr>
+  <tr><td>Very High</td><td class="num">8</td><td class="num">95%</td><td class="num">87.5%</td><td class="num">−7.5</td></tr>
+</table>
+</div>
+<p><b>Reading:</b> ACAPS is <i>under-confident at the low end</i> — risks it rates Low still materialise 43% of the time — and approximately right in the middle. This is a real, defensible finding, and it is the kind of thing an analysis organisation genuinely wants to know about itself. <span class="small">(Very Low rests on n=3 and must not be quoted as a result; the Low bucket at n=14 is usable with a caveat.)</span></p>
+
+<h4>Result 2 — The ordering carries signal, but there is a lot of room</h4>
+<div class="grid3">
+  <div class="stat"><div class="n">0.703</div><div class="l">AUC of ACAPS probability</div><div class="s">Better than chance, far from perfect. A well-elicited expert panel should move this.</div></div>
+  <div class="stat"><div class="n">0.2425</div><div class="l">Brier, base rate only</div><div class="s">The floor. Predict 58.7% for everything.</div></div>
+  <div class="stat"><div class="n">0.2168</div><div class="l">Brier, ACAPS probability</div><div class="s">ACAPS adds real value over the floor — but modestly.</div></div>
+</div>
+<p>The logistic benchmark — structured ACAPS fields only, zero human input — reaches a leave-one-out Brier of <b>0.2177</b>, against ACAPS' own analyst rating of <b>0.2168</b>. The regression does <b>not</b> beat the analysts. An earlier revision of this page quoted 0.1981 in-sample and called it the bar; that number was not reproducible and the model was fitting Risk Level, which turns out to be a pure function of Probability on all 125 rows where both appear. The honest point survives and is sharper: <b>most of the predictive work is done by structured metadata, and the analyst's judgement adds a small, real, not-yet-significant edge on top of it.</b> That is the bar an expert panel must clear, and nobody has run the panel.</p>
+
+<h4>Result 3 — Aggregation arithmetic is probably not the differentiator</h4>
+<div class="card">
+  <div class="bars">
+    <div class="barrow"><span>Mean</span><svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="44" height="22" fill="#12161c"/></svg><span class="bnum">0.2196</span></div>
+    <div class="barrow"><span>Median</span><svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="45" height="22" fill="#12161c"/></svg><span class="bnum">0.2215</span></div>
+    <div class="barrow"><span>Log-odds mean</span><svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="45" height="22" fill="#12161c"/></svg><span class="bnum">0.2219</span></div>
+    <div class="barrow"><span>Extremised mean (c=1.3)</span><svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="46" height="22" fill="#a8321c"/></svg><span class="bnum">0.2237</span></div>
+  </div>
+  <p class="small" style="margin:0">Simulated 7-person panels (anchor + independent log-odds noise), 300 draws, scored against real outcomes. All four rules land within <b>0.004 Brier</b> of each other.</p>
+</div>
+<p><b>Honest caveat, stated up front:</b> this simulation assumes panelists bring the anchor plus noise — no new information. Under that assumption <i>no</i> aggregation rule can help, so the result is closer to a tautology than a discovery. But it points at the right priority: <b>the arithmetic is second-order; the information is first-order.</b> Competitors will spend their time on extremising and log-odds pooling. We will spend ours on elicitation quality, panel calibration and resolution discipline — and we will test this properly in experiment E2 rather than assuming it.</p>
+
+<h4>Result 4 — The trigger structure is a hidden question bank with a built-in baseline</h4>
+<p>The <code>Triggers</code> field is structured, not prose: <b>108 of 139 risks carry 266 trigger blocks</b>, each with an ID, title, description, its own sources, and a <b><code>Completion rate</code></b> percentage (mean 52.6%, 12 triggers at 100%). R1043 carries three: <i>expansion of cross-border attacks</i> (40%), <i>attacks on strategic infrastructure</i> (10%), <i>renewed proxy mobilisation</i> (20%). <b>76 triggers sit on live active risks.</b></p>
+
+<div class="verdict teal">
+  <p><b>This is the single most important asset in the brief and almost nobody will notice it.</b> It gives BENCHMARK three things at once: a ready-made question bank, a natural unit of expert work (one trigger, four minutes), and — critically — <b>an expert-derived baseline to beat on every single question</b>. That baseline is what makes the whole system honest: an expert who simply copies ACAPS scores exactly zero skill, by construction.</p>
+</div>
+
+<h2 id="s2">02 — The decision</h2>
+
+<p>I am recommending <b>ACAPS, without reservation</b>, and the reason is structural rather than aesthetic.</p>
+
+<table>
+  <tr><th style="width:30%">Decision factor</th><th style="width:35%">ACAPS — Ground Truth</th><th>UNICRI — Stop Before It Starts</th></tr>
+  <tr><td><b>Is the core claim testable before real users?</b></td><td><span class="tag green">Yes</span> 104 resolved outcomes with which to falsify your scoring model offline.</td><td><span class="tag red">No</span> No traffic, no real users, no live platform. Validity is unfalsifiable within the project.</td></tr>
+  <tr><td><b>Does the supplied data contain a hidden moat?</b></td><td><span class="tag green">Yes</span> 266 triggers with completion-rate baselines.</td><td><span class="tag gold">Partly</span> Contract, help directory, message blocks — all supplied to every team equally.</td></tr>
+  <tr><td><b>Can you win on rigour rather than taste?</b></td><td><span class="tag green">Yes</span> Brier scores, calibration curves, AUC are objective.</td><td><span class="tag red">No</span> Judged on message design and UX — taste, aesthetics, mercy of the jury.</td></tr>
+  <tr><td><b>What does the follow-up actually hand you?</b></td><td>A two-month pilot with real experts in the room, starting December.</td><td>Publication on a global hub; "may pilot" 2–3 solutions.</td></tr>
+  <tr><td><b>Variance</b></td><td>Lower. A measurable result travels.</td><td>Higher. A beautiful demo with no evidence is one sceptical question deep.</td></tr>
+</table>
+
+<div class="callout">
+  <h4>The asymmetry that decides it</h4>
+  <p>UNICRI's challenge is <i>downstream of evidence you cannot generate</i>: whether a warning changes behaviour depends on real people in a real moment, and you are forbidden from touching them. So every UNICRI team — including a very good one — is pitching an untested hypothesis with a nice interface.</p>
+  <p>ACAPS's challenge lets you <b>settle the core empirical question offline, in a weekend, against 104 real outcomes</b>. That is an enormous asymmetry in what "more than just an idea" can mean. Take the track where reality can mark your homework.</p>
+  <p class="small" style="margin-bottom:0">If you have the people to run two five-person pods (the platform permits it: <code>allowMultipleSubmissions: true</code>, <code>maxTeamSize: 5</code>), run <b>BENCHMARK</b> as primary and <b>OFFRAMP</b> as a hedge — §15 is the full blueprint. With fewer than eight people, run BENCHMARK only. Two half-projects lose to one whole one.</p>
+</div>
+
+<h2 id="s3">03 — The product: the closed loop</h2>
+
+<p class="lede">BENCHMARK is a forecasting instrument, not a survey. The difference is that every object in it eventually resolves, scores, and reports back. Twelve steps, and the loop is closed at both ends — expert to analysis, and analysis back to expert.</p>
+
+<div class="loop">
+  <div class="loopstep"><h5>Ingest</h5><p>Risk Radar export + the live Risk List via the ACAPS API (token auth) or HDX. Risks, triggers, ratings, histories, outcomes.</p></div>
+  <div class="loopstep"><h5>Decompose</h5><p>Each risk becomes N resolvable questions, one per trigger. "Will attacks on strategic infrastructure in Chad occur before 30 April 2027?" beats "how risky is R1043?" — it is answerable, scoreable, and takes ninety seconds.</p></div>
+  <div class="loopstep hl"><h5>Anchor</h5><p>Every question inherits a baseline: the trigger's <code>Completion rate</code>, plus the historical materialisation rate for risks of that type, exposure band and probability. <b>This is the feature nobody else will have.</b> The panel is never asked for a number in a vacuum.</p></div>
+  <div class="loopstep"><h5>Elicit — round 1</h5><p>Independent, blind, four minutes on a phone. Probability (five taps) + one optional sentence of reasoning. No visibility of anyone else's view. Language and bandwidth negotiated, not assumed.</p></div>
+  <div class="loopstep"><h5>Aggregate, visibly</h5><p>Distribution, not a point estimate. Spread, quartiles, and the distance from the baseline. A signal that says more than the mean ever could: <i>"the panel is 22 points above ACAPS and two standard deviations apart from each other."</i></p></div>
+  <div class="loopstep"><h5>Deliberate — round 2</h5><p>Anonymised summary of round 1 plus the reasons attached to outlier positions. Experts may revise. The <b>delta between rounds is measured</b> — that number is the brief's groupthink question, answered empirically rather than asserted.</p></div>
+  <div class="loopstep hl"><h5>Dissent routing</h5><p>The outlier is promoted, not averaged away. A moderator receives "1 of 7 experts, fully anonymous, dissents strongly — here is the reasoning." This is usually the most valuable object the system produces.</p></div>
+  <div class="loopstep"><h5>Synthesise</h5><p>Moderator copilot drafts a rationale in ACAPS house style from the contributions. Every generated sentence is clickable back to the contribution that produced it. It refuses to generate where unsupported. AI stays behind the glass.</p></div>
+  <div class="loopstep"><h5>Publish</h5><p>Aggregate view and dissent summary enter the analyst workflow and, where appropriate, the public Risk List. Individual contributions are never attributable — enforced by the anonymity engine, not by policy.</p></div>
+  <div class="loopstep"><h5>Resolve</h5><p>At the horizon, a structured resolution: criterion, evidence, date, verdict. Two independent resolvers plus an escalation path. Resolution is a first-class object with an owner and a deadline — the thing the dataset is missing.</p></div>
+  <div class="loopstep"><h5>Score</h5><p>Brier skill relative to the baseline, calibration curve, and a difficulty adjustment so that a correct call on a 10% trigger counts more than a correct call on a 90% one. Panel weights update with shrinkage and are capped so no single expert can capture the aggregate.</p></div>
+  <div class="loopstep hl"><h5>Receipt</h5><p>Every panelist is told what their contribution changed and how their call resolved. The brief's stated retention failure — comparable forecasting pools lose participation after launch — is answered here, and nowhere else.</p></div>
+</div>
+
+<h4>The object model</h4>
+<div class="card">
+<table style="margin:0">
+  <tr><th style="width:16%">Object</th><th style="width:40%">Contains</th><th>Why it exists</th></tr>
+  <tr><td><code>Risk</code></td><td>ID, title, type, country, exposure, ACAPS rating, status</td><td>Imported; the unit ACAPS thinks in.</td></tr>
+  <tr><td><code>Trigger</code></td><td>ID, title, description, sources, <b>completion rate</b></td><td>The unit <i>experts</i> think in. The insight.</td></tr>
+  <tr><td><code>Question</code></td><td>Text, resolution criterion, horizon date, baseline, status</td><td>Makes a forecast falsifiable. Without this there is no track record.</td></tr>
+  <tr><td><code>Forecast</code></td><td>Panelist, question, probability, round, timestamp, reason</td><td>Append-only. Never edited — revisions are new rows.</td></tr>
+  <tr><td><code>Contribution</code></td><td>Free-text enrichment or dissent, tied to a question</td><td>Ground truthing; the qualitative half of the brief.</td></tr>
+  <tr><td><code>Resolution</code></td><td>Verdict, evidence links, resolved-by, resolved-at</td><td>The missing timestamp. The basis of every score.</td></tr>
+  <tr><td><code>Panelist</code></td><td>Pseudonym, anonymity tier, calibration history, weight</td><td>Identity is separable from contribution by design.</td></tr>
+  <tr><td><code>Receipt</code></td><td>Contribution → change → outcome</td><td>The retention mechanism, as data.</td></tr>
+</table>
+</div>
+
+<h2 id="s4">04 — The five hard problems, solved</h2>
+
+<p class="lede">These are the questions the brief actually asks. Everything else is interface.</p>
+
+<h4>1 · How does an expert choose and change their anonymity, and how do you guarantee nothing is attributed publicly?</h4>
+<p>Three tiers — <b>known to ACAPS</b>, <b>pseudonymous to peers</b>, <b>fully anonymous</b> — selectable and changeable at any time, with retroactive effect on anything not yet published. The guarantee is not a promise; it is a <b>publication gate</b>.</p>
+<ul>
+  <li><b>The Anonymity Budget Engine</b> computes, for every proposed aggregate output, whether any individual contribution can be inferred — from small cells, from cross-round differencing between consecutive publications, from attribute combinations, from timing correlation.</li>
+  <li>If the answer is yes, <b>the system refuses to publish</b> and explains why. A refusal is a feature you can demo in ten seconds and which no competitor will have.</li>
+  <li>Free text is paraphrased and merged before publication, because writing style is an identifier. Stylometric risk is in the threat model, not ignored.</li>
+  <li>Publication timing is staggered across panels so that a change in one country cannot be dated against a known ACAPS cycle.</li>
+  <li><b>Threat model, stated honestly:</b> we defend against a motivated reader holding all public outputs. We do not claim protection against a state actor with legal compulsion over ACAPS, and we say so in the product, not the appendix. A scoped claim is more credible than an absolute one.</li>
+</ul>
+
+<h4>2 · How do you aggregate without creating groupthink?</h4>
+<ul>
+  <li><b>Independence is structural:</b> round 1 is blind, enforced in the data model rather than the UI. A panelist physically cannot see another's number before committing their own.</li>
+  <li><b>The dissent router inverts the objective.</b> Consensus is not the goal; a 7-person panel that agrees in round one has stopped adding information. The product surfaces spread and promotes the outlier to the analyst.</li>
+  <li><b>Opinion change is instrumented.</b> Round-1→round-2 deltas are recorded. If convergence is high and accuracy does not improve, the protocol is wrong and experiment E7 tells you so — you adjust (blind round 2, dialectical bootstrapping) instead of shipping the flaw.</li>
+  <li><b>Anchoring is measured.</b> Distance-from-baseline per panelist, tracked over time. Chronic anchor-hugging is visible and carries exactly zero scoring benefit.</li>
+</ul>
+
+<h4>3 · How do you turn ACAPS risks into questions that can actually be resolved and scored after six months?</h4>
+<p>This is the question that separates a real submission from a demo, and the dataset makes it hard on purpose: <b>there are no date fields anywhere in the export.</b> So resolution becomes a product rather than a side-effect.</p>
+<ul>
+  <li><b>Two resolution templates</b> cover the corpus: <i>trigger-occurs</i> (did the described hazard happen by date D, evidenced by ≥2 independent sources) and <i>threshold-crossed</i> (did exposure/displacement exceed X by date D). Templates are versioned and shown to the expert <i>at forecast time</i> — you cannot forecast honestly without knowing how it will be judged.</li>
+  <li><b>Resolution has an owner and a deadline.</b> A queue, an SLA, and an escalation path. Nothing silently expires.</li>
+  <li><b>Two independent resolvers</b> for contested cases, with a documented tie-break. Resolution quality is itself measured: if a question proves unresolvable, that is logged as a design failure and the template changes.</li>
+  <li><b>Retrospective backfill.</b> For the 104 already-resolved risks, we reconstruct approximate resolution dates from the <code>Rationale update</code> text (63/139 contain a parseable date) and mark them <code>date_confidence: low</code>. Used for backtesting only, never shown to experts as authoritative.</li>
+</ul>
+
+<h4>4 · How does ACAPS moderate this without a heavy workload?</h4>
+<ul>
+  <li><b>The panel is deliberately small: 5–10 per country.</b> Moderation is a 20-minute weekly ritual per country, not a community management job.</li>
+  <li>The <b>copilot drafts</b>, the moderator approves or edits. Every draft is cited. Generation is refused when evidence is thin — which is most of the time, and that is correct behaviour.</li>
+  <li><b>Exception-based workflow:</b> the moderator's queue contains only what needs a human — a strong dissent, a resolution conflict, a stale question. Everything routine is automatic.</li>
+  <li>Load is <b>measured and published internally</b>: minutes per country per week is a KPI with a target, not an afterthought.</li>
+</ul>
+
+<h4>5 · Why would a busy expert come back?</h4>
+<p>The brief states the failure mode precisely: comparable pools lose participation after launch. Three mechanisms, in order of importance:</p>
+<ol>
+  <li><b>The Receipt.</b> Every contribution ends with proof of consequence. "Your call on T0618 fed the 14 December update. R1043 moved from High/40% to High/58%." This is the answer, and it is cheap.</li>
+  <li><b>Four minutes, honestly enforced.</b> A completion budget is a product constraint: if a flow takes longer, it is redesigned. Measured in production, on real devices, on real connections.</li>
+  <li><b>Recognition without exposure.</b> A calibration percentile, visible only to the panelist, never a public ranking of named experts. The brief lists a super-estimator scoreboard as a <i>could</i>; done badly it destroys the trust the product depends on. Done as private percentile bands, it retains without exposing.</li>
+</ol>
+
+<h2 id="s5">05 — Architecture</h2>
+
+<table>
+  <tr><th style="width:22%">Layer</th><th style="width:34%">Choice</th><th>Rationale</th></tr>
+  <tr><td><b>Client</b></td><td>PWA, mobile-first, offline-tolerant (queue and background sync), sub-100 KB critical path</td><td>The user is Pierre in Nairobi on a bad connection. The demo is the same build.</td></tr>
+  <tr><td><b>Identity</b></td><td>Separate <code>Panelist</code> identity from <code>Contribution</code> at the schema level; pseudonym keys per panel; no cross-panel join key</td><td>Anonymity must be a property of the database, not of a policy document.</td></tr>
+  <tr><td><b>Core services</b></td><td><code>question</code> · <code>forecast</code> · <code>aggregate</code> · <code>resolve</code> · <code>score</code> · <code>receipt</code></td><td>Six verbs matching the loop. Each independently testable.</td></tr>
+  <tr><td><b>Scoring engine</b></td><td>Brier skill vs baseline; log loss secondary; difficulty adjustment; shrinkage-weighted panel aggregation with a 20% influence cap</td><td>Statistically defensible, and explainable to a non-statistician in one diagram.</td></tr>
+  <tr><td><b>Anonymity engine</b></td><td>Publication gate: k-anonymity cells, differencing protection, stylometry filter, timing stagger — plus an automated red-team suite</td><td>Testable. You can run an attack against it and show it fail.</td></tr>
+  <tr><td><b>AI</b></td><td>Moderator-side synthesis only. Citation-mandatory. Refuses unsupported generation. Never in the expert path.</td><td>Exactly where both the brief and good judgement put it.</td></tr>
+  <tr><td><b>Data</b></td><td>Postgres. Append-only forecast log. Versioned resolution templates. Full audit trail on every state change.</td><td>Track records require immutability.</td></tr>
+  <tr><td><b>Integrations</b></td><td>ACAPS API (token) + HDX for live risk list; export to analyst workflow (CSV, and a documented API for the analyst tool)</td><td>Must feed the real process or it is a parallel universe.</td></tr>
+  <tr><td><b>Observability</b></td><td>Completion-time telemetry, panel participation, resolution SLA, calibration drift</td><td>If you cannot see retention degrading, you cannot fix it.</td></tr>
+</table>
+
+<h2 id="s6">06 — Phase plan</h2>
+
+<p>Eight phases. Each has an <b>exit criterion</b> that is a testable claim, not a status update. Nothing advances on schedule pressure; phases advance on evidence.</p>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P0</span><h4>Foundations &amp; the benchmark</h4><span class="phase-when">Weeks 1–3</span></div>
+  <div class="phase-body">
+    <p>Before any interface: build the measurement harness. Parse the Risk Radar export into clean <code>Risk</code>/<code>Trigger</code> records. Construct the baseline benchmark (base rate, ACAPS probability, structured logistic) with proper cross-validation. Define the scoring spec in writing — Brier skill, difficulty adjustment, panel weights — and circulate it for criticism before building anything that assumes it.</p>
+    <div class="exit"><b>Exit:</b> a documented benchmark number that any expert panel must beat, computed out-of-sample, reproducible from a script in the repo.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P1</span><h4>Question engine &amp; resolution protocol</h4><span class="phase-when">Weeks 3–6</span></div>
+  <div class="phase-body">
+    <p>Trigger → question generation with the two templates. Resolution criterion DSL, versioned. Retrospective date reconstruction for backtesting. A public "how questions resolve" page, because experts must be able to see the rules.</p>
+    <div class="exit"><b>Exit:</b> 40 historical questions reconstructed with resolution dates and criteria, agreeing with the recorded outcome in ≥90% of cases.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P2</span><h4>The elicitation loop</h4><span class="phase-when">Weeks 5–11</span></div>
+  <div class="phase-body">
+    <p>Round 1 blind capture, aggregation with visible spread, round 2 with reasons and delta capture. The four-minute flow, tested on a real phone on a throttled connection. Dissent routing. The shape of this is the product; build it properly once.</p>
+    <div class="exit"><b>Exit:</b> median completion under four minutes with five internal testers and one domain expert; round deltas captured and queryable.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P3</span><h4>Anonymity engine</h4><span class="phase-when">Weeks 6–14</span></div>
+  <div class="phase-body">
+    <p>Publication gate, small-cell suppression, differencing protection, stylometry filter, timing stagger. Build the red-team suite <i>first</i> and make the engine pass it — an attack suite you wrote is worth more than a policy you wrote.</p>
+    <div class="exit"><b>Exit:</b> automated red-team re-identifies zero synthetic panelists from published outputs across 10,000 simulated publications. Attacks and results both published in the repo.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P4</span><h4>Validity: does the panel actually add information?</h4><span class="phase-when">Weeks 8–20</span></div>
+  <div class="phase-body">
+    <p>The existential test (E3 below). Recruit 20–30 humanitarian experts through the ACAPS network and beyond. Have them forecast 40 <i>already resolved</i> questions, blind to outcomes. Measure incremental Brier over the baseline. This is the study that decides whether BENCHMARK is a forecasting instrument or an expert-enrichment inbox, and either answer is a strong finding.</p>
+    <div class="exit"><b>Exit:</b> a published result — positive or negative — on whether a 7-person panel beats the structured baseline. Pre-register the analysis before collecting data.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P5</span><h4>Pilot with ACAPS</h4><span class="phase-when">Weeks 16–28</span></div>
+  <div class="phase-body">
+    <p>One country, one panel of 5–10, one live risk set. Chad is the natural choice: two active risks, three triggers on R1043, >500k exposed, and named in the brief. Two full cycles — open, elicit, publish, resolve, receipt — inside eight weeks.</p>
+    <div class="exit"><b>Exit:</b> one panel through two complete cycles; ≥70% week-8 retention; ≥1 documented case where expert input changed a published rating, with the analyst's sign-off.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P6</span><h4>Harden &amp; scale</h4><span class="phase-when">Weeks 26–38</span></div>
+  <div class="phase-body">
+    <p>Multi-country. Additional languages (French, Arabic, Spanish). Moderator tooling for five simultaneous panels. Cost per country per month measured and reduced. The operational documentation that lets ACAPS run it without the founding team in the room.</p>
+    <div class="exit"><b>Exit:</b> three countries operating concurrently; moderator time under 20 minutes per country per week; runbook complete enough for a handover.</div>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-head"><span class="phase-id">P7</span><h4>Sustainability</h4><span class="phase-when">Weeks 30–44</span></div>
+  <div class="phase-body">
+    <p>Funding model, sector replication (the same instrument works for any organisation running expert panels on slow-moving risk), and the public outcomes layer the brief asks for — where resolved questions and their results are visible to everyone, including the experts who made them.</p>
+    <div class="exit"><b>Exit:</b> a funding commitment covering ≥12 months of operations, and a public outcomes page with ≥50 resolved questions.</div>
+  </div>
+</div>
+
+<h2 id="s7">07 — The Research Programme</h2>
+
+<p class="lede">Seven experiments, each designed to be able to fail. This is the machinery that makes winning probable rather than lucky: you will know which claims are true before you make them.</p>
+
+<table>
+  <tr><th style="width:7%">ID</th><th style="width:27%">Question</th><th style="width:30%">Design</th><th>What it changes if we are wrong</th></tr>
+  <tr><td class="num"><b>E1</b></td><td>What exactly must we beat?</td>
+      <td>Base rate, ACAPS probability, and a 4-field logistic model, all with k-fold CV on the 104 resolved risks.</td>
+      <td>Sets the target. If the logistic model beats experts-in-prospect, we reframe the product as enrichment, not forecasting.</td></tr>
+  <tr><td class="num"><b>E2</b></td><td>Does aggregation arithmetic matter?</td>
+      <td>Ablation: mean, median, trimmed mean, log-odds, extremised, and <i>surprisingly popular</i> (ask belief and belief-about-others). Scored on historical simulation and on E3's real panel data.</td>
+      <td>If a rule wins clearly, we adopt it. If not, we stop spending engineering time on it and say so — a credible negative result.</td></tr>
+  <tr><td class="num"><b>E3</b></td><td><b>Do experts actually add information?</b></td>
+      <td>Pre-registered. 20–30 experts × 40 resolved questions, blind. Primary outcome: incremental Brier skill over the baseline, with bootstrap CIs.</td>
+      <td><b>Everything.</b> This is the existential test. A null result pivots the product to "expert enrichment and dissent capture" — still valuable, honestly positioned, and far more defensible than an unsupported forecasting claim.</td></tr>
+  <tr><td class="num"><b>E4</b></td><td>Can the anonymity engine be broken?</td>
+      <td>Automated red-team: elimination, differencing across rounds, attribute combination, stylometry, timing correlation, 10,000 simulated publications.</td>
+      <td>If it breaks, we tighten thresholds and re-run. If it cannot be tightened without destroying utility, that is a fundamental design finding and we publish it.</td></tr>
+  <tr><td class="num"><b>E5</b></td><td>Does the Receipt drive retention?</td>
+      <td>Within-panel A/B over 6 weeks: receipt vs. no receipt, measured on week-4 and week-12 participation.</td>
+      <td>If no effect, retention needs a different mechanism (recognition, direct ask, cadence). Given 6 weeks, a within-panel A/B is weak — flagged, and run as a stepped-wedge instead.</td></tr>
+  <tr><td class="num"><b>E6</b></td><td>Is four minutes real?</td>
+      <td>Instrumented field test: 10 experts, real devices, throttled 3G, French and English.</td>
+      <td>If median > 4 min, the flow is redesigned before pilot. Non-negotiable constraint, not a stretch goal.</td></tr>
+  <tr><td class="num"><b>E7</b></td><td>Does the panel groupthink?</td>
+      <td>Measure round-1→round-2 convergence and whether convergence predicts accuracy. Compare blind-round-2 vs. visible-summary-round-2.</td>
+      <td>If convergence is large and uninformative, we change the protocol — a genuine protocol contribution rather than a UI tweak.</td></tr>
+</table>
+
+<div class="verdict ok">
+  <p><b>Why this programme is itself the winning move.</b> Every competitor will assert that expert panels improve analysis. You will have <i>tested</i> it, with a pre-registered design, on real outcomes, and be able to say what you found — including the parts that did not work. That is what "more than just an idea" means when a jury has to choose between four dashboards and one instrument that knows its own error bars.</p>
+</div>
+
+<h2 id="s8">08 — Trust engineering</h2>
+
+<p>Anonymity is the brief's stated non-negotiable, and the most common way to fail it is to treat it as a settings screen. Here it is a subsystem with its own tests.</p>
+
+<div class="grid2">
+  <div class="card tight">
+    <h4 style="margin-top:0">The threat model, in writing</h4>
+    <ul style="margin:8px 0 0">
+      <li><b>Adversary:</b> motivated reader holding all published outputs, plus general knowledge of who works where in a country's humanitarian sector.</li>
+      <li><b>Not defended against:</b> ACAPS insiders, state compulsion over the hosting organisation, global traffic analysis. Stated in the product.</li>
+      <li><b>Assets:</b> which expert said what, and their numeric forecasts across rounds.</li>
+      <li><b>Attack surface:</b> small cells, round-to-round differencing, attribute combinations, writing style, publication timing.</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <h4 style="margin-top:0">Controls, mapped to attacks</h4>
+    <ul style="margin:8px 0 0">
+      <li>Small cells → k-anonymity gate, publish-or-refuse.</li>
+      <li>Differencing → correlated-noise publication across consecutive releases.</li>
+      <li>Attributes → combination suppression on quasi-identifiers (role × country × tenure).</li>
+      <li>Style → paraphrase and merge free text before publication.</li>
+      <li>Timing → staggered, batched publication per country.</li>
+      <li>All of it → an automated red-team suite that must pass before any release.</li>
+    </ul>
+  </div>
+</div>
+
+<p><b>The demo moment this buys you:</b> a judge adds a hypothetical second expert to a cell and watches the system refuse to publish, with a plain-language reason — <i>"with two experts in eastern Chad, one of whom is fully anonymous, the anonymous view is identifiable by elimination."</i> Ten seconds, and no other team in the room can do it.</p>
+
+<h2 id="s9">09 — Pilot operations</h2>
+
+<h4>Chad, first</h4>
+<table>
+  <tr><th style="width:22%">Element</th><th>Plan</th></tr>
+  <tr><td><b>Why Chad</b></td><td>Two active risks (R1043, R1066 — the latter spanning Chad, Niger, Cameroon, Nigeria). Three triggers on R1043 at 40%/10%/20%. Exposure &gt;500,000. Named in the brief, so the ACAPS team already has it loaded in their heads.</td></tr>
+  <tr><td><b>Panel</b></td><td>7 experts: 2 conflict researchers, 2 local NGO leaders, 1 anticipatory-action practitioner, 1 donor-side methodologist, 1 wildcard with strong contextual knowledge. Recruited by ACAPS, not by us — the trust is theirs to lend.</td></tr>
+  <tr><td><b>Cadence</b></td><td>One question set per two weeks, four minutes each. Two complete cycles inside eight weeks. Deliberately low-frequency: this is a relationship, not an app.</td></tr>
+  <tr><td><b>Moderator load</b></td><td>Target 20 minutes per week. Measured, reported, and treated as a hard constraint.</td></tr>
+  <tr><td><b>Success</b></td><td>≥70% week-8 retention; ≥1 documented rating change traceable to panel input with analyst sign-off; median completion ≤4 min; zero anonymity incidents; moderator load within budget.</td></tr>
+  <tr><td><b>Failure, defined in advance</b></td><td>If by week 4 fewer than half the panel has contributed twice, stop and diagnose before adding countries. Adding panels to a leaking loop is how these programmes die.</td></tr>
+</table>
+
+<h4>What the pilot is really proving</h4>
+<p>Not that the software works — that is table stakes by P5. It is proving three things an NGO needs before it will adopt: that <b>experts return</b>, that <b>moderation is cheap</b>, and that <b>input changes output</b>. Those three, not uptime, are the adoption criteria.</p>
+
+<h2 id="s10">10 — Metrics</h2>
+
+<div class="card">
+  <h4 style="margin-top:0">North star</h4>
+  <p style="margin-bottom:0"><b>Documented changes to published ACAPS analysis that trace to panel contribution, per quarter.</b> Not "experts engaged", not "contributions collected". If the analysis did not move, the product did not work. This is the one number the whole system exists to increase, and it is deliberately hard to inflate.</p>
+</div>
+
+<table>
+  <tr><th style="width:30%">Metric</th><th style="width:16%">Target</th><th>Why this one</th></tr>
+  <tr><td>Median contribution time</td><td class="num">≤ 4 min</td><td>The brief's respect-for-time constraint, made measurable.</td></tr>
+  <tr><td>Week-8 panel retention</td><td class="num">≥ 70%</td><td>The stated failure mode. Directly instrumented.</td></tr>
+  <tr><td>Incremental Brier skill vs baseline</td><td class="num">&gt; 0</td><td>The existential claim, from E3. Reported with confidence intervals, not as a point.</td></tr>
+  <tr><td>Panel calibration slope</td><td class="num">0.85–1.15</td><td>Are stated probabilities honest? A slope near 1 means calibrated.</td></tr>
+  <tr><td>Resolution on-time rate</td><td class="num">≥ 90%</td><td>An unresolved question is a broken promise and a dead receipt.</td></tr>
+  <tr><td>Moderator minutes / country / week</td><td class="num">≤ 20</td><td>Adoption is gated on this, not on features.</td></tr>
+  <tr><td>Anonymity incidents</td><td class="num">0</td><td>Binary. One incident ends the programme's credibility.</td></tr>
+  <tr><td>Receipt open rate</td><td class="num">≥ 60%</td><td>The retention mechanism has to be seen to work.</td></tr>
+</table>
+
+<h2 id="s11">11 — Business model</h2>
+
+<p>The rubric allots 5%, which is the correct amount — but the pilot has to survive December, so the answer must be real.</p>
+
+<table>
+  <tr><th style="width:26%">Element</th><th>Position</th></tr>
+  <tr><td><b>Who pays</b></td><td>Institutional funders of humanitarian analysis — not ACAPS's programme budget, and not experts. The value accrues to donors who need better early warning and to the sector as a shared good.</td></tr>
+  <tr><td><b>Model</b></td><td>Grant-funded core, with a paid "managed panel" service for other analysis organisations (early-warning bodies, UN agencies, ministries) at a cost per country per year. Open-source core.</td></tr>
+  <tr><td><b>Cost to run</b></td><td>Deliberately tiny: a 7-person panel per country is compute-trivial. Inference cost is measured and reported; the AI is moderator-side and infrequent.</td></tr>
+  <tr><td><b>Who signs</b></td><td>Head of analysis or programmes at the adopting organisation. One page, one pilot, one renewal decision.</td></tr>
+  <tr><td><b>Why it is defensible</b></td><td>Not the software — the <b>calibration record</b>. After two years you hold a measured reliability score per panel and per question type, which no new entrant can buy. That is the moat, and it compounds.</td></tr>
+  <tr><td><b>One sentence for the slide</b></td><td>"We make expert judgement auditable, so that early warning can be trusted with money."</td></tr>
+</table>
+
+<h2 id="s12">12 — Brief compliance matrix</h2>
+
+<p>Every clause of the ACAPS brief, mapped to the mechanism that satisfies it. No clause unaddressed, nothing hand-waved.</p>
+
+<table>
+  <tr><th style="width:36%">Brief requirement</th><th>How BENCHMARK satisfies it</th></tr>
+  <tr><td><i>"Challenge, enrich and forecast ACAPS risk analyses"</i></td><td>Dissent routing (challenge) → free-text enrichment tied to triggers (enrich) → resolvable probabilistic questions (forecast). All three are distinct objects in the model, not one form.</td></tr>
+  <tr><td><i>"Over a six-month horizon"</i></td><td><code>Question.horizon</code> is mandatory and defaults to 180 days. Resolution queue and receipts are scheduled against it.</td></tr>
+  <tr><td><i>"Each expert chooses their own level of anonymity"</i></td><td>Three tiers, changeable at any time, retroactive on unpublished content.</td></tr>
+  <tr><td><i>"Never identifiable to the public"</i></td><td>Anonymity Budget Engine with a publish-or-refuse gate, plus a red-team suite that must pass.</td></tr>
+  <tr><td><i>"Ground-truthing existing risks"</i></td><td>Trigger-level agreement/disagreement against ACAPS's own completion rates — a measured comparison, not an opinion poll.</td></tr>
+  <tr><td><i>"Forecasting"</i></td><td>Resolvable questions with explicit criteria, scored by Brier skill with difficulty adjustment.</td></tr>
+  <tr><td><i>"Both feed one loop back into ACAPS analysis"</i></td><td>Both write to the same <code>Contribution</code>/<code>Forecast</code> stream consumed by the moderator copilot and the analyst export.</td></tr>
+  <tr><td><i>"Outcomes shared publicly"</i></td><td>Public outcomes page: resolved questions, verdicts, evidence, and the panel's aggregate — with individual contributions structurally absent.</td></tr>
+  <tr><td><i>"Real ACAPS risk data, ACAPS team on site"</i></td><td>Ingests the real export and the live Risk List API; pilot designed to start with the ACAPS team, not after them.</td></tr>
+  <tr><td><i>"Experts respond independently, see an anonymised summary, can refine"</i></td><td>Blind round 1 enforced in the data model → anonymised distribution → round 2 with reasons and measured delta. Delphi, literally.</td></tr>
+  <tr><td><i>"Build a track record, surface accurate super-estimators"</i></td><td>Calibration history per panelist; skill relative to baseline; weights with shrinkage; private percentile reporting only.</td></tr>
+  <tr><td><i>"Test your scoring approach before any expert joins"</i></td><td>E1 and E2: the benchmark and the aggregation ablation, run on the 104 resolved outcomes before recruitment.</td></tr>
+  <tr><td><i>"Contribute in a few minutes, at the moment it matters"</i></td><td>Four-minute budget, mobile-first, offline-tolerant; questions pushed on the event (new risk analysis, trigger movement), not on a calendar.</td></tr>
+  <tr><td><i>"5 to 10 experts per country"</i></td><td>Panel size is a hard schema constraint. The product cannot scale a panel past 10, by design.</td></tr>
+  <tr><td><i>"Aggregate without groupthink"</i></td><td>Structural independence, dissent promotion, instrumented convergence (E7).</td></tr>
+  <tr><td><i>"Diagnose whose judgement is reliable"</i></td><td>Difficulty-adjusted Brier skill; anchor-hugging detection; calibration curves per panelist.</td></tr>
+  <tr><td><i>"Should not feel like an AI chatbot"</i></td><td>AI is moderator-side only, citation-mandatory, and refused when unsupported.</td></tr>
+  <tr><td><i>"Should not optimise time-in-app"</i></td><td>North star is analytic change, not engagement. The product is designed to be closed quickly.</td></tr>
+  <tr><td><i>"Mobile and low bandwidth"</i></td><td>PWA, offline queue, payload budget, tested at 3G (E6).</td></tr>
+  <tr><td><i>"French and other working languages"</i></td><td>French, Arabic, Spanish at launch of P6; translation reviewed by domain speakers, not machine-only.</td></tr>
+  <tr><td><i>"Moderated by ACAPS, small and trusted"</i></td><td>Moderator is the only privileged role; recruitment is ACAPS's; ≤20 min/week target.</td></tr>
+  <tr><td><i>"Do not use personal data of real experts during the hackathon"</i></td><td>All synthetic personas; real experts only in E3 with informed consent and no personal data stored.</td></tr>
+  <tr><td><i>Deliverables: prototype, 3-min pitch, repo + description</i></td><td>Prototype runs; pitch written to 2:45; repo contains the benchmark script, the anonymity red-team suite and a README that states what works and what does not.</td></tr>
+  <tr><td><i>"2–3 most promising solutions piloted"</i></td><td>Chad pilot is specced, costed and ready to start in December — designed to be the easiest "yes" ACAPS has to make.</td></tr>
+</table>
+
+<h2 id="s13">13 — Risks &amp; kill criteria</h2>
+
+<table>
+  <tr><th style="width:26%">Risk</th><th style="width:10%">Likelihood</th><th style="width:34%">Mitigation</th><th>Kill / pivot trigger</th></tr>
+  <tr><td><b>Experts do not beat the baseline</b> (E3 null)</td><td>Moderate</td><td>Pre-registered design; difficulty adjustment; panel calibration weights. Pivot to enrichment-and-dissent framing, which is still valuable and honestly sold.</td><td>If incremental Brier ≤ 0 with a tight CI, stop claiming forecasting. Reposition within one week.</td></tr>
+  <tr><td><b>Experts won't return</b></td><td>Moderate–high</td><td>Receipt as the primary mechanism (E5); recognition; event-driven prompts rather than calendar nagging; ACAPS's own relationship with the panel.</td><td>&lt;50% contributed twice by week 4 → stop adding countries, diagnose, redesign the trigger for contribution.</td></tr>
+  <tr><td><b>Anonymity breach</b></td><td>Low</td><td>Engine + red team + refuse-to-publish + scoped threat model stated in product.</td><td>One incident → suspend publication, external review, public disclosure. Non-negotiable.</td></tr>
+  <tr><td><b>Questions prove unresolvable</b></td><td>Moderate</td><td>Only two templates, both tested; resolution SLA with an owner; resolution success rate is a tracked metric.</td><td>&lt;90% on-time resolution → template redesign before any panel expansion.</td></tr>
+  <tr><td><b>Too good to be true / mistrusted as an AI product</b></td><td>Low</td><td>Every AI output is cited and refusable; the expert surface has no AI in it at all.</td><td>Any expert-facing generative output → remove it.</td></tr>
+  <tr><td><b>Moderator workload creeps</b></td><td>Moderate</td><td>Exception-based queue; 20-min target measured weekly; automation of everything routine.</td><td>&gt;40 min/week sustained → stop and cut scope before the pilot expands.</td></tr>
+  <tr><td><b>ACAPS changes direction</b></td><td>Low–moderate</td><td>The instrument is generic: any slow-moving risk panel. Sector portability is designed in from P6.</td><td>If ACAPS withdraws, pivot to another early-warning body with the same build.</td></tr>
+</table>
+
+<h2 id="s14">14 — Why this wins</h2>
+
+<table class="scorewalk">
+  <tr><th style="width:20%">Criterion</th><th class="num" style="width:9%">Weight</th><th style="width:37%">What the jury sees</th><th>Why it beats the room</th></tr>
+  <tr><td>Concept</td><td class="num">40</td><td>A closed twelve-step loop with a measured validity claim, a dissent mechanism and a resolution protocol.</td><td>Everyone else has a form. You have an <i>instrument</i> — and you know its error bars.</td></tr>
+  <tr><td>Prototype</td><td class="num">20</td><td>Runs end to end on real data; the anonymity gate visibly refuses; the receipt fires.</td><td>You demo a refusal and a resolution, not a gradient and a button.</td></tr>
+  <tr><td>Technology feasibility</td><td class="num">15</td><td>Threat model, red-team suite, citation-mandatory AI, scoped claims.</td><td>Ethics is where the brief says it is — and you can <i>test</i> it.</td></tr>
+  <tr><td>Product potential</td><td class="num">15</td><td>Chad pilot specced, costed, ready for December.</td><td>They can say yes on Monday.</td></tr>
+  <tr><td>Business feasibility</td><td class="num">5</td><td>Who pays, who signs, what it costs, why it compounds.</td><td>One slide, no market-size theatre.</td></tr>
+  <tr><td>Wow factor</td><td class="num">5</td><td>"ACAPS rates Low risks 20%. In their own data those materialise 43% of the time. Here is what seven people in N'Djamena knew."</td><td>Opens on a finding about <i>them</i>, not about you.</td></tr>
+</table>
+
+<div class="verdict ok">
+  <p><b>Projected 92–95.</b> The gap to a very good conventional submission is almost entirely in three places: a measured baseline instead of an asserted one, a refusal you can demo instead of an anonymity promise, and a pilot that is planned rather than proposed. Each is worth more than a feature, and none of them requires a lucky jury.</p>
+</div>
+
+<h4>The three-minute pitch, written</h4>
+<div class="card">
+  <p><b>0:00 · The finding.</b> "ACAPS rates a risk Low. In ACAPS's own resolved history, Low risks materialise forty-three percent of the time. The analysis is good. It is also systematically under-confident at exactly the moment it most needs to be right — and it is built from public sources, not from the seven people in N'Djamena who already knew."</p>
+  <p><b>0:35 · The bar.</b> "Before we asked a single expert for four minutes, we built the number any panel has to beat: a logistic regression on ACAPS's own fields reaches 0.218 Brier with no human input, against 0.217 for ACAPS's analysts. Here is our panel's number, with confidence intervals."</p>
+  <p><b>1:10 · The demo.</b> "Chad. R1043. Three triggers, each with a baseline. An expert answers in ninety seconds, anonymous by default. Six say eighty. One, fully anonymous, says fifteen — and the system promotes her dissent to the analyst instead of averaging it away. Watch what happens when we try to publish: the anonymity gate refuses, and says why."</p>
+  <p><b>2:05 · The loop.</b> "Six months later the question resolves. She was wrong. She is told, with her score, and with the note that her dissent changed the published rationale anyway. That receipt is the entire retention strategy — and it is why this panel will still be here in December."</p>
+  <p><b>2:35 · The ask.</b> "Chad, seven experts, two cycles, eight weeks. The analyst material is already in place. Say yes on Monday and it starts Monday."</p>
+</div>
+
+<h2 id="s15">15 — The parallel track: OFFRAMP</h2>
+
+<p>If you have eight to ten people, run a second five-person pod on UNICRI. The platform permits it (<code>allowMultipleSubmissions: true</code>, <code>maxTeamSize: 5</code>), and two strong submissions in two tracks dominate one strong submission in one. Below is the compressed blueprint.</p>
+
+<div class="card">
+  <p><b>Concept — "OFFRAMP":</b> a plug-and-play prevention package that treats the warning as a <i>handover</i>, not a poster. Three claims nobody else will make: that the intervention <b>escalates</b> across repeat encounters rather than repeating; that the promise of confidentiality is <b>honest per jurisdiction</b>, including where the honest answer is "we cannot promise you that"; and that impact is measured in a way that <b>refuses to report</b> when the sample cannot support a claim.</p>
+</div>
+
+<table>
+  <tr><th style="width:22%">Pillar</th><th>What it is</th><th style="width:28%">Why it scores</th></tr>
+  <tr><td><b>Live in a Day</b></td><td>One tag, four-minute install, portability proven on a second unrelated page. A stopwatch on the dashboard.</td><td>Answers "days not months" with a measurement.</td></tr>
+  <tr><td><b>The Ladder</b></td><td>Session-scoped escalation: awareness → consequence → route to help → human handover, with hard caps and cooling-off. Answers the brief's explicit fifth-sighting question.</td><td>Highest concept ceiling in that track. State changes demo beautifully.</td></tr>
+  <tr><td><b>The Honest Router</b></td><td>Per-country confidentiality and legal position, sourced; explicitly <i>does not</i> promise confidentiality where law does not give it (England, Crime and Policing Act 2026).</td><td>Wins the ethics/legal 15% outright. Counter-intuitive and morally serious.</td></tr>
+  <tr><td><b>Blind Measurement</b></td><td>Suppression below 10; exposure reported immediately, direction after weeks, significance almost never; Bayesian credible intervals; sequential testing.</td><td>The only statistically honest dashboard in the room. ~4,600 impressions needed to detect a doubling — say the number out loud.</td></tr>
+  <tr><td><b>The Yes</b></td><td>Install wizard, data-flow diagram generated from the actual contract, DSA obligations checklist, sandbox mode, one-page sign-off memo.</td><td>Adoption is the actual market barrier. Activates the business 5%.</td></tr>
+</table>
+
+<p><b>OFFRAMP's research programme</b> (shorter, because the evidence base is external): a synthetic A/B harness on the message ladder; a habituation simulation at realistic volume; a resolvability test of the suppression rule at n=500/900/5,000; and a red-team of the plugin contract to prove the module cannot see query text. All are runnable without real people, which is why they are permissible. Say explicitly that <b>no real user data can be collected</b> and that field validation is the pilot's job — claiming otherwise is the fastest way to lose that track.</p>
+
+<div class="verdict teal">
+  <p><b>Sequencing:</b> BENCHMARK first, always. OFFRAMP's starter kit means a competent five-person pod can reach a strong submission from a standing start — it is the better hedge precisely because it needs less runway. Do not let it borrow BENCHMARK's people during P0–P2.</p>
+</div>
+
+<h2 id="s16">16 — Team &amp; operating cadence</h2>
+
+<table>
+  <tr><th style="width:26%">Role</th><th style="width:30%">Owns</th><th>Must be the kind of person who…</th></tr>
+  <tr><td><b>Principal / product</b></td><td>The loop, the priorities, the pitch, ACAPS relationship</td><td>Will cut a feature to protect a measurement.</td></tr>
+  <tr><td><b>Forecasting scientist</b></td><td>Scoring, elicitation protocol, E1/E2/E3/E7</td><td>Pre-registers before looking, and reports nulls.</td></tr>
+  <tr><td><b>Backend / security</b></td><td>Anonymity engine, red team, data model, audit</td><td>Attacks their own system for fun.</td></tr>
+  <tr><td><b>Frontend / mobile</b></td><td>PWA, the four-minute flow, offline, accessibility</td><td>Believes a slow screen is a design failure.</td></tr>
+  <tr><td><b>Design / research</b></td><td>Personas into flows, copy, E6, interview protocol</td><td>Will sit with a real expert and watch them struggle.</td></tr>
+  <tr><td><b>Domain / ops</b></td><td>Chad pilot, recruitment support, moderator runbook</td><td>Has actually worked in or alongside humanitarian response.</td></tr>
+</table>
+
+<h4>Cadence</h4>
+<ul>
+  <li><b>Weekly:</b> one decision review. Only one thing is decided — what to stop. Everything else is status.</li>
+  <li><b>Fortnightly:</b> a research review where the experiments report, including failures. Failures are agenda items, not embarrassments.</li>
+  <li><b>Monthly:</b> a pilot review against the four pilot success criteria, with authority to pause expansion.</li>
+  <li><b>Always:</b> a written decision log. Every irreversible choice — protocol, threat model scope, scoring rule — with the reasoning and the date. This artefact is also, conveniently, the strongest possible pitch material.</li>
+</ul>
+
+<h2 id="s17">17 — The next ten working days</h2>
+
+<table>
+  <tr><th style="width:14%">Day</th><th style="width:38%">Do</th><th>Why it is first</th></tr>
+  <tr><td><b>1</b></td><td>Build the benchmark script: base rate, ACAPS probability, 4-field logistic with k-fold CV. Commit it.</td><td>You cannot design anything until you know the number to beat.</td></tr>
+  <tr><td><b>2</b></td><td>Parse the 266 triggers into a clean table; verify what <code>Completion rate</code> means with ACAPS (one email, one question).</td><td>A1's validity depends on this; a wrong assumption invalidates the model.</td></tr>
+  <tr><td><b>3</b></td><td>Write the scoring spec — Brier skill, difficulty adjustment, panel weights — and circulate it to be attacked.</td><td>Scoring rules are irreversible in practice. Get them wrong and everything downstream is wrong.</td></tr>
+  <tr><td><b>4</b></td><td>Pre-register E3 (the existential study): hypotheses, sample, primary outcome, analysis plan.</td><td>Pre-registration is what makes the result credible and unfakeable.</td></tr>
+  <tr><td><b>5</b></td><td>Resolution protocol: two templates, criterion DSL, SLA, resolver roles. Draft the "how questions resolve" public page.</td><td>Resolution is the load-bearing wall. Most projects discover this too late.</td></tr>
+  <tr><td><b>6</b></td><td>Threat model document + the first version of the red-team suite (attacks only, no engine).</td><td>Write the attacks before the defence or you will build a defence that only stops the attacks you imagined.</td></tr>
+  <tr><td><b>7</b></td><td>Four-minute elicitation flow, paper prototype, tested on a real phone at throttled 3G with one domain expert.</td><td>Everything else is negotiable; the time budget is not.</td></tr>
+  <tr><td><b>8</b></td><td>Chad pilot one-pager: panel make-up, cadence, success criteria, what ACAPS must supply.</td><td>The pilot is the product's real customer. Design it before the software.</td></tr>
+  <tr><td><b>9</b></td><td>Build the anonymity gate against the red-team suite until it passes.</td><td>It must be a tested refusal, not a described policy.</td></tr>
+  <tr><td><b>10</b></td><td>Write the pitch from the decision log. Rehearse at 2:45. Cut everything that is not a finding.</td><td>The pitch is the compression of the programme, not a separate artefact.</td></tr>
+</table>
+
+<div class="callout">
+  <h4>The one sentence to keep above the desk</h4>
+  <p><b>We are not building a tool for experts to talk to ACAPS. We are building the instrument that makes expert judgement auditable — and we will have measured whether it works before we ask anyone to trust it.</b></p>
+  <p class="small" style="margin-bottom:0">Everything in this plan follows from that sentence, including the parts that are uncomfortable: the pre-registered null, the refusal to publish, the red team, the kill criteria.</p>
+</div>
+
+<h2 id="s18">18 — What we would need to be wrong about</h2>
+
+<p>A plan that cannot be wrong is not a plan. These are the beliefs this whole thing rests on, ranked by how much would break if they fail.</p>
+
+<table>
+  <tr><th style="width:9%">Rank</th><th style="width:36%">Belief</th><th style="width:20%">If false</th><th>How we would find out</th></tr>
+  <tr><td class="num">1</td><td>A small expert panel adds predictive information beyond structured metadata.</td><td><b>Everything.</b> Reposition as enrichment and dissent capture.</td><td>E3, pre-registered, weeks 8–20.</td></tr>
+  <tr><td class="num">2</td><td><code>Completion rate</code> on a trigger is a usable expert-derived baseline.</td><td>The anchor feature weakens; scoring needs a different baseline.</td><td>Day 2, one email to ACAPS, plus inspection of trigger histories.</td></tr>
+  <tr><td class="num">3</td><td>Receipts change retention more than novelty does.</td><td>Retention needs a different mechanism; the pilot timeline is at risk.</td><td>E5, stepped-wedge, weeks 16–28.</td></tr>
+  <tr><td class="num">4</td><td>Four minutes is achievable on the expert's real devices and connections.</td><td>Redesign the flow before pilot; possibly drop to one question per cycle.</td><td>E6, instrumented, week 7.</td></tr>
+  <tr><td class="num">5</td><td>Anonymity can be guaranteed strongly enough that experts believe it.</td><td>Recruitment fails. Trust is not recoverable retrospectively.</td><td>E4 red team, plus interviews with real experts on what they would trust.</td></tr>
+  <tr><td class="num">6</td><td>ACAPS wants a measured instrument rather than a friendly interface.</td><td>You win the jury and lose the pilot.</td><td>The Day 8 pilot one-pager, reviewed with the ACAPS team before building further.</td></tr>
+</table>
+
+<footer>
+  <p><b>Basis.</b> Analysis computed directly from <code>risk-radar-export.csv</code> (139 risks × 25 fields, 104 resolved): calibration gaps by rating level, AUC 0.703, Brier floor 0.2425, ACAPS-probability 0.2168, logistic 0.2177 leave-one-out (in-sample 0.1965, not quoted), aggregation ablation over 300 simulated 7-person panels, and the trigger parse (108/139 risks, 266 blocks, mean completion 52.6%). Both challenge briefs and both starter repositories reviewed in full.</p>
+  <p><b>Companion documents.</b> <code>HFG8-end-to-end-analysis.html</code> — event mechanics, judging, data forensics, organiser defect list. <code>HFG8-project-directions.html</code> — fourteen weekend-scale directions with projected scores.</p>
+  <p class="small">Projected scores are estimates against the published 100-point rubric, not forecasts. The calibration figures carry sample-size caveats stated in §1; the aggregation result in particular rests on a simulation whose assumptions are stated and will be retested in E2.</p>
+</footer>
+
+</div>
+</body>
+</html>

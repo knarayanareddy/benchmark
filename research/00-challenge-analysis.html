@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hackathon for Good #8 — End-to-End Challenge Analysis</title>
+<style>
+  :root{
+    --ink:#12161c; --ink2:#3b444f; --muted:#6b7480; --rule:#dcd8d0;
+    --paper:#f8f6f2; --card:#fff; --accent:#a8321c; --teal:#0d6567;
+    --gold:#8a6a1f; --bar:#1f2933; --good:#1e7a4a; --warn:#a8321c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16.5px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 28px 120px}
+  header.hero{
+    padding:64px 0 40px; border-bottom:3px solid var(--ink); margin-bottom:14px;
+  }
+  .kicker{
+    font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin-bottom:18px;
+  }
+  h1{font-size:42px; line-height:1.1; margin:0 0 18px; letter-spacing:-.022em; font-weight:800}
+  .sub{font-size:19px; color:var(--ink2); max-width:44em; margin:0 0 26px}
+  .metaline{display:flex;flex-wrap:wrap;gap:10px 26px;font-size:13px;color:var(--muted)}
+  .metaline b{color:var(--ink);font-weight:600}
+  h2{
+    font-size:13px; letter-spacing:.14em; text-transform:uppercase; font-weight:800;
+    color:var(--accent); margin:64px 0 6px; padding-top:22px; border-top:1px solid var(--rule);
+  }
+  h3{font-size:25px; line-height:1.24; margin:10px 0 14px; letter-spacing:-.012em; font-weight:750}
+  h4{font-size:17px; margin:30px 0 8px; font-weight:700; letter-spacing:-.005em}
+  h5{font-size:14.5px; margin:22px 0 6px; font-weight:700; color:var(--ink2); text-transform:uppercase; letter-spacing:.06em}
+  p{margin:0 0 15px}
+  ul,ol{margin:0 0 16px; padding-left:22px}
+  li{margin-bottom:7px}
+  strong{font-weight:680}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.87em; background:#eceae5; padding:1.5px 5px; border-radius:3px;
+  }
+  .lede{font-size:18.5px;color:var(--ink2)}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;margin:22px 0}
+  .card.tight{padding:16px 20px}
+  .verdict{border-left:4px solid var(--accent);background:#fff;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0}
+  .verdict.ok{border-left-color:var(--good)}
+  .verdict.teal{border-left-color:var(--teal)}
+  .verdict p:last-child{margin-bottom:0}
+  table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.2px;background:#fff}
+  th{
+    text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);font-weight:800;border-bottom:2px solid var(--ink);padding:9px 10px;
+    vertical-align:bottom;
+  }
+  td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+  tr:last-child td{border-bottom:1px solid var(--ink)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .tbl-note{font-size:12.5px;color:var(--muted);margin:-12px 0 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+  .stat .n{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-top:5px}
+  .stat .s{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;
+       padding:3px 8px;border-radius:4px;background:#eceae5;color:var(--ink2);margin-right:6px}
+  .tag.red{background:#f6e3de;color:var(--accent)}
+  .tag.green{background:#dff0e6;color:var(--good)}
+  .tag.blue{background:#dde9ea;color:var(--teal)}
+  .tag.gold{background:#f3ead4;color:var(--gold)}
+  .quote{font-size:17px;font-style:italic;color:var(--ink2);border-left:3px solid var(--rule);padding-left:18px;margin:22px 0}
+  .small{font-size:13.5px;color:var(--muted)}
+  hr{border:0;border-top:1px solid var(--rule);margin:36px 0}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:20px 24px;margin:26px 0 8px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px;font-size:14px}
+  .toc li{margin-bottom:5px}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  .toc a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+  @media(max-width:720px){.toc ol{columns:1}}
+  .bars{margin:8px 0 18px}
+  .barrow{display:grid;grid-template-columns:150px 1fr 74px;align-items:center;gap:10px;margin-bottom:6px;font-size:13.5px}
+  .barsvg{height:22px;display:block}
+  .bnum{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;text-align:right;color:var(--ink2)}
+  .callout{background:#12161c;color:#f4f2ee;border-radius:10px;padding:24px 26px;margin:26px 0}
+  .callout h4{color:#fff;margin-top:0}
+  .callout code{background:#2a323c;color:#e8e4dc}
+  .callout .small{color:#a9b0b8}
+  .clock{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:var(--accent)}
+  footer{margin-top:70px;padding-top:22px;border-top:3px solid var(--ink);font-size:12.5px;color:var(--muted)}
+  .two-col{column-count:2;column-gap:34px}
+  @media(max-width:720px){.two-col{column-count:1}}
+  .two-col li{break-inside:avoid}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">End-to-end analysis · Junction Platform · Event ID 20</div>
+  <h1>Hackathon for Good #8</h1>
+  <p class="sub">A full read of <code>/participate/20/challenges</code> — the platform, the two partner challenges, the judging mechanics, the data behind them, and what to build with the hours you have left.</p>
+  <div class="metaline">
+    <span><b>Event</b> Hackathon for Good #8</span>
+    <span><b>Host</b> The Hague Tech</span>
+    <span><b>Dates</b> 6–8 Nov 2026</span>
+    <span><b>Venue</b> Waldorpstraat 5, Den Haag</span>
+    <span><b>Challenges</b> ACAPS · UNICRI &amp; UAE MoI</span>
+    <span><b>Participants</b> 170 registered</span>
+  </div>
+</header>
+
+<div class="toc">
+  <div class="small" style="margin-bottom:10px"><b>Contents</b></div>
+  <ol>
+    <li><a href="#s1">What you are actually looking at</a></li>
+    <li><a href="#s2">The event, decoded from the platform</a></li>
+    <li><a href="#s3">Portfolio: the two challenges side by side</a></li>
+    <li><a href="#s4">ACAPS deep dive + data forensics</a></li>
+    <li><a href="#s5">UNICRI deep dive + measurement math</a></li>
+    <li><a href="#s6">The judging machine</a></li>
+    <li><a href="#s7">Execution plan: T-minus now to deadline</a></li>
+    <li><a href="#s8">Failure modes</a></li>
+    <li><a href="#s9">For the organisers: 8 fixable defects</a></li>
+  </ol>
+</div>
+
+<div class="verdict">
+  <p><b>The one-paragraph verdict.</b> You are one hour from <i>Hacking starts</i>. This is not a two-challenge hackathon with equal options: it is a <b>distribution problem</b> (UNICRI) racing a <b>calibration and trust problem</b> (ACAPS). Both briefs are unusually well-resourced — real data, a starter kit, named on-site owners, and a post-event pilot as the actual prize. The 100-point rubric puts <b>60 points on Concept + Prototype</b> and only 5 on business model, which tells you precisely what to optimise. The two things that will decide the winner are the ones least written down: <b>whether your anonymity model survives contact with a real expert</b>, and <b>whether you can prove your scoring works before any expert ever joins</b>.</p>
+</div>
+
+<h2 id="s1">01 — What you are actually looking at</h2>
+<h3>The page is a decision surface, not a poster</h3>
+
+<p>Before treating <code>/participate/20/challenges</code> as content, it is worth being precise about what the artefact is. Probing it from the outside tells you a lot about the product it belongs to.</p>
+
+<table>
+  <tr><th style="width:34%">Observation</th><th>What it means</th></tr>
+  <tr>
+    <td>Signed-out request returns <code>404</code> with header <code>x-clerk-auth-status: signed-out</code>, <code>x-matched-path: /404</code></td>
+    <td>This is a Clerk <b>protect-rewrite</b>, not a genuine missing page. Route IDs 1–46 and 55 all return the same 404 when logged out, so the gate is global to <code>/participate/*</code>. Nothing about the challenge set is indexable or linkable to a non-registered visitor.</td>
+  </tr>
+  <tr>
+    <td>Response is cached at the edge (<code>x-vercel-cache: HIT</code>, <code>age: 73136</code>, ~20 h)</td>
+    <td>The 404 is being served from Vercel's CDN. Signed-out visitors hit a stale gate; there is no soft landing, no teaser, no "sign in to see 2 challenges". A bounced recruiter or journalist cannot see what the event is about.</td>
+  </tr>
+  <tr>
+    <td>Public event page renders all content server-side, but ships <code>"challenges":[]</code></td>
+    <td>Challenge data is deliberately stripped from public RSC payloads. On the public page it is <code>[]</code>; on the participator page it is fetched per-registration. Challenges are treated as <b>participant-scoped content</b>.</td>
+  </tr>
+  <tr>
+    <td>API is tRPC over <code>/api/trpc</code>; <code>skill.getUserSkills</code> returns <code>401 "You must be logged in"</code>; <code>event.getAllFutureEvents</code> is anonymous</td>
+    <td>Clean split of public vs. authenticated procedures. Event discovery is public; anything personal or challenge-scoped requires a session. Reasonable design, competently enforced.</td>
+  </tr>
+</table>
+
+<p>The practical consequence for a participant: <b>the challenge page is where you commit</b>. It is not a brochure you skim — it is the screen where a team binds itself to a partner, a dataset and a judging track. Which means the quality of that page's information architecture has direct consequences on Sunday afternoon.</p>
+
+<div class="verdict teal">
+  <p><b>On information architecture:</b> the page gives you four things per challenge — <i>The Challenge</i>, <i>Insight</i>, <i>Resources</i>, <i>Company Info</i> — then <i>Judging Criteria</i> and <i>Prizes</i>. That ordering is doing quiet work. Putting <b>Insight</b> second, before resources, tells you the organisers consider the framing of the problem to be the scarce asset, not the API keys. And in both challenges, the <i>Prizes</i> block is not money: it is <b>continuation</b> — a pilot, a publication, a global hub. Read that as the real success metric of the weekend.</p>
+</div>
+
+<h3>The event identity</h3>
+<p>The <code>20</code> in the URL resolves cleanly. Querying the platform's future-events procedure returns exactly three upcoming events, and ID 20 is the first:</p>
+
+<div class="card tight">
+<table style="margin:0">
+  <tr><th>Event ID</th><th>Name</th><th>Slug</th><th>Starts</th></tr>
+  <tr><td class="num">20</td><td><b>Hackathon for Good #8</b></td><td><code>hackathon-for-good-8</code></td><td>6 Nov 2026</td></tr>
+  <tr><td class="num">55</td><td>Junction China 2026</td><td><code>Junction-China-2026</code></td><td>upcoming</td></tr>
+  <tr><td class="num">45</td><td>Junction 2026: European Tech Renaissance</td><td><code>junction-2026</code></td><td>13 Nov 2026</td></tr>
+</table>
+</div>
+
+<p class="tbl-note">A useful side-effect: if you had assumed <code>/participate/20</code> was Junction 2026 — the obvious guess, given Junction's own flagship is the loudest event on the domain — you would have briefed yourself on the wrong hackathon entirely. Junction 2026 is ID 45, a week later, in Espoo, with 3,557 participants. HFG #8 is ID 20, this weekend, in The Hague, with 170.</p>
+
+<h2 id="s2">02 — The event, decoded from the platform</h2>
+
+<p>Everything below is read from the event record and the public schedule rather than from marketing copy. Times converted to <b>Europe/Amsterdam (CET, UTC+1)</b>, which is the event's display timezone.</p>
+
+<div class="grid3">
+  <div class="stat"><div class="n">46 h</div><div class="l">Hacking window</div><div class="s">Fri 13:00 → Sun 11:00 CET</div></div>
+  <div class="stat"><div class="n">26 h</div><div class="l">Actual on-site build time</div><div class="s">Venue closes 22:00–08:00 both nights</div></div>
+  <div class="stat"><div class="n">170</div><div class="l">Registered participants</div><div class="s">≈ 30–60 teams at 3–5 per team</div></div>
+</div>
+
+<h4>The clock that matters</h4>
+<table>
+  <tr><th style="width:22%">Time (CET)</th><th>Milestone</th><th>Why it matters</th></tr>
+  <tr><td class="num">Fri 13:00</td><td>Hacking starts</td><td>Challenge deep dives at 14:00 — the single highest-value hour of the weekend. On-site owners are answering questions before they are tired.</td></tr>
+  <tr><td class="num">Fri 22:00</td><td>Building closes</td><td>Hard stop. Plan the night's asynchronous work now, not at 21:50.</td></tr>
+  <tr><td class="num">Sat 16:00</td><td>Pitch practice &amp; feedback</td><td>Free dress rehearsal with organisers. Most teams skip this and then improvise a 3-minute pitch cold.</td></tr>
+  <tr><td class="num">Sun 11:00</td><td><b>Submission deadline</b></td><td><span class="tag red">critical</span> See the discrepancy below.</td></tr>
+  <tr><td class="num">Sun 13:00</td><td>Round 1 — track pitches</td><td>Per-challenge judging. This is where ACAPS/UNICRI pick their pilots.</td></tr>
+  <tr><td class="num">Sun 15:00</td><td>Finalists announced</td><td>30 to 100 minutes between rounds. Rehearse a second, different pitch.</td></tr>
+  <tr><td class="num">Sun 15:10</td><td>Grand final</td><td>40 minutes for every finalist.</td></tr>
+  <tr><td class="num">Sun 16:10</td><td>Winner announced</td><td>Partner awards at 15:50 — separate from the main prize.</td></tr>
+</table>
+
+<div class="callout">
+  <h4>⚠ A one-hour discrepancy that can cost you the weekend</h4>
+  <p>The public event schedule lists <b>“Hacking ends, submission deadline — 8 Nov 2026, 12:00”</b>. The platform's own event record sets <code>submissionsEndTime</code> to <b>2026-11-08 10:00 UTC</b>, which is <b>11:00 CET</b>. The hard close on the submission form is an hour earlier than the schedule everyone will be reading.</p>
+  <p class="small" style="margin-bottom:0">Treat <b>11:00 CET</b> as the real deadline. Build for <b>10:30</b>. Teams that trust the printed schedule will lose their submission — and there is no remedy once reviewing opens at 11:00.</p>
+</div>
+
+<h4>Structural settings worth knowing</h4>
+<div class="card">
+<table style="margin:0">
+  <tr><th style="width:38%">Setting</th><th>Value</th><th>Implication</th></tr>
+  <tr><td><code>allowMultipleSubmissions</code></td><td class="num">true</td><td>You can submit more than one project. Do not. Split focus at 46 hours is how good teams place fourth.</td></tr>
+  <tr><td><code>maxTeamSize</code></td><td class="num">5</td><td>Description text says teams of <b>2–6</b>. The platform will not let a 6th member in. Reconciled below.</td></tr>
+  <tr><td><code>hasGavelVoting</code></td><td class="num">true</td><td>Judging runs on Gavel — structured, weighted peer scoring, not a show of hands.</td></tr>
+  <tr><td><code>hasFinalistVoting</code></td><td class="num">true</td><td>Two-stage: track round, then finalist round.</td></tr>
+  <tr><td><code>reviewAnyChallenge</code></td><td class="num">true</td><td>Judges are not siloed to one track — your pitch has to land for a generalist as well as the partner.</td></tr>
+  <tr><td><code>showScore</code> · <code>showFeedback</code></td><td class="num">true · true</td><td>You get scored feedback afterwards. Design your submission to be <i>read</i> by a judge with 6 minutes and a rubric.</td></tr>
+  <tr><td><code>physicalPeerReview</code></td><td class="num">false</td><td>Unlike Junction's flagship, there is no top-5-by-peers stage. Straight to track judging.</td></tr>
+</table>
+</div>
+
+<h4>The partner roster</h4>
+<p>Seven partners are attached to the event, but only two own challenges. That distinction is the most under-read signal on the page:</p>
+<div class="grid2">
+  <div class="card tight">
+    <div class="tag red">Challenge owners</div>
+    <p style="margin:8px 0 0"><b>ACAPS</b> — humanitarian risk analysis · <b>UNICRI &amp; UAE Ministry of Interior</b> — AI for Safer Children. These two define the work, judge it, and hand out the continuation prizes.</p>
+  </div>
+  <div class="card tight">
+    <div class="tag blue">Tool &amp; platform partners</div>
+    <p style="margin:8px 0 0"><b>AWS · GreenPT · Lovable · Bright Data Initiative · Dutch Blockchain Week.</b> These are infrastructure and side-award surfaces, not tracks.</p>
+  </div>
+</div>
+<p>Practical read: <b>AWS, Lovable, Bright Data and GreenPT exist in your build as accelerators, and in your pitch as a sentence.</b> "Deployed on AWS, dashboard built in Lovable, enrichment via Bright Data" is 15 seconds of anecdote that earns goodwill with named partners without costing a minute of engineering. GreenPT — a sustainability-positioned inference provider — is worth a line if your solution touches compute cost, which a 10-expert-per-country moderating tool absolutely does.</p>
+
+<h2 id="s3">03 — Portfolio: the two challenges, compared</h2>
+
+<p>The two briefs share a rubric and a room, and almost nothing else. Laid out side by side, the strategic difference is stark.</p>
+
+<table>
+  <tr>
+    <th style="width:26%"></th>
+    <th style="width:37%">ACAPS — Ground Truth</th>
+    <th style="width:37%">UNICRI — Stop Before It Starts</th>
+  </tr>
+  <tr><td><b>Core ask</b></td>
+      <td>An expert loop that lets humanitarian specialists challenge, enrich and forecast risk analyses, with self-controlled anonymity.</td>
+      <td>A plug-and-play prevention package platforms can switch on in days, warning people seeking CSAM and routing them to help.</td></tr>
+  <tr><td><b>Discipline</b></td>
+      <td>Product + statistics. Calibration, aggregation, incentive design, moderation tooling.</td>
+      <td>Product + distribution. Integration ergonomics, message design, privacy-preserving measurement.</td></tr>
+  <tr><td><b>Primary user</b></td>
+      <td>A busy field expert, 5–10 per country, recruited and trusted by ACAPS.</td>
+      <td>Two users: a part-time moderator at a 20k-member forum, and a person in crisis at the moment of search.</td></tr>
+  <tr><td><b>Data supplied</b></td>
+      <td><span class="tag green">Strong</span> 139 risks, 25 fields, 57 countries, resolved outcomes for 104.</td>
+      <td><span class="tag green">Strong</span> Help-service directory, NL/EN message blocks with citations, plugin contract, synthetic traffic generator.</td></tr>
+  <tr><td><b>Starter code</b></td>
+      <td><span class="tag gold">Reference only</span> A notebook and docs. No app skeleton — you start from zero.</td>
+      <td><span class="tag green">Runnable</span> Mock platform, Vite dev server, Express backend, JSON schemas, safety test suite. <code>npm run dev</code> works.</td></tr>
+  <tr><td><b>Hard constraint</b></td>
+      <td>Anonymity is non-negotiable and expert-controlled. Contributions always anonymous to the public.</td>
+      <td>No real data of any kind. Only <code>test-trigger-*</code> placeholders. Aggregate counts suppressed below 10.</td></tr>
+  <tr><td><b>Proof that you are right</b></td>
+      <td>Backtest your scoring against 104 resolved outcomes. High risk materialised 84.2%, Medium 46.6%.</td>
+      <td>No live traffic, no real users. Prove it with the synthetic generator and a clean A/B harness.</td></tr>
+  <tr><td><b>Real prize</b></td>
+      <td>Pilot with ACAPS, ~2 months, from December, with real experts.</td>
+      <td>Publication on the AI for Safer Children Global Hub + possible pilot of 2–3 solutions.</td></tr>
+  <tr><td><b>Hardest part</b></td>
+      <td>Staying useful over months with a 5–10 person panel that has no obligation to return.</td>
+      <td>Getting a sceptical moderator to install it — and measuring impact without collecting data on the people you are protecting.</td></tr>
+  <tr><td><b>Biggest trap</b></td>
+      <td>Building a slick survey app with no scoring model. The evidence is in the outcomes, not the UI.</td>
+      <td>Building detection. The brief explicitly says don't — detection already exists, distribution doesn't.</td></tr>
+  <tr><td><b>Ethical load</b></td>
+      <td>Moderate. Sensitivity around expert identity and attribution risk in conflict contexts.</td>
+      <td>Very high. Self-care guidance, no real people, no real terms, no vigilante tooling.</td></tr>
+</table>
+
+<div class="verdict">
+  <p><b>How to choose, if you have not already.</b> Pick ACAPS if you have someone who can run a spreadsheet for two hours and defend a scoring model on stage; the dataset is your entire advantage and it rewards rigour. Pick UNICRI if you have someone who can ship a clean embeddable widget and write a persuasive install path; the starter kit is real working code and the demo can look genuinely finished by Sunday morning. <b>Do not pick UNICRI thinking it is easier</b> — the build is easier and the thinking is harder, and 40 points sit on the thinking.</p>
+</div>
+
+<h2 id="s4">04 — ACAPS: Ground Truth, decoded</h2>
+
+<p class="lede">The brief asks a product question. The data answers a statistical one. Teams that only read the first will build a beautiful thing that cannot prove anything.</p>
+
+<h4>What is actually being asked</h4>
+<p>Strip the framing and the deliverable is a <b>moderated, small-panel elicitation system with self-sovereign anonymity and a scoring model that survives six months of latency</b>. Three constraints do most of the work:</p>
+<ol>
+  <li><b>5–10 experts per country.</b> Not a platform. Not a community. A panel. This is the single most important number in the brief and it kills most growth-style product thinking.</li>
+  <li><b>Minutes, not sessions.</b> A contribution must be completable on a phone, on bad bandwidth, in a gap between meetings.</li>
+  <li><b>Nobody is ever identifiable to the public.</b> Not "we anonymise". Structurally cannot be attributed.</li>
+</ol>
+
+<p>The brief then names two directions — <b>ground truthing</b> (Delphi-style reaction to ACAPS analyses) and <b>forecasting</b> (probability of resolvable events over six months) — and says the strongest solutions show how both feed one loop back into analysis, with outcomes shared publicly.</p>
+
+<h4>The four personas are a spec, not colour</h4>
+<table>
+  <tr><th style="width:20%">Persona</th><th style="width:26%">Real constraint</th><th>What it forbids you from building</th></tr>
+  <tr><td><b>Jose</b><br><span class="small">Head of UN agency, regional office, Jordan. Six countries.</span></td>
+      <td>Wants field users to feed quality back to HQ. Sits between them and cannot see what they see.</td>
+      <td>A tool that only speaks to the analyst. Jose is a <i>filter</i> — your output has to be legible to a regional coordinator, not only to ACAPS HQ.</td></tr>
+  <tr><td><b>Emily</b><br><span class="small">Methodology lead, donor agency HQ.</span></td>
+      <td>Judging source reliability. When an analysis looks wrong she goes elsewhere to check.</td>
+      <td>Uncited claims. Every aggregation you show her needs provenance or she will not trust it twice.</td></tr>
+  <tr><td><b>Pierre</b><br><span class="small">MEAL officer, IFRC, field-deployed. Nairobi.</span></td>
+      <td>Scenario planning is demanded of him, he lacks method and time, and doubts the effort pays off.</td>
+      <td>Anything that requires a workshop. If Pierre cannot do it in a 4-minute window on a phone, it does not happen.</td></tr>
+  <tr><td><b>Aisha</b><br><span class="small">Country director, INGO, 150+ staff.</span></td>
+      <td>Needs political projection to plan programmes and fundraising.</td>
+      <td>Pure risk language. She is buying <i>foresight about what comes next</i>, not a dashboard of what is already known.</td></tr>
+</table>
+
+<div class="verdict teal">
+  <p><b>The insight hiding in the personas.</b> Pierre "doubts the value of the effort" and Emily "goes elsewhere to check". Neither is a motivation problem — they are both <b>evidence problems</b>. The winning product does not gamify experts into contributing. It <b>shows them, on entry, that the last time this panel spoke, the analysis changed</b>. A visible change-log from expert input to published risk rating is worth more than any points, badges or streaks.</p>
+</div>
+
+<h4>Data forensics: what the Risk Radar export actually supports</h4>
+<p>I parsed the provided export — <code>data/risk-radar-export.csv</code>, 139 rows × 25 columns. The headline claim in the brief ("roughly eight in ten High risks materialised, against about four in ten Low") is directionally right but needs care. Here is the honest version, computed on the 104 resolved risks:</p>
+
+<div class="card">
+  <div class="bars">
+    <div class="barrow"><span>High (n=38)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect x="0" y="0" width="84.2" height="22" fill="#a8321c"/></svg>
+      <span class="bnum">84.2%</span></div>
+    <div class="barrow"><span>Medium (n=58)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect x="0" y="0" width="46.6" height="22" fill="#8a6a1f"/></svg>
+      <span class="bnum">46.6%</span></div>
+    <div class="barrow"><span>Low (n=3)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect x="0" y="0" width="33.3" height="22" fill="#6b7480"/></svg>
+      <span class="bnum">33.3%</span></div>
+  </div>
+  <p class="small" style="margin:0">Materialisation rate among resolved risks, by ACAPS Risk Level. High vs Medium difference is statistically solid: <b>z = 3.71</b>. The Low bucket has only 3 resolved cases and cannot carry an argument — do not put it on a slide as if it means something.</p>
+</div>
+
+<p>The brief says "about four in ten of those rated Low". That is the headline from an earlier cut of the data; here Low resolved n=3. <b>If you build a slide on the Low bucket you will be corrected by the challenge owner in the room.</b> The Medium/High contrast is the defensible story.</p>
+
+<h5>Finding 1 — Probability carries the signal; Impact does not</h5>
+<p>Correlation with materialisation across resolved risks:</p>
+<table>
+  <tr><th>Field</th><th class="num">Correlation with "materialised"</th><th>Reading</th></tr>
+  <tr><td>Probability (ordinal 1–5)</td><td class="num">0.348</td><td>The predictive spine. High/Very High → 84.2%; Low/Very Low → 41.2%.</td></tr>
+  <tr><td>Impact (1–5)</td><td class="num">0.111</td><td>Essentially noise. Impact is <i>severity if it happens</i>, not <i>likelihood it happens</i>.</td></tr>
+</table>
+<p>This matters because "Risk Level" is a composite that is dominated by probability, and because a naive elicitation design will ask experts to estimate both dimensions in the same gesture. <b>They are different questions with different resolution criteria.</b> Ask them separately, score them separately. A design that asks "how risky is this?" produces an unfalsifiable answer and no track record.</p>
+
+<h5>Finding 2 — Big risks resolve; small risks disappear</h5>
+<div class="card tight">
+  <div class="bars">
+    <div class="barrow"><span>&gt;500,000 (n=46)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="73.9" height="22" fill="#12161c"/></svg><span class="bnum">73.9%</span></div>
+    <div class="barrow"><span>250k–500k (n=11)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="63.6" height="22" fill="#12161c"/></svg><span class="bnum">63.6%</span></div>
+    <div class="barrow"><span>100k–250k (n=7)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="57.1" height="22" fill="#12161c"/></svg><span class="bnum">57.1%</span></div>
+    <div class="barrow"><span>20k–100k (n=16)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="56.2" height="22" fill="#12161c"/></svg><span class="bnum">56.2%</span></div>
+    <div class="barrow"><span>&lt;20,000 (n=21)</span>
+      <svg class="barsvg" viewBox="0 0 100 22" preserveAspectRatio="none"><rect width="23.8" height="22" fill="#a8321c"/></svg><span class="bnum">23.8%</span></div>
+  </div>
+  <p class="small" style="margin:0">Materialisation rate by expected exposure band, resolved risks. Small-scale risks appear far less likely to "materialise" — but this is at least partly <b>observability</b>, not reality. Nobody publishes when 8,000 people are affected the way they do when 800,000 are.</p>
+</div>
+<p><b>Design consequence:</b> any scoring scheme that rewards "did it materialise" will systematically reward experts who predict large, visible, well-covered risks and punish those with granular local knowledge — exactly the people ACAPS most needs. Build in a <b>difficulty adjustment</b> (resolve-rate-normalised scoring, or Brier with per-question base rates) or you will optimise your panel into noise.</p>
+
+<h5>Finding 3 — There is no resolution date, and that breaks the forecast track record</h5>
+<p>The export has 25 columns and <b>not one of them is a date field</b>. The only temporal signal is free text: <code>Rationale update</code>, of which only <b>63 of 139 rows</b> contain a parseable date. "What materialised?" is a prose description, not a timestamp.</p>
+<div class="callout">
+  <h4>The trap almost every ACAPS team will fall into</h4>
+  <p>You cannot compute a genuine track record from this export, because a forecast score needs <i>a question opened at T and resolved at T+6 months</i>. The dataset tells you the outcome but not when it became known. Teams will nonetheless put a "superforecaster leaderboard" on the demo, populated by numbers they invented.</p>
+  <p class="small" style="margin-bottom:0">Two honest ways out, both of which score points: <b>(a)</b> reconstruct open/resolve dates with a documented, imperfect heuristic and <i>show the uncertainty</i>; or <b>(b)</b> ship the scoreboard as a <i>shadow mode</i> that runs on synthetic experts with a stated "resolves in N weeks" clock, and be explicit that real track records start after the pilot. Option (b) is faster and — because it is honest — reads as more senior.</p>
+</div>
+
+<h5>Finding 4 — Only 7% of the corpus is even a forecasting problem</h5>
+<p>Risk types split 69 new-emerging / 56 deterioration / 8 future-impact-of-past-hazard. Only the middle category is naturally a "will this escalate" question with a clean resolution rule. The 28 active risks sit in 18 countries, with Sudan alone holding 6 — so a single-country panel in the pilot can be genuinely deep.</p>
+
+<div class="verdict ok">
+  <p><b>The demo is pre-chosen for you and it is good.</b> <b>R1043</b> — "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad." Active, High, probability High, impact 4, trend <i>Deteriorated</i>, exposure &gt;500,000, priority needs Protection / Food security / Livelihoods / Health, with 4,128 characters of structured triggers and 3,568 characters of rationale. Chad also has a second active risk (R1066, spanning Chad–Niger–Cameroon–Nigeria). <b>Build your entire narrative on Chad and you get a two-risk, 5–10-expert panel that is realistic in size, rich in data and directly named in the brief.</b></p>
+</div>
+
+<h4>The concept that wins 40 points</h4>
+<p>The rubric gives <b>Concept 40%</b> — "is the concept a real solution for the challenge, and more than just an idea?" Translated: they are not grading your UI, they are grading whether you <i>understood the problem</i>. Most teams will build: a login, a risk card, a 1–5 slider, a comment box, a chart. That is a survey. Here is the version that is not.</p>
+
+<div class="card">
+<h4 style="margin-top:0">Three design moves that make it a concept</h4>
+<ol>
+  <li><b>Anonymity as a capability, not a checkbox.</b> Three tiers — <i>known to ACAPS</i> / <i>pseudonymous to peers</i> / <i>fully anonymous</i> — are the minimum, and the brief names them. The concept step is making the tier <b>legible in the aggregate</b>: a moderator sees "3 of 7 experts disagree, 2 of them fully anonymous", never who. Ship a visible <b>attribution test</b> in the demo: one click that shows exactly what the public output can and cannot reveal, computed live. Nothing earns trust from a safety-minded jury faster than proving the negative.</li>
+  <li><b>Disagreement as the product.</b> The brief asks "how do you aggregate without creating groupthink?" The lazy answer is an average. The correct answer is that <b>consensus is the wrong target for risk analysis</b> — a 5–10 panel that agrees early has stopped adding information. Show the <i>spread</i> and the <i>dissent</i>, and route the outlier to the analyst as the most valuable object in the system. A panel of 7 where one expert says "you are wrong about Chad" is worth more than 7 votes of 60%.</li>
+  <li><b>The loop must be visible, or nobody comes back.</b> Every expert contribution should end with a promise and a receipt: <i>"This fed into the R1043 update on 14 Dec. Here is what changed."</i> That single feature is the entire answer to the brief's stated problem that comparable forecasting pools lose participation after launch. It is also 20 lines of UI and 40 points of narrative.</li>
+</ol>
+</div>
+
+<h4>What to ship by 11:00 Sunday</h4>
+<table>
+  <tr><th style="width:32%">Surface</th><th>Minimum viable, demo-grade</th></tr>
+  <tr><td><b>Expert card</b></td><td>One risk (R1043), the triggers rendered as bullets, three questions max. Target: 90 seconds to complete on a phone.</td></tr>
+  <tr><td><b>Anonymity control</b></td><td>Three-tier selector, persisted, with a live "what the public sees" preview.</td></tr>
+  <tr><td><b>Delphi round</b></td><td>Round 1 independent answers → anonymised distribution → Round 2 revision with the delta shown. Two rounds is enough to demonstrate the mechanism.</td></tr>
+  <tr><td><b>Forecast + resolution</b></td><td>One resolvable question with an explicit resolution rule and a date. Show the rule; teams forget this and it is the difference between forecasting and vibes.</td></tr>
+  <tr><td><b>Backtest panel</b></td><td>The calibration chart above, computed live from the CSV: High 84.2% vs Medium 46.6%. This is your "why should you believe the scoring" slide, and it is already true.</td></tr>
+  <tr><td><b>Moderator view</b></td><td>Dissent queue + a one-click synthesis draft. AI belongs <i>here</i> — behind the moderator, never in front of the expert.</td></tr>
+  <tr><td><b>Receipt</b></td><td>The "your input changed X" closure loop. Cheapest differentiating feature available to you.</td></tr>
+</table>
+
+<h4>3-minute pitch skeleton</h4>
+<ol>
+  <li><b>0:00–0:25 — The gap.</b> ACAPS rates 139 risks across 57 countries. The people closest to the crisis never get to disagree. Today their knowledge dies in a WhatsApp thread.</li>
+  <li><b>0:25–1:00 — The proof it matters.</b> On 104 resolved risks, High materialised 84.2% of the time, Medium 46.6%. The model is good — and it is learning from public sources, not from the 7 people in N'Djamena who knew.</li>
+  <li><b>1:00–2:10 — Demo.</b> Chad. R1043. An expert answers in 90 seconds, fully anonymous, sees the group's spread without identities, revises once, and a week later gets a receipt showing what changed.</li>
+  <li><b>2:10–2:40 — The mechanism.</b> Score against real outcomes; adjust for difficulty so local granular knowledge is not punished; AI only behind the moderator.</li>
+  <li><b>2:40–3:00 — The ask.</b> Two months, one country, seven experts. Chad is ready today.</li>
+</ol>
+
+<h2 id="s5">05 — UNICRI: Stop Before It Starts, decoded</h2>
+
+<p class="lede">This brief is a distribution problem wearing an engineering costume. It says so twice, plainly: <i>“Focus on making adoption cheap, easy and compelling, not on building new detection.”</i></p>
+
+<h4>What is actually being asked</h4>
+<p>Three building blocks, one package. The message and the route to help are <b>given to you</b>, with sources. The creative and engineering space is entirely in the third block: <b>the plug-and-play integration</b>. The target is explicit and it is the whole design brief compressed into one sentence: <i>a Dutch hobby forum with 20,000 members and one part-time moderator who wants this live within a week.</i></p>
+
+<div class="grid2">
+  <div class="card tight">
+    <div class="tag green">Provided — don't rebuild</div>
+    <ul style="margin:8px 0 0">
+      <li><code>data/help-services.json</code> — 5 verified Dutch/global services with confidentiality notes</li>
+      <li><code>data/message-blocks.json</code> — NL + EN blocks, each cited to evidence</li>
+      <li><code>data/legal-confidentiality.json</code> — per-country legal and confidentiality</li>
+      <li><code>contract/PLUGIN_CONTRACT.md</code> + JSON schemas</li>
+      <li><code>mock-platform/</code> — runnable local fake platform</li>
+      <li><code>tools/generate-traffic.js</code> — synthetic traffic generator</li>
+      <li><code>integrations/</code> — Discourse and WordPress examples</li>
+    </ul>
+  </div>
+  <div class="card tight">
+    <div class="tag red">Rules that constrain your build</div>
+    <ul style="margin:8px 0 0">
+      <li>Only <code>test-trigger-*</code> placeholders. <b>Never</b> real abuse-related terms, anywhere — code, comments, commits, docs.</li>
+      <li>No query text passed to the module. The module knows a trigger fired, not what was typed.</li>
+      <li><code>sessionScopedId</code> is random, per session, never persisted.</li>
+      <li>Aggregate measurement only, <b>counts suppressed below 10</b>.</li>
+      <li>No fingerprinting, no IP logging, no cross-session IDs.</li>
+      <li><code>npm run check</code> enforces this — run it in CI, and say so on stage.</li>
+    </ul>
+  </div>
+</div>
+
+<h4>The measurement math nobody will do</h4>
+<p>The brief cites two anchors: roughly <b>1 in 100</b> people who see a warning click through to help, and a dark-web field experiment where redesigning messages lifted click-through from <b>8.7% to 15.7%</b>. Put those next to the suppression rule and a hard constraint appears:</p>
+
+<div class="card">
+  <p style="margin-bottom:12px"><b>To detect a doubling of click-through (1% → 2%) at 80% power, α = 0.05 two-sided, you need ≈ 2,300 impressions per arm — about 4,600 in total.</b></p>
+  <p style="margin-bottom:12px">A 25% relative improvement (1% → 1.25%) needs on the order of <b>46,000</b> impressions. A 20,000-member hobby forum will not produce that in a week.</p>
+  <p class="small" style="margin:0">And because counts under 10 are suppressed, a platform with 900 impressions and 6 clicks sees <i>nothing</i> — the dashboard shows a dash, not a signal. <b>Your impact dashboard is structurally blind at exactly the scale your target customer operates.</b></p>
+</div>
+
+<div class="verdict">
+  <p><b>This is the highest-value insight in the UNICRI track, and almost no team will surface it.</b> The honest answer is not to fake statistical power — it is to <b>redesign what "impact" means at small scale</b>: sequential testing so you can stop early, Bayesian reporting with credible intervals rather than point rates, an <i>exposure</i> metric (impressions shown) decoupled from <i>outcome</i> metrics, and per-install expectations set at "we will know in 6 weeks" rather than "here is today's conversion rate". Say the word <b>power analysis</b> out loud in your pitch and you will separate from the room.</p>
+</div>
+
+<h4>Where the concept points are</h4>
+<ol>
+  <li><b>The install path is the product.</b> A moderator's decision is risk, not effort. Your landing surface should be a five-minute <code>&lt;script&gt;</code> tag, a snippet for Discourse, and a page that says precisely what data does and does not leave their server. Ship the <i>copy-paste</i>, not the architecture diagram.</li>
+  <li><b>Habituation is a design constraint, not an afterthought.</b> The brief asks explicitly what happens on someone's fifth sighting. A static interstitial trains dismissal. Escalating intervention ladders — awareness → consequence → route to help — with a hard cap on repetition, is a real concept.</li>
+  <li><b>Honesty is the conversion mechanism.</b> Fear of being reported is the stated reason people don't seek help, and confidentiality rules differ by country. A per-country, honestly-worded confidentiality statement — especially where a reporting duty exists, as in England under the Crime and Policing Act 2026 — is what makes the click safe. Being clear that you are <i>not</i> promising confidentiality where the law does not give it is a trust feature, not a legal footnote.</li>
+  <li><b>The message A/B harness should be visible in the demo.</b> The brief wants "design for testing variants". Show a variant registry with cited evidence per block. That converts your pitch from "a warning" to "an evidence pipeline".</li>
+</ol>
+
+<h4>What to ship by 11:00 Sunday</h4>
+<table>
+  <tr><th style="width:32%">Surface</th><th>Minimum viable, demo-grade</th></tr>
+  <tr><td><b>Embeddable module</b></td><td>One <code>&lt;script&gt;</code> tag against the mock platform. <code>npm run dev</code>, type <code>test-trigger-red</code>, warning appears. This already works — make it work from a <i>different</i> page to prove portability.</td></tr>
+  <tr><td><b>Install page</b></td><td>The thing the moderator reads. Three steps, a snippet, a data-flow statement, and a one-line "what happens if I do nothing".</td></tr>
+  <tr><td><b>Intervention ladder</b></td><td>Three escalating formats with a repetition cap. Show the fifth-sighting behaviour explicitly — that is the question the brief asks.</td></tr>
+  <tr><td><b>One-click to help</b></td><td>Straight to Preventielijn van Offlimits (0800 266 64 36) and Stoppen is mogelijk, with the confidentiality note rendered per country.</td></tr>
+  <tr><td><b>Impact dashboard</b></td><td>Synthetic traffic, aggregate counts, suppression at 10, confidence intervals. The <i>honesty</i> of this screen is the demo.</td></tr>
+  <tr><td><b>Safety proof</b></td><td><code>npm run check</code> green, shown on screen. Cheap, and directly answers the 15% technology-feasibility criterion.</td></tr>
+</table>
+
+<h2 id="s6">06 — The judging machine</h2>
+
+<p>Both challenges publish the same rubric. It is unusually blunt, and it should reorganise your weekend.</p>
+
+<table>
+  <tr><th style="width:34%">Criterion</th><th class="num">Weight</th><th>What actually earns it</th></tr>
+  <tr><td><b>Concept</b></td><td class="num">40%</td><td>"More than just an idea." A defensible mechanism — how trust is preserved, how the loop closes, how scoring resists gaming. This is won in the first 60 seconds of the pitch and lost in the UI.</td></tr>
+  <tr><td><b>Prototype</b></td><td class="num">20%</td><td>"Did the team build a prototype, and does it work?" A narrow thing that genuinely runs beats five screens that mostly render.</td></tr>
+  <tr><td><b>Technology Feasibility</b></td><td class="num">15%</td><td>Future-proofing <i>plus ethics, security, legal side of AI</i>. Both briefs bake this in: anonymity engineering, aggregate-only measurement, no real data. Quote your own constraints back at them.</td></tr>
+  <tr><td><b>Product Potential</b></td><td class="num">15%</td><td>Innovation and clarity of the opportunity. For ACAPS: the pilot. For UNICRI: the hub and the EU roll-out.</td></tr>
+  <tr><td><b>Business Feasibility</b></td><td class="num">5%</td><td>One slide. Neither customer pays. Cost-of-ownership, procurement path, who signs.</td></tr>
+  <tr><td><b>Wow Factor</b></td><td class="num">5%</td><td>Pitch quality and the ability to sell it.</td></tr>
+</table>
+
+<div class="grid3">
+  <div class="stat"><div class="n">60%</div><div class="l">Concept + Prototype</div><div class="s">Everything else is rounding</div></div>
+  <div class="stat"><div class="n">10%</div><div class="l">Business + Wow</div><div class="s">Spend 20 minutes total, not 4 hours</div></div>
+  <div class="stat"><div class="n">15%</div><div class="l">Ethics / legal / security</div><div class="s">Given away free in both briefs — take it</div></div>
+</div>
+
+<h4>Three rubric exploits that are entirely legitimate</h4>
+<ul>
+  <li><b>Read the criteria out loud in your pitch.</b> "You asked whether the concept is more than an idea — here is the mechanism, and here is it running." Judges score against a visible sheet; naming the criterion as you satisfy it is not gaming, it is clarity.</li>
+  <li><b>Demo the constraint, not just the feature.</b> Show the suppression rule firing. Show the attribution test proving anonymity. Show the safety check passing. Ethics is 15% and it takes ninety seconds to demonstrate.</li>
+  <li><b>Budget for the 3-minute format.</b> Three minutes is roughly 400 words. Rehearse to 2:45 so you are never cut off mid-demo. Practise at 16:00 Saturday — the slot exists and is free.</li>
+</ul>
+
+<h2 id="s7">07 — Execution plan</h2>
+<p>Assuming you are at or near kickoff. On-site build time is <b>26 hours</b>, not 46 — the venue closes 22:00–08:00 both nights. Plan for that number.</p>
+
+<table>
+  <tr><th style="width:22%">Window</th><th style="width:30%">Objective</th><th>Definition of done</th></tr>
+  <tr><td><b>Fri 13:00–14:00</b></td><td>Listen, then ask one good question</td><td>Ask the on-site owner the question that decides your architecture. ACAPS: "How does a risk get resolved, and who records it?" UNICRI: "What would actually make a forum say no?"</td></tr>
+  <tr><td><b>Fri 14:00–18:00</b></td><td>Kill the ambiguity</td><td>One risk, one user, one workflow, drawn on paper. No code yet. If you cannot describe Sunday's demo in five sentences, you are not ready to type.</td></tr>
+  <tr><td><b>Fri 18:00–22:00</b></td><td>Walking skeleton</td><td>End-to-end thin slice: entry → one question → stored answer → aggregate shown. Ugly is fine. Working is not optional.</td></tr>
+  <tr><td><b>Fri night</b></td><td>Async split</td><td>One person on the data/backtest, one on the install/embed path, one on the pitch narrative. Sleeping is a performance feature — Sunday's pitch is decided by who is coherent at 15:00.</td></tr>
+  <tr><td><b>Sat 08:00–12:30</b></td><td>The differentiating feature</td><td>ACAPS: the Delphi round-2 delta + receipt loop. UNICRI: the intervention ladder + per-country confidentiality. This is your 40%.</td></tr>
+  <tr><td><b>Sat 13:00–16:00</b></td><td>Evidence layer</td><td>ACAPS: calibration chart from the real CSV. UNICRI: synthetic traffic + CIs + suppression. Judges reward proof.</td></tr>
+  <tr><td><b>Sat 16:00</b></td><td><b>Pitch practice</b></td><td>Run the real 3 minutes on the real screen. Take the feedback. This hour is free and most teams waste it.</td></tr>
+  <tr><td><b>Sat 17:00–22:00</b></td><td>Polish the demo path only</td><td>One golden path, rehearsed, no dead ends. Delete or hide everything that is not on it.</td></tr>
+  <tr><td><b>Sun 08:00–10:30</b></td><td>Submit early</td><td>Repo + description + demo link in by <b>10:30</b>. The real cut-off is 11:00, not the 12:00 on the schedule.</td></tr>
+  <tr><td><b>Sun 10:30–13:00</b></td><td>Two pitches, not one</td><td>Round 1 at 13:00 is track-specific. The grand final at 15:10 is a generalist jury. They need different openings.</td></tr>
+</table>
+
+<div class="callout">
+  <h4>The one thing to decide in the next hour</h4>
+  <p><b>Which of the two, and which single user.</b> Both briefs punish scope. A team that does one thing — Chad, seven experts, ninety seconds, one receipt — will beat a team that does a platform. The rubric's 40% on "more than just an idea" is not a demand for breadth. It is a demand for a mechanism that holds.</p>
+  <p class="small" style="margin-bottom:0">If you are still undecided at 14:00, default to <b>ACAPS</b> if you have anyone numerate, <b>UNICRI</b> if you have anyone who ships front-end fast. Both are winnable. Neither is winnable by halves.</p>
+</div>
+
+<h2 id="s8">08 — Failure modes</h2>
+<table>
+  <tr><th style="width:26%">Failure</th><th style="width:37%">Why teams do it</th><th>The counter</th></tr>
+  <tr><td><b>Building a survey</b></td><td>It looks like the brief: questions, answers, chart.</td><td>The brief asks for <i>challenge, enrich, forecast</i> — three verbs, three mechanisms. If your product has one, you have built a form.</td></tr>
+  <tr><td><b>Anonymity as a settings toggle</b></td><td>It is one line in the brief and feels solved by a dropdown.</td><td>Anonymity is a <i>system property</i>. Demonstrate what the aggregate can leak. Prove the negative on stage.</td></tr>
+  <tr><td><b>Leaderboard theatre</b></td><td>The brief mentions "super estimators" and it is the easiest visual.</td><td>Resolved questions are the only legitimate input. Backtest on 104 real outcomes or label the leaderboard as shadow-mode fiction.</td></tr>
+  <tr><td><b>Building detection (UNICRI)</b></td><td>It feels like the "real" technical problem.</td><td>The brief forbids it in a full paragraph. Detection exists; distribution does not.</td></tr>
+  <tr><td><b>An AI chatbot front door</b></td><td>Fastest path to something that looks alive.</td><td>Both briefs say the expert-facing experience must feel human. AI goes behind the moderator.</td></tr>
+  <tr><td><b>Ignoring the suppression rule</b></td><td>Showing a rate is more satisfying than a dash.</td><td>The rule is a design constraint, not a limitation. Design for it and mention it — it is 15% of your score.</td></tr>
+  <tr><td><b>Business model on the big screen</b></td><td>Founders instinctively pitch the market.</td><td>5%. One sentence: who pays, who signs, what it costs to run.</td></tr>
+</table>
+
+<h2 id="s9">09 — For the organisers: eight fixable defects</h2>
+<p>Included because an end-to-end analysis of the page that stops at the participant's side is only half the job. All are observable from outside the auth wall.</p>
+<ol>
+  <li><b>The submission deadline is inconsistent by one hour.</b> Public schedule says 12:00 CET; <code>submissionsEndTime</code> is 11:00 CET. Teams reading the schedule will miss the form. This is the only defect on this list that can directly cost a team their weekend.</li>
+  <li><b>Team size contradicts itself.</b> Description says 2–6; <code>maxTeamSize</code> is 5. A sixth member literally cannot join.</li>
+  <li><b>No pre-registration view of challenges.</b> The gate is applied to <code>/participate/*</code> globally, so an unregistered visitor — a recruiter, a journalist, a judge — cannot see the two challenges. A public, read-only challenge preview would cost nothing and would have made this analysis unnecessary.</li>
+  <li><b>The 404 gate is edge-cached for ~20 hours.</b> Signed-out users get a stale <code>404</code> with no sign-in prompt, which reads as a broken link rather than an auth wall. A <code>302</code> to <code>/auth/signin</code> is the conventional pattern and Clerk supports it natively.</li>
+  <li><b>Challenges are stripped even from the public event payload</b> (<code>"challenges":[]</code>), so the public event page cannot list its own tracks. The information architecture is inverted: the least discoverable page carries the most important decision.</li>
+  <li><b>No resolution-date field in the ACAPS export.</b> 25 columns and no timestamp means no team can build a true forecast track record, which is a headline feature of the brief. Adding <code>identified_date</code> and <code>resolved_date</code> would materially raise the ceiling of every submission.</li>
+  <li><b>The "Low" bucket in the brief does not survive contact with the data.</b> The brief cites ~4-in-10 Low materialisation; the shipped export has 3 resolved Low risks. Either ship a larger cut or adjust the claim — teams will build slides on it and be corrected on stage.</li>
+  <li><b>No stated submission format enforcement.</b> Both briefs require <i>prototype + 3-minute pitch + repo with description</i>, but nothing on the platform indicates how that is captured or judged. A one-line template on the participate page would raise the floor of every submission.</li>
+</ol>
+
+<footer>
+  <p><b>Method.</b> Page and API behaviour observed from outside the authentication wall; event record read from the platform's public event procedures; both challenge briefs and both starter repositories (docs, data, contracts, code) reviewed in full; the ACAPS Risk Radar export (139 × 25) analysed directly — all calibration, correlation and exposure figures above are computed from <code>risk-radar-export.csv</code>, not quoted.</p>
+  <p>Challenge pages sit behind Clerk authentication, so the full challenge set could not be enumerated; the analysis covers the two published challenges (ACAPS, UNICRI &amp; UAE Ministry of Interior) visible on the page and corroborated by the two starter repositories and the partner roster. Figures reflect the event as configured on 6 November 2026, ~11:50 CET.</p>
+</footer>
+
+</div>
+</body>
+</html>

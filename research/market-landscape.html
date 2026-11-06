@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Landscape — What Already Exists, How It's Faring, What It Means for the Build</title>
+<style>
+  :root{
+    --paper:#faf8f4; --panel:#ffffff; --ink:#1b1a18; --muted:#6d665e; --faint:#9a938a;
+    --rule:#e2ddd4; --rule2:#d2cbc0;
+    --evidence:#1a6b4f; --evidence-bg:#eaf3ee;
+    --warn:#a8541a; --warn-bg:#fbeee2;
+    --danger:#9b2226; --danger-bg:#f9e7e7;
+    --blue:#1f4e79; --blue-bg:#e8eff5;
+    --purple:#5b3a7e; --purple-bg:#f0eaf6;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px 120px}
+  h1,h2,h3,h4{font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-weight:600; line-height:1.2; letter-spacing:-.01em}
+  a{color:var(--blue); text-decoration:none; border-bottom:1px solid #c3d3e0}
+  a:hover{border-bottom-color:var(--blue)}
+
+  /* ---- masthead ---- */
+  .masthead{padding:64px 0 40px; border-bottom:2px solid var(--ink); margin-bottom:8px}
+  .kicker{font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:18px}
+  h1{font-size:clamp(32px,4.4vw,50px); margin:0 0 20px; max-width:20ch}
+  .deck{font-size:19px; line-height:1.55; color:#3d3934; max-width:62ch; margin:0 0 28px}
+  .meta{display:flex; flex-wrap:wrap; gap:26px; font-size:13px; color:var(--muted); border-top:1px solid var(--rule); padding-top:16px}
+  .meta b{color:var(--ink); font-weight:600}
+
+  /* ---- nav ---- */
+  nav.toc{position:sticky; top:0; z-index:50; background:rgba(250,248,244,.96); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule); margin:0 -28px 44px; padding:10px 28px; overflow-x:auto; white-space:nowrap}
+  nav.toc a{display:inline-block; font-size:12px; letter-spacing:.02em; color:var(--muted); border:none;
+    padding:5px 11px; margin-right:2px; border-radius:4px; font-weight:500}
+  nav.toc a:hover{background:#efeae2; color:var(--ink)}
+  nav.toc a b{color:var(--ink); font-weight:700; margin-right:5px; font-variant-numeric:tabular-nums}
+
+  section{margin:0 0 62px; scroll-margin-top:64px}
+  .sec-head{display:flex; align-items:baseline; gap:16px; border-bottom:1px solid var(--rule2); padding-bottom:10px; margin-bottom:26px}
+  .sec-num{font-size:12px; font-weight:700; letter-spacing:.1em; color:var(--faint); font-variant-numeric:tabular-nums; padding-top:6px}
+  h2{font-size:clamp(23px,2.8vw,31px); margin:0}
+  h3{font-size:20px; margin:34px 0 10px}
+  h4{font-size:16px; margin:24px 0 8px; font-family:inherit; font-weight:700; letter-spacing:0}
+  p{margin:0 0 15px; max-width:74ch}
+  ul,ol{margin:0 0 16px; padding-left:22px; max-width:74ch}
+  li{margin-bottom:8px}
+  strong{font-weight:650}
+  code{font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:.88em; background:#efeae2; padding:1px 5px; border-radius:3px}
+
+  /* ---- callouts ---- */
+  .callout{border-left:3px solid var(--rule2); padding:2px 0 2px 20px; margin:22px 0; max-width:none}
+  .callout p:last-child{margin-bottom:0}
+  .callout.evidence{border-color:var(--evidence); background:var(--evidence-bg); padding:16px 20px; border-radius:0 5px 5px 0}
+  .callout.warn{border-color:var(--warn); background:var(--warn-bg); padding:16px 20px; border-radius:0 5px 5px 0}
+  .callout.danger{border-color:var(--danger); background:var(--danger-bg); padding:16px 20px; border-radius:0 5px 5px 0}
+  .callout .lab{display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; margin-bottom:7px}
+  .callout.evidence .lab{color:var(--evidence)} .callout.warn .lab{color:var(--warn)} .callout.danger .lab{color:var(--danger)}
+
+  blockquote{margin:22px 0; padding:0 0 0 20px; border-left:3px solid var(--ink); font-family:Georgia,serif;
+    font-size:18px; line-height:1.5; color:#2c2925; font-style:italic; max-width:none}
+  blockquote cite{display:block; font-family:-apple-system,sans-serif; font-size:12px; font-style:normal;
+    color:var(--muted); margin-top:10px; letter-spacing:.02em}
+
+  /* ---- tables ---- */
+  .tbl-wrap{overflow-x:auto; margin:22px 0; border:1px solid var(--rule); border-radius:6px; background:var(--panel)}
+  table{border-collapse:collapse; width:100%; font-size:13.5px; line-height:1.45}
+  th{background:#f3efe8; text-align:left; padding:10px 13px; font-weight:700; font-size:11px;
+    letter-spacing:.07em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--rule2); vertical-align:bottom}
+  td{padding:10px 13px; border-bottom:1px solid var(--rule); vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  tr.hi td{background:#fdfaf3}
+
+  /* ---- badges ---- */
+  .badge{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    padding:2.5px 8px; border-radius:3px; white-space:nowrap; vertical-align:1px}
+  .b-high{background:var(--danger-bg); color:var(--danger)}
+  .b-med{background:var(--warn-bg); color:var(--warn)}
+  .b-low{background:var(--evidence-bg); color:var(--evidence)}
+  .b-none{background:#eee9e1; color:#7a736a}
+  .b-dead{background:#3d3934; color:#f0ece5}
+  .b-layer{background:var(--blue-bg); color:var(--blue); font-weight:600; letter-spacing:.04em}
+  .b-layer2{background:var(--purple-bg); color:var(--purple); font-weight:600; letter-spacing:.04em}
+
+  /* ---- profile cards ---- */
+  .cards{display:grid; gap:18px; margin:24px 0}
+  .card{background:var(--panel); border:1px solid var(--rule); border-radius:7px; padding:20px 22px 18px;
+    box-shadow:0 1px 2px rgba(27,26,24,.03)}
+  .card>header{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:5px}
+  .card h3{font-size:19px; margin:0; flex:1 1 auto; min-width:180px}
+  .card .loc{font-size:12px; color:var(--faint); width:100%; margin:0 0 14px; font-variant-numeric:tabular-nums}
+  .card dl{margin:0; display:grid; grid-template-columns:88px 1fr; gap:9px 16px; font-size:14px}
+  .card dt{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; font-weight:700; color:var(--faint); padding-top:3px}
+  .card dd{margin:0; max-width:70ch}
+  .card dd.mono{font-variant-numeric:tabular-nums}
+
+  /* ---- stat strip ---- */
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--rule);
+    border:1px solid var(--rule); border-radius:6px; overflow:hidden; margin:24px 0}
+  .stat{background:var(--panel); padding:15px 16px}
+  .stat .v{font-family:Georgia,serif; font-size:26px; line-height:1.1; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .stat .v small{font-size:14px; color:var(--muted)}
+  .stat .k{font-size:11px; color:var(--muted); margin-top:6px; line-height:1.4}
+  .stat.bad .v{color:var(--danger)} .stat.good .v{color:var(--evidence)}
+
+  /* ---- numbered findings ---- */
+  .finding{display:grid; grid-template-columns:44px 1fr; gap:0 18px; padding:22px 0; border-bottom:1px solid var(--rule)}
+  .finding:first-of-type{border-top:1px solid var(--rule)}
+  .finding .n{font-family:Georgia,serif; font-size:30px; line-height:1; color:var(--faint); font-variant-numeric:tabular-nums}
+  .finding .body h3{margin:0 0 8px; font-size:19px}
+  .finding .body p:last-child{margin-bottom:0}
+  .finding .impl{margin-top:11px; font-size:14px; padding:10px 14px; background:var(--evidence-bg);
+    border-left:2px solid var(--evidence); border-radius:0 4px 4px 0}
+  .finding .impl b{color:var(--evidence)}
+
+  /* ---- matrix ---- */
+  .matrix{font-size:13px}
+  .matrix th{font-size:10px; padding:8px 9px}
+  .matrix td{padding:8px 9px}
+  .mark{font-weight:700; font-size:14px}
+  .mark.y{color:var(--evidence)} .mark.n{color:#c9c2b8} .mark.p{color:var(--warn)}
+
+  /* ---- footer ---- */
+  footer{border-top:2px solid var(--ink); padding-top:22px; font-size:13px; color:var(--muted); margin-top:70px}
+  .srcs{font-size:12.5px; line-height:1.5; color:var(--muted)}
+  .srcs li{margin-bottom:6px}
+  .srcs b{color:var(--ink); font-weight:600}
+
+  @media (max-width:640px){
+    .wrap{padding:0 18px 80px}
+    .masthead{padding:40px 0 30px}
+    .card dl{grid-template-columns:1fr; gap:3px 0}
+    .card dt{padding-top:9px}
+    .finding{grid-template-columns:1fr; gap:6px}
+    .finding .n{font-size:22px}
+  }
+  @media print{ nav.toc{display:none} .card{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="kicker">Hackathon for Good #8 · ACAPS Ground Truth · Research pass</div>
+  <h1>What already exists, how it is actually faring, and what that changes about the build</h1>
+  <p class="deck">A landscape review of every product, institution and method that is already part of the answer — so that we build the missing part instead of rebuilding a solved one. Ends in build implications, not a directory.</p>
+  <div class="meta">
+    <span><b>Scope</b> 2 challenge briefs · 4 market layers · 26 profiled entities</span>
+    <span><b>Evidence standard</b> published numbers, dated, sourced</span>
+    <span><b>Compiled</b> 6 November 2026</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#s1"><b>01</b>The answer</a>
+  <a href="#s2"><b>02</b>The map</a>
+  <a href="#s3"><b>03</b>Machines</a>
+  <a href="#s4"><b>04</b>Platforms</a>
+  <a href="#s5"><b>05</b>The incumbent</a>
+  <a href="#s6"><b>06</b>The prior art</a>
+  <a href="#s7"><b>07</b>Methods</a>
+  <a href="#s8"><b>08</b>UNICRI (rev.)</a>
+  <a href="#s9"><b>09</b>Failure modes</a>
+  <a href="#s10"><b>10</b>The gap</a>
+  <a href="#s11"><b>11</b>Build implications</a>
+  <a href="#s12"><b>12</b>Buy or build</a>
+  <a href="#s13"><b>13</b>Pitch language</a>
+  <a href="#s14"><b>14</b>Questions</a>
+  <a href="#s15"><b>15</b>Sources</a>
+</nav>
+
+<!-- ============================================================ 01 -->
+<section id="s1">
+  <div class="sec-head"><div class="sec-num">01</div><h2>The answer in one page</h2></div>
+
+  <p>Before the reports: the market is <strong>far more crowded than the briefs imply, and almost entirely empty in the one place that matters.</strong> There are mature commercial forecasting platforms selling to governments. There is world-class statistical early warning with AUROC above 0.95. There is a $2.7M humanitarian analysis organisation that has publicly committed to expert judgement as its official method. And there is <strong>no product, anywhere, that captures expert judgement on a named humanitarian risk statement and gives the expert a receipt.</strong> That is the whole opportunity, and it is narrow, and it is real.</p>
+
+  <p>Five findings do most of the work. Each one changes something in the plan.</p>
+
+  <div class="finding">
+    <div class="n">1</div>
+    <div class="body">
+      <h3>The exact product was proposed for this sector in January 2016, at Start Network, and it went nowhere.</h3>
+      <p>A published concept note — <em>Beating Hindsight: Forecasting for Humanitarian Planning and Preparedness</em> — proposed a GJP-style humanitarian forecasting tournament managed by the Start Network: 4–5 staff from each member organisation, mixed field/regional/HQ, ~12 questions, 3-month rounds, 6–18 month horizons. It named the Early Warning Project as the closest existing analogue. It identified the real barrier correctly: <em>"evidence provided by early warning projects has historically not led to improved response due to the lack of political will… and decisions are not evidence-based."</em> Ten years later there is no such tournament.</p>
+      <div class="impl"><b>Build implication:</b> we are not pitching a novel idea, we are pitching a post-mortem. The pitch must open by naming the 2016 attempt and stating precisely why ours survives where that one died. That is a stronger opening than any demo, and it is unavailable to every other team in the room.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="n">2</div>
+    <div class="body">
+      <h3>The closest analogue in the world lost 89% of its participants — and that is the design argument.</h3>
+      <p>The Early Warning Project's expert opinion pool went from <strong>10,825 votes in 2018 to 1,148 in 2021</strong>. Its own 2015 report already noted that a small share of participants accounted for most activity, and that engagement <em>slowed</em> in year two. This is the single most important number in this entire document, because it is measured on a well-funded, institutionally hosted, genuinely important elicitation exercise in exactly our domain.</p>
+      <div class="impl"><b>Build implication:</b> the receipt loop (E7) is not a delight feature. It is the documented survival condition of the product. Promote it from "stage 4" in the build order to <strong>co-equal with E3/E4</strong>, and make the pilot's primary success metric response retention at round 2, not accuracy.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="n">3</div>
+    <div class="body">
+      <h3>ACAPS has already published "expert judgement" as its method. It just doesn't keep the receipt.</h3>
+      <p>In its own methodology: <em>"Risk probability is not mathematically calculated but assigned through expert judgement based on the triangulation of available data, historical patterns, forward indicators, and context knowledge."</em> Impact is likewise <em>"adjusted through expert judgement."</em> And in a published Afghanistan risk report, the input survey went to <strong>more than 60 people and got 10 responses.</strong></p>
+      <div class="impl"><b>Build implication:</b> stop describing the product as adding a method. Describe it as <strong>making ACAPS's own stated method auditable</strong> — and set an explicit, falsifiable target against their own published baseline: <strong>≥50% response within 72 hours</strong>, versus a corpus where 73% of scored triggers have no written criterion to respond to.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="n">4</div>
+    <div class="body">
+      <h3>Machine forecasting has won where things are countable, and still cannot answer ACAPS's actual question.</h3>
+      <p>VIEWS posts AUROC ≈ 0.95 and Brier 0.0062 on conflict fatalities. WFP's HungerMap LIVE runs across 94 countries with 300+ analysts and gradient-boosted models. Neither produces a judgement on whether <em>"escalating cross-border insecurity linked to the Sudan conflict increases protection risks in eastern Chad"</em> should move from 40% to 55%. Meanwhile the machines that do forecast judgement-style questions have risen from below-crowd to near-expert: o3 scores Brier 0.135 against a Metaculus crowd of 0.149, still well above superforecasters at ~0.023 — with benchmark parity projected around August 2027.</p>
+      <div class="impl"><b>Build implication:</b> do not compete on prediction and do not put an LLM at the centre. Put the model in as the <strong>second baseline the expert is permitted to disagree with</strong> — which is already E3's design. The research supplies the exact numbers to defend it under questioning.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="n">5</div>
+    <div class="body">
+      <h3>The commercial "why not just buy this?" question is real, has a name, and has a good answer.</h3>
+      <p>Cultivate Labs / Hinsley is the closest commercial analogue: SOC 2 Type II, UK G-Cloud 14, built Cosmic Bazaar for the UK Cabinet Office and INFER for the US OSTP, 10M+ forecasts processed. It is also a generic tournament engine with no risk model, no trigger-level dual baselines, no anonymity tiers, no publication gate, and a scoring rule that has been formally shown to be <em>not proper</em> (relative-Brier gaming and Sybil vulnerability). And the RAND Forecasting Initiative — a well-funded institutional tournament built on that very platform — <strong>ran 2024 to 2026 and then shut down.</strong></p>
+      <div class="impl"><b>Build implication:</b> answer the buy question in the pitch pre-emptively, in one line, with the RAND shutdown as evidence. A forecasting pilot without a named institutional consumer inside the publisher's workflow dies. Ours lands inside ACAPS's own Risk Radar update cycle.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 02 -->
+<section id="s2">
+  <div class="sec-head"><div class="sec-num">02</div><h2>The map: four layers, and where the hole is</h2></div>
+
+  <p>The landscape is not a flat list of competitors. It is four layers, and each layer has a different relationship to our build. Confusing them is how pitches lose — a jury member who knows VIEWS will ask why we aren't using it; a jury member who knows Cultivate will ask why we aren't buying it. Both questions have answers only if the layers are kept separate.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:15%">Layer</th><th style="width:26%">What it produces</th><th style="width:30%">Who is in it</th><th>Relationship to us</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>1 · The incumbent</b></td>
+        <td>Human judgement on named humanitarian risk statements, published as a 5×5 probability/impact grid</td>
+        <td>ACAPS Risk Radar</td>
+        <td><b>Not a competitor — the customer.</b> Their published methodology is the spec.</td>
+      </tr>
+      <tr>
+        <td><b>2 · The machines</b></td>
+        <td>Statistical forecasts of countable quantities: fatalities, displacement, IPC phase, food consumption scores</td>
+        <td>VIEWS, INFORM, WFP HungerMap LIVE, OCHA Centre, DRC Foresight, ICG eEARTH, Verisk Maplecroft</td>
+        <td><b>Upstream suppliers, not rivals.</b> They provide one of our two baselines and the honesty beat.</td>
+      </tr>
+      <tr>
+        <td><b>3 · The judgement platforms</b></td>
+        <td>Aggregated probability from multiple people on resolvable questions</td>
+        <td>Metaculus, Good Judgment, Cultivate/Hinsley, Hypermind, Swift Centre, EWP, CSET Foretell, RAND RFI <span class="badge b-dead">dead</span></td>
+        <td><b>The real competitive set.</b> This is the "why not just buy/hire them" question.</td>
+      </tr>
+      <tr>
+        <td><b>4 · The harm-prevention stack</b></td>
+        <td>Interventions at the point of online harm: warnings, detection, hashing, reporting, regulation</td>
+        <td>Project Intercept, Thorn, Tech Coalition, INHOPE, IWF, national hotlines, EU CSAR</td>
+        <td><b>UNICRI track only.</b> Our concept sits between layers, which is its vulnerability.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The hole</h3>
+  <p>Every layer is saturated except the seam between layer 1 and layer 3. Layer 1 has the domain but no elicitation infrastructure. Layer 3 has the elicitation infrastructure but no domain — no risk model, no trigger vocabulary, no country panels, no publisher. Nobody occupies that seam.</p>
+
+  <div class="callout evidence">
+    <span class="lab">The positioning sentence the research earns you</span>
+    <p style="font-family:Georgia,serif;font-size:18px;line-height:1.5;margin:0">Everyone either forecasts <em>numbers</em> or aggregates <em>strangers</em>. ACAPS needs judgement on <em>its own sentences</em> from <em>its own people</em> — and there is no product for that, because until now nobody had both the sentence bank and the panel.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 03 -->
+<section id="s3">
+  <div class="sec-head"><div class="sec-num">03</div><h2>Layer 2 — the machines</h2></div>
+
+  <p>These are not competitors. They are the reason the brief says "ground truthing <em>and</em> forecasting" rather than just one. Read them for two things: what they prove is possible (credibility by association) and what they cannot do (the gap we occupy).</p>
+
+  <div class="cards">
+
+    <article class="card">
+      <header><h3>VIEWS — Violence &amp; Impacts Early-Warning System</h3><span class="badge b-low">Threat: none</span></header>
+      <div class="loc">Uppsala University / PRIO · open source · monthly releases</div>
+      <dl>
+        <dt>Approach</dt><dd>Machine learning ensembles over a dozen-plus data providers and hundreds of features (conflict history, economy, governance, terrain, climate vulnerability), with an open MLOps pipeline.</dd>
+        <dt>Solution</dt><dd>Monthly probabilistic forecasts of state-based armed conflict, non-state conflict and one-sided violence, 1–36 months ahead, at country and subnational (PRIO-GRID) level. New forecasts released every month; the Oct 2026 release covers to Aug 2029.</dd>
+        <dt>Faring</dt><dd>The genuine state of the art. Country-month AUROC ≈ 0.95 and Brier ≈ 0.0062; correctly identified 7 of the 10 deadliest countries in 2024 and 6 of 10 in 2023, at a stated cost of ~35% false positives for 95% coverage. Free, funded by the Swedish Foundation for Strategic Research and partnered with UNHCR.</dd>
+        <dt>Borrow</dt><dd>The monthly cadence and the brutal habit of publishing coverage-versus-false-positive trade-offs rather than a single headline number.</dd>
+        <dt>Beat</dt><dd>Nothing. Do not compete. Instead, <em>cite</em>: "we are not claiming to beat the state of the art in conflict modelling; we are claiming to fix the step after it."</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>INFORM Risk &amp; Severity</h3><span class="badge b-none">Threat: none — it is the vocabulary</span></header>
+      <div class="loc">EU Joint Research Centre · published twice yearly · API + Excel</div>
+      <dl>
+        <dt>Approach</dt><dd>Composite indicator index: hazard &amp; exposure, vulnerability, coping capacity. ~54+ indicators for Risk, 40+ for Severity, aggregated to a 0–10 score and five classes.</dd>
+        <dt>Solution</dt><dd>Country-level structural risk (Risk) and crisis-level severity (Severity), heavily used across the humanitarian system and cited directly in ACAPS and IPC-adjacent products.</dd>
+        <dt>Faring</dt><dd>Ubiquitous and institutionally entrenched. It is the reference vocabulary: <em>very low → very high</em>, 0–10, twice-yearly.</dd>
+        <dt>Borrow</dt><dd>Nothing methodologically — borrow the <em>legitimacy</em>. Because ACAPS's Risk Radar already speaks INFORM's dialect, a product that speaks it too needs no explanation to a jury.</dd>
+        <dt>Beat</dt><dd>Its structural weakness, stated carefully: a composite index is a static ranking with no resolution criterion and no expert channel. It can say a country is high-risk; it cannot say whether a specific named event happened.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>WFP HungerMap LIVE</h3><span class="badge b-med">Threat: medium — the scale benchmark</span></header>
+      <div class="loc">World Food Programme · 94 countries · relaunched April 2026 with Google support</div>
+      <dl>
+        <dt>Approach</dt><dd>Unified data lake (mVAM phone surveys, market prices, CHIRPS rainfall, MODIS vegetation, ACLED conflict, nightlights, macro indicators), with gradient-boosted tree ensembles (XGBoost) trained on 14 years across 63 countries, plus an LSTM predictive layer updating weekly.</dd>
+        <dt>Solution</dt><dd>Near-real-time nowcast plus short-term forecast of the prevalence of insufficient food consumption and crisis-level coping, at first-level administrative area. Public dashboard plus AI-assisted forecasts for 16 designated hunger hotspots.</dd>
+        <dt>Faring</dt><dd><b>The most institutionally successful product in this entire landscape.</b> Validated against ex-post IPC classification with mean absolute deviation under 0.5 IPC phases in 82% of districts; WFP claims a minimum of $7 saved per $1 invested in anticipatory action. Draws on a network of 300+ analysts.</dd>
+        <dt>Borrow</dt><dd>The <em>human-plus-machine</em> framing honestly implemented — 300+ analysts and a model, not a model alone. And the return-on-investment framing for the pitch: $7 per $1 is a donor-facing number that travels.</dd>
+        <dt>Beat</dt><dd>The scope boundary. HungerMap answers "how many people are food insecure in this district." It cannot answer "was our risk statement right." It also proves the panel-size point in reverse: 300+ analysts is a data-collection workforce, not an elicitation panel.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>OCHA Centre for Humanitarian Data — Predictive Analytics</h3><span class="badge b-med">Threat: medium — potential host or gatekeeper</span></header>
+      <div class="loc">UN OCHA · The Hague · Peer Review Framework · Catalogue of Predictive Models</div>
+      <dl>
+        <dt>Approach</dt><dd>An in-house team that develops, validates and peer-reviews predictive models, and supports CERF Anticipatory Action frameworks with triggers and thresholds; publishes a Catalogue of Predictive Models and a Peer Review Framework for Predictive Analytics in Humanitarian Response.</dd>
+        <dt>Solution</dt><dd>Technical support to country offices and to the two-stage CERF AA trigger architecture; sits alongside HDX, which it also manages.</dd>
+        <dt>Faring</dt><dd>Embedded and expanding — currently recruiting data scientists based in Nairobi to support AA frameworks and humanitarian response plan projections. The institutional centre of gravity for humanitarian predictive work.</dd>
+        <dt>Borrow</dt><dd><strong>The Peer Review Framework.</strong> This is the closest thing the sector has to an accepted quality bar for a predictive model, and our product's validation story should be written to satisfy it.</dd>
+        <dt>Beat</dt><dd>Not a competitor, but a real risk: it is the obvious body to host a product like ours, which is both an opportunity (credibility) and a threat (why would ACAPS build rather than let OCHA do it). Answer: ACAPS owns the risk statements and the resolution record; that ownership is the asset.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>DRC Foresight</h3><span class="badge b-low">Threat: none — the closest internal-deployment template</span></header>
+      <div class="loc">Danish Refugee Council · in deployment since early 2020 · 40 countries</div>
+      <dl>
+        <dt>Approach</dt><dd>Explainable machine learning (gradient-boosted trees per forecast horizon, plus structure-learned graphical models whose graph inputs were specified by subject-matter experts in workshops) for forced displacement, with a scenario layer.</dd>
+        <dt>Solution</dt><dd>Long-horizon displacement forecasts feeding DRC's annual Global Displacement Report, country strategic reviews, resource requirements and staffing decisions in Asia and West Africa and seven country operations.</dd>
+        <dt>Faring</dt><dd>One of very few genuinely <em>deployed-and-used</em> humanitarian forecasting systems — and notably, its authors report it "shifted organisational thinking around anticipative response."</dd>
+        <dt>Borrow</dt><dd>The deployment pattern: <strong>a forecast that lands in a recurring institutional document survives; a forecast that lands in a dashboard does not.</strong> This is the single most transferable finding in layer 2.</dd>
+        <dt>Beat</dt><dd>Nothing — but note the asymmetry. DRC's output is a number planners can use directly. ACAPS's output is a judgement about a sentence. That is precisely why DRC could automate and ACAPS cannot.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>International Crisis Group — eEARTH</h3><span class="badge b-low">Threat: low — brand-adjacent</span></header>
+      <div class="loc">Crisis Group · Early Action &amp; Risk Tracking Hub · CrisisWatch</div>
+      <dl>
+        <dt>Approach</dt><dd>"Fuses cutting-edge data analytics with political expertise" to detect resource-related conflict signals; backed by CrisisWatch's standing apparatus of ~70 monitored conflicts plus ~50 on standby monitoring.</dd>
+        <dt>Solution</dt><dd>An early-warning hub for climate-security and resource conflict, initially Horn of Africa, plus monthly conflict trend tracking.</dd>
+        <dt>Faring</dt><dd>New and credible on brand, but early — an initiative riding an existing reputation rather than an independently evaluated system.</dd>
+        <dt>Borrow</dt><dd>The <strong>standby monitoring</strong> concept: not every risk is live, but a named set is watched for drift. This maps cleanly onto ACAPS's active-vs-dormant risk split (108 of 139 risks carry triggers; only 76 sit on active risks).</dd>
+        <dt>Beat</dt><dd>N/A. But it is a reminder that "analytics plus expertise" is a crowded sentence, and we need a sharper one.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>Verisk Maplecroft + IRC Emergency Watchlist</h3><span class="badge b-none">Threat: none for ACAPS; contrast only</span></header>
+      <div class="loc">Bath, UK · commercial indices · IRC annual product</div>
+      <dl>
+        <dt>Approach</dt><dd>Maplecroft: ~150+ commercial risk indices across 198 countries sold to corporates and investors (~$15M revenue, ~177 staff). IRC: an annual curated watchlist built from a transparent indicator set plus qualitative conflict analysis.</dd>
+        <dt>Solution</dt><dd>Country risk scoring for supply chain, human rights, ESG and civil unrest clients; IRC's watchlist for humanitarian prioritisation.</dd>
+        <dt>Faring</dt><dd>Maplecroft is commercially mature but is an index business, not a forecasting business — it also appears as an <em>input</em> in IRC's technical notes, which tells you where it sits in the value chain.</dd>
+        <dt>Borrow</dt><dd>Nothing directly. Useful as evidence that the <em>buyer</em> exists for risk products — just not this buyer.</dd>
+        <dt>Beat</dt><dd>N/A. Mention only if asked about commercial alternatives; the honest answer is that the commercial market solves a different customer's problem.</dd>
+      </dl>
+    </article>
+
+  </div>
+
+  <div class="callout warn">
+    <span class="lab">Do not say in the pitch</span>
+    <p>"We combine AI forecasting with expert input." Every layer-2 organisation already says that, with more data and bigger teams. The differentiating claim is narrower and harder: <em>we are the only system that keeps the human judgement traceable to a named sentence and returns the outcome to the person who made it.</em></p>
+  </div>
+</section>
+
+<!-- ============================================================ 04 -->
+<section id="s4">
+  <div class="sec-head"><div class="sec-num">04</div><h2>Layer 3 — the judgement platforms</h2></div>
+
+  <p>This is the competitive set. One of these is the answer to "why not just buy it," one is the answer to "why not just hire them," and one is the answer to "has anyone tried this before."</p>
+
+  <div class="cards">
+
+    <article class="card">
+      <header><h3>Cultivate Labs / Hinsley</h3><span class="badge b-high">Threat: high</span></header>
+      <div class="loc">Chicago · founded 2012/2014 · ~18 staff · SOC 2 Type II · UK G-Cloud 14</div>
+      <dl>
+        <dt>Approach</dt><dd>Crowdsourced forecasting as a managed platform. Decompose and scenario, write resolvable questions, invite internal and external forecasters, collect rationales, aggregate, optionally layer an AI forecaster on top. Now marketed under the Hinsley brand as "AI-driven research, analysis and forecasting" with "continuous probabilistic foresight."</dd>
+        <dt>Solution</dt><dd>Cosmic Bazaar for the UK Cabinet Office; INFER for the US White House OSTP; Shell; and 10M+ forecasts processed for AbbVie, GE, LG and the US Intelligence Community.</dd>
+        <dt>Faring</dt><dd><strong>Commercially the most successful entrant.</strong> SOC 2 Type II recertified annually, on the UK G-Cloud 14 framework — both of which matter enormously to a body like ACAPS, which is funded by ECHO, SDC and the Norwegian MFA and would need procurement cover. It also acquired the entire RAND Forecasting Initiative as a customer, and then lost it.</dd>
+        <dt>Borrow</dt><dd>The compliance posture. If the pilot ever becomes a procurement conversation, G-Cloud listing and SOC 2 are the artefacts that get it past a finance director.</dd>
+        <dt>Beat</dt><dd>Three specific, defensible gaps: (i) it is a <em>generic tournament engine</em> — no risk model, no trigger vocabulary, no dual baselines, no country panels; (ii) its scoring rule is <strong>not a proper scoring rule</strong> — published work shows relative-Brier scoring is gameable and Sybil-vulnerable; (iii) it is a platform, not a workflow, so it has no place to land inside the Risk Radar update cycle.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>Good Judgment</h3><span class="badge b-med">Threat: medium</span></header>
+      <div class="loc">USA · commercial · network of Superforecasters</div>
+      <dl>
+        <dt>Approach</dt><dd>Recruit, train, team and aggregate: identify forecasting talent by track record, train cognitive debiasing, put forecasters in small teams, aggregate with extremising. Sells the output and the method as training and reports.</dd>
+        <dt>Solution</dt><dd>Probabilistic forecasts on client-specified questions, plus in-house forecasting capability building for governments and corporates.</dd>
+        <dt>Faring</dt><dd>The strongest public track record in the field: <strong>831 resolved questions</strong> as of August 2026, with the highest-probability outcome correct on 73% of days; 79% of forecasts beat hybrid human-plus-machine teams; roughly 30% more accurate than intelligence analysts with classified access; beat all IARPA competitors by 35–72%; ~66% more accurate than futures markets on Fed calls. Anticipated events at 400 days out as accurately as ordinary forecasters at 150 days.</dd>
+        <dt>Borrow</dt><dd>The teaming effect (~10% of GJP's advantage came from recruitment and retention, and team structures add further gain) — which is why the panel should be a stable cohort, not a fresh anonymous crowd each round.</dd>
+        <dt>Beat</dt><dd>Four things, and this is the strongest answer in the deck: they are <strong>a paid vendor</strong> (a real budget line for a $2.7M organisation); their forecasters have <strong>no standing in the country being forecast</strong>; they produce <strong>forecasts, not revisions to published analysis</strong>; and they do not solve the problem in the brief, which is not accuracy but <em>turning scattered expert knowledge into grounded analysis without costing experts their time or anonymity.</em> Good Judgment optimises the forecast. ACAPS needs the loop.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>Early Warning Project <span class="badge b-dead">the cautionary case</span></h3><span class="badge b-low">Threat: low</span></header>
+      <div class="loc">US Holocaust Memorial Museum · opinion pool since 2013 · statistical risk assessment since 2015</div>
+      <dl>
+        <dt>Approach</dt><dd>Two mechanisms bolted together: a statistical risk assessment (SRA) producing country-level probabilities of mass-atrocity onset, and a public expert opinion pool in which participants forecast binary questions about specific countries.</dd>
+        <dt>Solution</dt><dd>An annual ranked watch list of countries at risk of mass killing, plus a public forecast tournament on atrocity onset.</dd>
+        <dt>Faring</dt><dd>Mixed, and instructive in both directions. The pool's aggregate <strong>Brier was 0.12</strong> across 83 binary questions (0.09 for mass-killing onsets, 0.06 for state-perpetrated killing) — genuinely good, and achieved by an aggregate whose <em>individual</em> forecasters were barely better than random. The SRA reached AUROC 0.81 and its Top-30 captured 68% of onsets, but at 4% sensitivity it produced <strong>precision of roughly 5% — about twenty false positives per onset.</strong> And participation collapsed from <strong>10,825 votes (2018) to 1,148 (2021)</strong>.</dd>
+        <dt>Borrow</dt><dd>Two things. First, the proof that <strong>aggregating weak individuals yields strong signal</strong> — which is the single best argument for a 5–10 person panel drawn from non-superforecasters. Second, and more usefully, <strong>the decay curve as a design requirement.</strong></dd>
+        <dt>Beat</dt><dd>Its failure mode. EWP asked experts to forecast events in countries they could not change, with no visible consequence, no feedback to the individual, and no institutional consumer. Every one of those four absences is a design decision we can reverse.</dd>
+      </dl>
+      <div class="callout danger" style="margin:16px 0 0">
+        <span class="lab">The number to put on a slide</span>
+        <p style="margin:0"><b>10,825 → 1,148.</b> An 89% collapse in participation, in a well-funded atrocity-forecasting pool, over three years. Any product in this space that does not answer this number with a mechanism is asking the jury to believe the same thing will not happen twice.</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <header><h3>Metaculus</h3><span class="badge b-low">Threat: low</span></header>
+      <div class="loc">Public benefit corporation · ~28 staff · ~$8.8M raised · BSD-2 open source since 2024</div>
+      <dl>
+        <dt>Approach</dt><dd>Open forecasting platform with recency-weighted median aggregation, log scoring floored at 0.1%/99.9% to prevent certainty, and a two-dimensional Baseline/Peer scoring regime introduced November 2023.</dd>
+        <dt>Solution</dt><dd>~15,000+ questions and 1M+ predictions from a ~50,000-user community; API, tournaments, and a platform others can self-host since the 2024 open-sourcing.</dd>
+        <dt>Faring</dt><dd>Healthy as a platform, and honestly self-critical: Brier around 0.107 on 2021 questions; the aggregated "Metaculus Prediction" was <strong>deprecated in November 2024</strong> in favour of the Community Prediction; their own Q2 2025 comparison showed Pro Forecasters still beating AI systems at p = 0.00001. Weaknesses are structural: many questions attract fewer than 50 forecasters, and calibration degrades on horizons beyond a year.</dd>
+        <dt>Borrow</dt><dd>The <strong>resolution criteria as contract</strong> discipline — no question opens until its death is specified. And the score floor: never permit 0% or 100%, because certainty is a failure of the instrument, not a statement about the world.</dd>
+        <dt>Beat</dt><dd>Everything about its social model. Public leaderboards, open crowds, and permanent profiles are the three features the ACAPS brief most directly forbids. Also: thin per-question liquidity means the aggregate on any single question is fragile — the opposite of a curated 5–10 person panel.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>Swift Centre</h3><span class="badge b-low">Threat: low — but the best external validation we have</span></header>
+      <div class="loc">London · founded 2022 · ~2–10 staff · ~$2M Future Fund grant</div>
+      <dl>
+        <dt>Approach</dt><dd>A deliberately small elite panel plus published, resolved, individually-attributed public forecasts. Publishes its misses as prominently as its hits.</dd>
+        <dt>Solution</dt><dd>Public forecasts on geopolitical and policy questions, with an annual year-in-review that scores the whole set.</dd>
+        <dt>Faring</dt><dd>Aggregate <strong>Brier 0.115</strong> across 13 public resolved forecasts in 2025 — competitive with much larger operations — and openly reports where it was wrong (LNG, Indus Waters) while noting where it beat Polymarket (Iran strike at 68% versus the market's 55%; Greenland at 4% versus 12%).</dd>
+        <dt>Borrow</dt><dd><strong>This is the external evidence that a small panel with published receipts beats a large crowd.</strong> It is the single most citable proof-of-concept for BENCHMARK's architecture, produced by an organisation with no connection to the hackathon.</dd>
+        <dt>Beat</dt><dd>Nothing. Cite it. "A small panel that publishes its misses is competitive with much larger operations — that is our architecture, validated by someone else."</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>CSET Foretell · RAND Forecasting Initiative</h3><span class="badge b-none">Threat: none</span></header>
+      <div class="loc">Georgetown CSET · RAND · 2024–2026 <span class="badge b-dead">shut down</span></div>
+      <dl>
+        <dt>Approach</dt><dd>CSET Foretell: a forecasting tournament testing whether crowd forecasts beat expert projections on emerging-technology indicators, with genuinely useful published question-design research. RAND RFI: a Cultivate-built platform on which several thousand analysts, SMEs and members of the public forecast geopolitical, technology and policy questions.</dd>
+        <dt>Solution</dt><dd>Both aimed to demonstrate that structured crowd judgement improves institutional analysis rather than to sell a product.</dd>
+        <dt>Faring</dt><dd>Foretell's headline result was real — crowd mean error 0.28 against 0.54 for historical projection, beating projection on 56% of metrics — but it remained an open proof of concept needing scale and, in its own framing, policymaker demand. <strong>RAND's initiative ran from 2024 to 2026 and then shut down</strong>, with the platform now a read-only archive of 298 scored questions.</dd>
+        <dt>Borrow</dt><dd>Question-design craft: a rolling multi-window format, explicit awareness that bucketing answers biases forecasters, and the finding that end users want a point estimate together with an 80% interval rather than a distribution.</dd>
+        <dt>Beat</dt><dd>Use their endings as the argument. <strong>Two institutional forecasting programmes with real funding and real prestige wound up within a few years.</strong> The lesson is not that forecasting doesn't work — it is that a forecasting programme without a permanent institutional consumer is a grant, not a product.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>Hypermind · Social Science Prediction Platform</h3><span class="badge b-none">Threat: none</span></header>
+      <div class="loc">Hypermind since 2000 · SSPP academic consortium</div>
+      <dl>
+        <dt>Approach</dt><dd>Hypermind: three distinct products — a Champion Forecasting Panel of named elite forecasters, a crowd-forecasting polling platform, and a prediction market — sold as collective-intelligence tools. SSPP: a panel of academic forecasters predicting the results of untested social programmes.</dd>
+        <dt>Solution</dt><dd>High-end bespoke forecasting for corporates and agencies; and systematic ex-ante prediction of research findings at scale (2,500+ forecasters from 340+ institutions, 174 studies, 54 countries).</dd>
+        <dt>Faring</dt><dd>Hypermind is a long-lived boutique with a serious client list. SSPP is a genuinely functioning research instrument with 85,000+ predictions — proof that expert panels can be recruited and sustained when the panel has a reason to care about the answer.</dd>
+        <dt>Borrow</dt><dd>SSPP's answer to the retention problem: <strong>participants return because the resolution is intellectually interesting to them.</strong> That is a design lever for E7 — make the outcome of the risk the expert assessed genuinely informative, not just an administrative closure.</dd>
+        <dt>Beat</dt><dd>N/A.</dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<!-- ============================================================ 05 -->
+<section id="s5">
+  <div class="sec-head"><div class="sec-num">05</div><h2>Layer 1 — the incumbent, read closely</h2></div>
+
+  <p>The most important research finding is not about a competitor. It is about ACAPS's own published methodology, because that document already specifies the product we are building — and already concedes the gap.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="v">2009</div><div class="k">Founded · non-profit, non-governmental project</div></div>
+    <div class="stat"><div class="v">~50<small>–60</small></div><div class="k">Professionals worldwide (headcount estimates 50–136 incl. affiliates)</div></div>
+    <div class="stat"><div class="v">$2.7<small>M</small></div><div class="k">Annual budget · ECHO, SDC, Norwegian MFA, FCDO</div></div>
+    <div class="stat"><div class="v">10–15</div><div class="k">Countries per analyst</div></div>
+    <div class="stat good"><div class="v">3<small>mo</small></div><div class="k">Risk update cadence in the methodology</div></div>
+    <div class="stat good"><div class="v">6<small>mo</small></div><div class="k">Accuracy review cadence in the methodology</div></div>
+  </div>
+
+  <h3>What the methodology actually says</h3>
+
+  <blockquote>
+    Risk probability is not mathematically calculated but assigned through expert judgement based on the triangulation of available data, historical patterns, forward indicators, and context knowledge.
+    <cite>ACAPS Risk Methodology, as reproduced in published country risk reports</cite>
+  </blockquote>
+
+  <p>And on impact:</p>
+
+  <blockquote>
+    Impact level is also adjusted through expert judgement, informed by context knowledge and triangulated through qualitative and quantitative data, to account for a population's vulnerability to shocks, coping strategies, and local, national, and international response capacities.
+    <cite>ACAPS Risk Methodology</cite>
+  </blockquote>
+
+  <p>Read together, these two sentences are the entire product case. ACAPS has <strong>publicly committed to expert judgement as its formal method, at two independent points in every risk</strong> — probability and impact — and then records only the resulting number. The judgement, the disagreement, the reasoning and the name all evaporate. There is no audit trail, no track record per expert, and no way for an expert to learn whether they were right.</p>
+
+  <div class="callout evidence">
+    <span class="lab">The reframe this unlocks</span>
+    <p><strong>BENCHMARK is not a new method imposed on ACAPS. It is ACAPS's own method, made auditable.</strong> That single sentence defuses the strongest objection a jury can raise — "this displaces our analysts" — because it replaces nothing. It records something the methodology already assumes happens.</p>
+  </div>
+
+  <h3>Three details in the methodology that change the schema</h3>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:26%">Methodology detail</th><th style="width:36%">What it means</th><th>Change to our plan</th></tr></thead>
+    <tbody>
+      <tr class="hi">
+        <td><b>Updates every three months;</b> past risks assessed and accuracy evaluated <b>every six months</b></td>
+        <td>There are two clocks, not one. Our blueprint assumed a single six-month cycle.</td>
+        <td><b>Decouple them.</b> Forecast horizon = 6 months (matching the accuracy review, and matching the brief). Prompt cadence = 3 months (matching the update cycle). Round 2 of the panel should land <em>before</em> the analyst's revision, not after.</td>
+      </tr>
+      <tr>
+        <td>Probability scale is <b>very low / low / medium / high / very high</b>. Impact scale is <b>very low / low / moderate / significant / major</b>.</td>
+        <td>The two five-point scales use <em>different words</em>. Only the first two labels match.</td>
+        <td><b>Do not reuse one label set for both.</b> Any UI that shows "High impact" is wrong — ACAPS's impact scale says "significant" or "major." A jury of ACAPS analysts will notice this immediately, and it is a two-line fix that buys disproportionate credibility.</td>
+      </tr>
+      <tr>
+        <td>Risk level is a function of probability <em>and</em> impact; a low-probability risk stays in the analysis if impact is medium or above.</td>
+        <td>Resolution is not one-dimensional.</td>
+        <td><b>"Unresolvable" needs two-axis criteria.</b> A risk can materialise in impact without the probability ever being tested, or vice versa. The resolver screen must allow "event occurred, but not with the stated impact," which is a different outcome from a clean miss.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The 17% response rate</h3>
+
+  <blockquote>
+    This risk overview is the result of a workshop involving nine analysts and experts on Afghanistan and bilateral conversations with contextual experts. In addition, a short risk survey was sent out to more than 60 people, but the response rate was low with only 10 responses.
+    <cite>ACAPS Afghanistan risk report, published methodology section</cite>
+  </blockquote>
+
+  <p>This is the closest thing ACAPS has published to a baseline for the exact behaviour we are trying to change. It is a survey — not the same instrument as our panel — but it is the only public evidence of what happens when ACAPS asks more than 60 external experts for a judgement. <strong>Ten replied.</strong></p>
+
+  <p>It also sits alongside the fact that most ACAPS risk products are built from a workshop of 9 to 28 participants plus key-informant interviews, with the product's own limitations sections routinely noting that the analysis "draws on a small number of KIIs for a national-level product." ACAPS is <em>already</em> doing small-group elicitation. It just does it synchronously, in a workshop, with no anonymity, no independent first round, no scoring, and no feedback loop.</p>
+
+  <div class="callout warn">
+    <span class="lab">The honest counter-argument, and its answer</span>
+    <p>Someone will say: "workshops already work — we get 9 to 28 people in a room." True, and that is exactly the problem. A workshop is fast and social; it is also where the loudest analyst wins, where a junior national staff member cannot contradict a senior adviser, and where nothing survives except the minutes. The brief's own phrasing — <em>without costing those experts their time or their anonymity</em> — is a direct critique of the workshop. Our product is the asynchronous, anonymous, independent-first-round complement to a JAM, not a replacement for it.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 06 -->
+<section id="s6">
+  <div class="sec-head"><div class="sec-num">06</div><h2>The prior art nobody in the room will know about</h2></div>
+
+  <p>In January 2016, Paul Currion published a concept note proposing exactly the thing we are proposing. It was never built. It is the most strategically valuable document in this entire research pass, and it should shape the first sixty seconds of the pitch.</p>
+
+  <div class="card" style="border-color:var(--ink); border-width:2px">
+    <header><h3>Beating Hindsight: Forecasting for Humanitarian Planning and Preparedness</h3><span class="badge b-med">2016 · never implemented</span></header>
+    <div class="loc">Published 7 January 2016 · proposed host: Start Network</div>
+    <dl>
+      <dt>Proposed</dt><dd>A GJP-style forecasting tournament for the humanitarian sector: 4–5 national and international staff from each of 4–5 Start member organisations, "preferably a combination of field, regional and HQ staff," a three-month initial tournament including platform development and training, built on ~12 questions about displacement, damage, crisis duration and negotiation outcomes.</dd>
+      <dt>Horizon</dt><dd>Explicitly "6–18 months — the perfect scale for decision-making [in] the existing humanitarian programme cycle."</dd>
+      <dt>Named EWP</dt><dd>Correctly identified the Early Warning Project as the closest existing analogue — "a combination of statistical risk assessment and an expert opinion pool (i.e. a tournament approach)."</dd>
+      <dt>Diagnosed</dt><dd>Why early warning fails in this sector, in four lines that have not aged: <em>"Evidence provided by early warning projects has historically not led to improved response due to the lack of political will… and decisions are not evidence-based."</em> Plus: "the sector has a high barrier to entry that external experts find difficult to breach"; "the community struggles to incorporate new conceptual models into its workflows, since those workflows have been developed in an ad hoc and reactive manner"; and improved forecasts "will never predict the future with 100% certainty is likely to be off-putting to senior decision-makers."</dd>
+      <dt>Solved</dt><dd>Proposed the right remedy too: "experiment with ways of connecting forecasting directly to response, such as coordination agreements that set out clear actions once a forecast reaches a certain threshold."</dd>
+      <dt>Outcome</dt><dd>No tournament exists. Start Network did build FOREWARN (2016) — an expert network supporting anticipatory alerts — but as a <em>technical advisory function for funding decisions</em>, not as a scored, anonymised, feedback-looping panel. The forecasting ambition was absorbed into a different, narrower mechanism.</dd>
+    </dl>
+  </div>
+
+  <h3>Why this matters more than any competitor</h3>
+  <p>Every other team in the room will pitch this product as new. If it is new, the jury's implicit question is "will this work?" If it is <em>ten years old and already failed once</em>, the jury's question changes to "why will this work now?" — and that is a question we can answer, because we have read the post-mortem and the 2016 author had not yet seen the EWP decay curve, the RAND shutdown, or the LLM baseline.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:34%">What the 2016 attempt had</th><th style="width:33%">Why it died</th><th>What we change</th></tr></thead>
+    <tbody>
+      <tr><td>A good design, a plausible host, and a named funder-adjacent network</td><td>It was a <em>proposal</em>, not a product. It required Start Network to fund and staff a new function with no prior evidence of value — and Start Network's money goes to anticipatory <em>alerts</em>, which do get funded (31 alerts to date).</td><td>We ship a working instrument inside ACAPS's existing published output, so the value is visible before any procurement decision is required.</td></tr>
+      <tr><td>Correct diagnosis of the adoption failure</td><td>No answer to it. "Educating decision-makers in how to accept uncertainty" is not a mechanism.</td><td><strong>The dual baseline.</strong> An analyst does not have to learn to accept uncertainty as an abstraction — they see ACAPS's own number, the panel's number and the model's number side by side on one screen, with the gap named. Uncertainty becomes a specific, addressable difference rather than a philosophical position.</td></tr>
+      <tr><td>GJP-derived panel recruitment</td><td>Assumed staff would participate across organisations with no incentive and no visible consequence. That is the EWP failure mode in advance.</td><td><strong>The receipt.</strong> The only mechanism in any of the surveyed systems that gives a volunteer a personal reason to come back: six weeks later, here is what happened to the thing you assessed, and here is the paragraph your dissent changed.</td></tr>
+      <tr><td>~12 questions, 3-month rounds</td><td>Fine, but volume without a workflow anchor is a tournament hobby.</td><td>Questions are <em>derived from the trigger bank</em> — 266 existing trigger blocks across 139 risks — so there is always a supply of questions and they are already the things ACAPS cares about.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ 07 -->
+<section id="s7">
+  <div class="sec-head"><div class="sec-num">07</div><h2>What the methods literature actually establishes</h2></div>
+
+  <p>Nine findings, each with a build consequence. This section is the ammunition for every methodological question in Q&amp;A.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:24%">Finding</th><th style="width:31%">Evidence</th><th>Build consequence</th></tr></thead>
+    <tbody>
+      <tr class="hi">
+        <td><b>Very small panels capture most of the gain</b></td>
+        <td>Gaba et al. (2017) find most accuracy gains from as few as <b>5 independent estimates</b>. EWP ran ~125 participants and decayed to irrelevance. Swift Centre operates with ~2–10 staff and scores Brier 0.115.</td>
+        <td><b>The brief's 5–10 is correct and now evidenced three ways.</b> Keep the hard schema cap. Do not let anyone "improve" it by opening the panel to hundreds — that is the EWP path.</td>
+      </tr>
+      <tr>
+        <td><b>Performance-weighted aggregation beats equal weights</b></td>
+        <td>Cooke's Classical Model, developed at TU Delft and applied across <b>45 expert panels</b> with problem-owner sign-off, weights experts by calibration on seed variables — and consistently outperforms equal weighting when seed data exists. In reliability settings, equal weighting plus a discussion-and-revision phase already improves calibration substantially.</td>
+        <td><b>Do not weight by performance in v1.</b> With 5–10 people and few resolved items per person, performance weights are noise. Use equal weights plus a revision round — which the reliability literature shows captures much of the benefit — and let A4 (panel health) display calibration without acting on it until n is large.</td>
+      </tr>
+      <tr>
+        <td><b>Extremising helps; over-engineering does not</b></td>
+        <td>GJP's extremising step produced real gains. But our own ablation on 104 resolved ACAPS risks found mean 0.2196, median 0.2215, log-odds 0.2219 and extremised 0.2237 — differences inside noise.</td>
+        <td><b>Ship equal-weight mean, describe extremising as available, and never claim the ablation as a discovery.</b> Say plainly: "on our n, aggregation method does not matter; we chose the one a jury can audit."</td>
+      </tr>
+      <tr>
+        <td><b>"Surprisingly popular" is a real, published, large effect</b></td>
+        <td>Prelec, Seung &amp; McCoy (Nature, 2017): asking people what they think <em>and</em> what they think others will say, then selecting the answer that beats expectations, reduced error by <b>21.3% versus majority vote, 24.2% versus confidence-weighted vote, and 48% on the state-capitals set.</b></td>
+        <td><b>This is a cheap, novel, defensible add.</b> One extra field in E4 — "what will most other panellists say?" — and the analyst gets a divergence signal that is not just variance. It is the single most credentialled method in this table that no humanitarian product uses. Add it as an optional analyst-only view in stage 4.</td>
+      </tr>
+      <tr>
+        <td><b>Some scoring rules used in this field are provably not proper</b></td>
+        <td>Published work (arXiv 2106.11248) shows the relative-Brier scoring regime used across GJ Open-style platforms is <b>not a proper scoring rule</b> — it is gameable via relative placement and vulnerable to Sybil attacks.</td>
+        <td><b>Say this out loud in Q&amp;A.</b> "We use Brier and log score on the absolute outcome, not relative scoring, because relative scoring has been shown to be improper." It is a devastatingly specific answer to "how is this different from Metaculus/Cultivate."</td>
+      </tr>
+      <tr>
+        <td><b>Training produces ~10%, and the literature has been challenged</b></td>
+        <td>GJP training improved Brier by roughly 10% across four years; recruitment and retention of better forecasters accounted for ~10% of GJP's advantage. But Hauenstein et al. (2025) argue the training effects may not be robust once question-set and timing differences are controlled.</td>
+        <td><b>Promise a 90-second onboarding, not a training programme.</b> Do not claim the 10% training effect as ours. Do claim the retention effect — because retention is the one GJP advantage that is not disputed, and it is exactly what E7 buys.</td>
+      </tr>
+      <tr>
+        <td><b>Attrition hits experts hardest</b></td>
+        <td>In a long-run existential-risk forecasting tournament, dropout was <b>19% among superforecasters but 51% among domain experts</b> — and the organisers reported real difficulty recruiting non-superforecasters willing to commit at all.</td>
+        <td><b>Our panel is <em>entirely</em> domain experts.</b> We are recruiting precisely the population with the worst demonstrated retention. This is the strongest argument that a 90-second round is a hard requirement, not a UX nicety, and that the pilot must instrument drop-off from invitation to submission.</td>
+      </tr>
+      <tr>
+        <td><b>Humanitarians systematically over-forecast</b></td>
+        <td>An MSF analysis found roughly <b>70% of medical items were over-forecast</b>, and ~40% of items had intermittent demand that breaks standard error measures. Judgemental forecasting is the norm in the sector, and it is biased in a predictable direction.</td>
+        <td><b>A directional de-biasing cue is warranted.</b> If humanitarian practitioners over-forecast, the analyst-side display should show panel mean against a base rate explicitly. And it gives a second reason for the model baseline: not to replace the panel but to pull against a known directional bias.</td>
+      </tr>
+      <tr>
+        <td><b>At the frontier, AI beats the crowd and trails the experts</b></td>
+        <td>o3 scores Brier <b>0.1352</b> against a Metaculus crowd of <b>0.149</b> and superforecasters at ~0.0225 median on held-out questions. On ForecastBench in May 2026, superforecasters sit at ~0.086 and the best AI systems at ~0.103, with a median projection of full parity around <b>August 2027</b>. Calibration analysis shows LLMs are typically overconfident on high-probability events.</td>
+        <td><b>Two consequences.</b> (i) Never claim the LLM is the product — it is demonstrably still behind experts and the gap is closing on a timescale that will make any AI-centric moat worthless. (ii) The specific failure mode — overconfidence on high-probability events — is exactly the ACAPS pattern we measured (High risks materialise at 84%). A model baseline that is overconfident at the top is <em>useful</em>, because the divergence it creates is where the panel earns its keep.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout evidence">
+    <span class="lab">The structural argument this section makes</span>
+    <p>Every methodologically serious choice in BENCHMARK turns out to be the choice the literature already recommends: <strong>small panel (Gaba), equal weights with a revision round (reliability literature), absolute proper scoring (arXiv 2106.11248), resolution criteria before opening (Metaculus's good habit), and a retention mechanism (GJP's undisputed advantage).</strong> We are not inventing a method. We are the first to apply an already-agreed method to risk statements rather than to standalone questions.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 08 -->
+<section id="s8">
+  <div class="sec-head"><div class="sec-num">08</div><h2>The UNICRI layer — revised</h2></div>
+
+  <div class="callout blue">
+    <span class="lab">Revision note · 6 November 2026</span>
+    <p style="margin-bottom:0">This section previously described UNICRI as a track that "stays a second pod" on the strength of one paper. That judgement was made before the challenge repo was read file by file and before the nineteen primary sources behind it were worked through. <b>It is withdrawn.</b> The evidence base on this track is roughly ten times that of the ACAPS one, four randomised trials exist, and the field's central problem — that 70% of people who want help cannot find an anonymous route to it — is a <em>routing</em> problem rather than a persuasion problem. The full analysis is in <code>unicri-research.html</code>. What follows is the market layer, rewritten to fit the revised view.</p>
+  </div>
+
+  <p>The child-protection space is crowded at the detection layer, competitive at the intervention layer, and structurally hollow at the layer in between: <strong>the handoff from a warning to a human who can help.</strong> That is the market fact this section establishes.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="v">70<small>M+</small></div><div class="k">Project Intercept warnings, two years</div></div>
+    <div class="stat"><div class="v">~1<small>%</small></div><div class="k">Click-through on the largest deployment in the world</div></div>
+    <div class="stat bad"><div class="v">0.018<small>%</small></div><div class="k">Pornhub reThink click-through — 490 from 2.8M</div></div>
+    <div class="stat"><div class="v">12.4<small>%</small></div><div class="k">Ahmia, where help is the only link on the page</div></div>
+    <div class="stat bad"><div class="v">70<small>%</small></div><div class="k">Who want help and cannot find an anonymous route</div></div>
+    <div class="stat bad"><div class="v">7</div><div class="k">Free detection tools a small platform can install — and zero warning tools</div></div>
+  </div>
+
+  <div class="cards">
+
+    <article class="card">
+      <header><h3>Project Intercept — Lucy Faithfull Foundation</h3><span class="badge b-med">Threat: the incumbent, but a consultancy rather than a product</span></header>
+      <div class="loc">UK charity · 22 bespoke interventions in 2 years · partners include OpenAI, Meta, TikTok, Google, Mega, Stability AI, Civitai, BT, Bing, Aylo, OnlyFans, MovieStarPlanet</div>
+      <dl>
+        <dt>Approach</dt><dd>Deterrence messaging at the moment of risk — on search terms indicating intent, or clicks to links previously reported as CSAM. Four message components derived from research with people who have offended: <b>it is a crime · it causes harm · there are consequences · there is help.</b></dd>
+        <dt>Faring</dt><dd>70M+ warnings, at times 95,000 a day, in 131 countries; ~683,000 click-throughs, roughly <b>1%</b>. Livingstone called that "disappointing" given the scale of the problem while noting four in five who do seek support engage with it. Note the denominator problem: each intervention is separately researched and built, roughly one per month, by a team of clinicians and engineers.</dd>
+        <dt>Borrow</dt><dd>The <b>four-message structure</b>, adopted verbatim rather than reinvented. And the <b>honest denominator</b>: Intercept publishes 70M and 700K in the same breath.</dd>
+        <dt>Beat</dt><dd>Not on distribution — that is structural. On <b>economics</b>. Intercept's model cannot reach a 20,000-member Dutch forum with one part-time moderator, and never will: the tail of platforms is long and each one is too small to justify bespoke R&amp;D. <b>Self-serve configuration is the entire opening.</b></dd>
+        <dt>What changed</dt><dd>The 2024 read was "we can beat them on segmentation." The revised read is sharper and less flattering to us: <b>we can only beat them on installability, and only in the tail.</b> Any pitch claiming to out-design a specialist charity with 22 deployments is not credible to a jury that contains one of its authors.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>The detection layer — Shield, PhotoDNA, Cloudflare, IWF, Thorn</h3><span class="badge b-none">Threat: none — and this is the constraint, not the opportunity</span></header>
+      <div class="loc">Hashing, classification, blocking, reporting</div>
+      <dl>
+        <dt>Faring</dt><dd>Mature, funded, and <b>free at the entry level</b>. Cloudflare's CSAM Scanning Tool is on every plan including free, toggled from a dashboard with a verified email. Project Arachnid's Shield API is free with TS/Python/Rust/PHP SDKs. PhotoDNA is free for qualified organisations. IWF's Image Intercept is explicitly built for small businesses. Tech Coalition Pathways exists to onboard exactly the platform in the brief.</dd>
+        <dt>Borrow</dt><dd>The measurement discipline — count files, reports, latency; never sentiment.</dd>
+        <dt>Beat</dt><dd><b>Nothing. Concede this layer entirely.</b> The strategic point is the inverse of competition: because detection is free and solved, a team that ships detection is shipping a solved problem. <b>Seven free ways to find an illegal image, zero ways to interrupt the person looking.</b> That sentence is the market gap, and it is stronger as a concession than as a claim.</dd>
+        <dt>What changed</dt><dd>The earlier read treated this layer as "the thing to sit above." The revised read is that it should be <b>bundled</b> — turned on by the same install — because the bundle is what makes adoption cheap, and none of the free tools currently reaches a small platform that has not already gone looking for them.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>EU CSAR and DSA Article 28</h3><span class="badge b-med">Threat: a tailwind, not a customer — and not law</span></header>
+      <div class="loc">Proposed 11 May 2022 · Council position Nov 2025 · fifth trilogue failed June 2026 · ePrivacy derogation extended to 3 April 2028 (Reg. 2026/1881) · sixth trilogue scheduled</div>
+      <dl>
+        <dt>Approach</dt><dd>Risk assessment and proportionate mitigation obligations on hosting and interpersonal-communication providers, layered on DSA art. 28; Council's 2025 position dropped mandatory detection orders in favour of risk-based mitigation and voluntary detection; a 45M MAU threshold for the heaviest duties.</dd>
+        <dt>Borrow</dt><dd>The <b>risk-categorisation logic</b> — obligations scale with assessed risk, not only with platform size. That is a legitimate pattern for an intervention that cannot show everyone the same interstitial.</dd>
+        <dt>Beat</dt><dd>Do not build against it. But do note the direction of travel in one sentence: <b>risk-mitigation-by-design is the only mechanism by which the tail of platforms will ever be compelled to install anything</b>, and it is the difference between a voluntary module and a mandated one.</dd>
+        <dt>What changed</dt><dd>Unchanged as a caution. It was and remains a reason to build a voluntary product rather than a compliance product.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><h3>The help layer — Offlimits, ReDirection, Kein Täter werden, Stop It Now UK</h3><span class="badge b-high">Threat: none. This is the actual bottleneck.</span></header>
+      <div class="loc">The organisations a module hands people to</div>
+      <dl>
+        <dt>Faring</dt><dd>Small and fragile. The Dutch prevention line took <b>943 contacts in an entire year</b> (2022) — about 2.6 a day for 17.9 million people. Insoll's survey of 4,493 CSAM users found <b>55% want to stop</b> and 70.2% could not find an anonymous route. Nurmi's Tor study found <b>73.9% of help-seekers could not get help.</b> Karolinska's Prevent It 2.0 shows what happens when they do: urges fall by <b>d = −1.01</b>, CSAM viewing by 1.87 h/week.</dd>
+        <dt>Borrow</dt><dd>The routing table. Country, language, service type, confidentiality terms, opening hours, capacity.</dd>
+        <dt>Beat</dt><dd>Nothing. <b>This layer is the customer's last mile, not a competitor.</b> But it carries the single biggest delivery risk in the whole product — see the capacity callout below.</dd>
+        <dt>What changed</dt><dd>This layer was absent from the previous version of this section and it is the most important one. The literature is unambiguous: <b>treatment works and routing fails.</b> A product that improves routing is doing the highest-value work available and the easiest to defend.</dd>
+      </dl>
+    </article>
+
+  </div>
+
+  <div class="callout danger">
+    <span class="lab">The capacity contradiction — the one thing that could sink the whole design</span>
+    <p style="margin:0">If a module installed across a few hundred Dutch platforms worked at even Project Intercept's rate, it would generate help-seeking demand far above <b>2.6 contacts a day</b>. Offlimits is a small team. <b>Success breaks the last mile.</b> Any credible design therefore has to default to self-help (Stoppen is mogelijk, ReDirection) rather than the phone line, reserve human contact for signals of higher need, and give the service a volume forecast it can staff against. A design that routes everyone to a helpline is not ambitious — it is irresponsible, and a juror from the sector will say so.</p>
+  </div>
+
+  <div class="callout warn">
+    <span class="lab">Revised strategic call</span>
+    <p>The UNICRI claim still cannot be falsified offline in a weekend — there is no equivalent of 104 resolved risks, and that asymmetry is real and permanent. But the earlier conclusion drawn from it — "build the measurement harness, not the intervention" — was wrong, because the field's binding constraint is not measurement. It is that <b>seven in ten people who want help cannot find the door, and no installable artefact exists that opens it.</b></p>
+    <p style="margin-bottom:0">The correct shape is therefore an <b>artifact plus an honest measurement design</b>: a self-serve module that installs in an afternoon, collects aggregate counts that cannot identify anyone, and ships with a pre-registered protocol for testing it properly. That is defensible, shippable in a weekend, and answers the adoptability criterion rather than dodging it.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 09 -->
+<section id="s9">
+  <div class="sec-head"><div class="sec-num">09</div><h2>Nine ways this dies — each with a documented corpse</h2></div>
+
+  <p>Every failure mode below is not hypothetical. It has already happened to someone with more money than us.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Failure mode</th><th style="width:38%">Documented instance</th><th>Our counter, by design</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td><b>Participation decays</b></td><td>EWP: 10,825 → 1,148 votes. X-risk tournament: 51% expert dropout.</td><td>E7 receipt + 90-second round + no metric rewards presence.</td></tr>
+      <tr><td class="num">2</td><td><b>The sponsor goes away</b></td><td>RAND Forecasting Initiative, 2024–2026, now a read-only archive. CSET Foretell stuck at proof of concept.</td><td>Land inside ACAPS's published update cycle, not in a separate product.</td></tr>
+      <tr><td class="num">3</td><td><b>It is a proposal, not a product</b></td><td>The 2016 humanitarian forecasting tournament. Never built.</td><td>Ship the number, the parser and E3+E4 in the first build stage; demo something that runs.</td></tr>
+      <tr><td class="num">4</td><td><b>The crowd is thin per question</b></td><td>Metaculus: many questions attract &lt;50 forecasters; long-horizon calibration degrades.</td><td>Hard cap of 5–10 <em>named</em> panellists per country; never open a question without a quorum.</td></tr>
+      <tr><td class="num">5</td><td><b>The aggregate is confident and wrong</b></td><td>EWP SRA: precision ~5%, roughly 20 false positives per onset.</td><td>G1 publication gate that refuses on small cells, plus an explicit confidence field that is never collapsed into the point estimate.</td></tr>
+      <tr><td class="num">6</td><td><b>The method is gameable</b></td><td>Relative-Brier scoring shown to be improper; Sybil-vulnerable.</td><td>Absolute proper scoring only; one ballot per verified invitee; no leaderboard.</td></tr>
+      <tr><td class="num">7</td><td><b>It optimises the wrong thing</b></td><td>HungerMap and VIEWS optimise fatality and food-consumption counts; neither can validate a risk statement.</td><td>Optimise for analyst behaviour change, measured as: does the published paragraph move, and can we show why.</td></tr>
+      <tr><td class="num">8</td><td><b>Anonymity is promised and not delivered</b></td><td>Small-cell and differencing attacks are the standard re-identification failure in published statistics.</td><td>Server-enforced blindness <em>and</em> a publication gate that names the risk (small-cell, differencing, attribute combination) and offers three routes out.</td></tr>
+      <tr><td class="num">9</td><td><b>The AI eats it</b></td><td>LLM forecasters moved from below-crowd to near-expert in roughly 18 months; benchmark parity projected ~Aug 2027.</td><td>Do not build an AI forecaster. Build the institution, the panel and the receipt — the parts that do not improve with compute.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ 10 -->
+<section id="s10">
+  <div class="sec-head"><div class="sec-num">10</div><h2>The gap: what literally nobody does</h2></div>
+
+  <p>Ten capabilities, checked against the eight most relevant systems. A dash is not a criticism of those systems — they were built for other customers. It is a map of where we are unopposed.</p>
+
+  <div class="tbl-wrap">
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th style="width:29%">Capability</th>
+        <th>Metaculus</th><th>Good Judgment</th><th>Cultivate / Hinsley</th><th>EWP</th><th>Swift Centre</th><th>VIEWS / HungerMap</th><th>ACAPS Risk Radar</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Questions derived from a live risk bank</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark p">partial</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark y">yes</td></tr>
+      <tr class="hi"><td><b>Dual baselines</b> — publisher's number and model's number, side by side</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr><td>Blind first round enforced server-side</td><td class="mark n">—</td><td class="mark p">team only</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark p">partial</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr class="hi"><td><b>Anonymity tiers</b> for experts in conflict-affected contexts</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark p">pool</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr><td>Same words as the publisher's own scales</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark y">is the publisher</td></tr>
+      <tr class="hi"><td><b>Publication gate</b> that refuses to publish</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr><td>"Unresolvable" as a first-class outcome</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark p">partial</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr class="hi"><td><b>Receipt returned to the individual expert</b></td><td class="mark n">—</td><td class="mark p">org-level</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark p">public</td><td class="mark n">—</td><td class="mark p">6-mo review, internal</td></tr>
+      <tr><td>Holding rewarded equally with moving</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td><td class="mark n">—</td></tr>
+      <tr><td>Absolute proper scoring, no leaderboard</td><td class="mark p">absolute, public board</td><td class="mark p">absolute, rankings</td><td class="mark n">relative</td><td class="mark y">yes</td><td class="mark y">yes</td><td class="mark n">n/a</td><td class="mark n">n/a</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Six capabilities are empty across all eight systems: <strong>dual baselines, anonymity tiers, the publication gate, holding as a rewardable act, receipts returned to the individual from an institutional publisher, and questions derived from a live risk bank.</strong> Those six are the product. Everything else in BENCHMARK is either borrowed (proper scoring), standard (blind first round) or necessary plumbing (the parser).</p>
+</section>
+
+<!-- ============================================================ 11 -->
+<section id="s11">
+  <div class="sec-head"><div class="sec-num">11</div><h2>Build implications — what changes in the plan</h2></div>
+
+  <p>Twelve changes, ordered by how much they alter what gets built. Each names the evidence that drives it. These supersede the corresponding points in the blueprint; the rest of the blueprint stands.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:4%">#</th><th style="width:31%">Change</th><th style="width:34%">Driven by</th><th>Concretely</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td class="num">1</td><td><b>Open the pitch with the 2016 attempt, not with the demo</b></td><td>The prior art is real, published, and unbeaten in the room.</td><td>First 40 seconds: name it, state why it died, state the one mechanism that changes the outcome. Then demo.</td></tr>
+      <tr class="hi"><td class="num">2</td><td><b>Promote E7 (receipt) to co-equal with E3/E4 in the build order</b></td><td>EWP −89% participation; 51% expert dropout in the x-risk tournament; GJP's retention effect is the one undisputed advantage.</td><td>Build order becomes: the number → the parser → <b>E3+E4+E7</b> → E6 → the gate → analyst → public → pilot kit. A product with a receipt and no group view is viable; the reverse is not.</td></tr>
+      <tr class="hi"><td class="num">3</td><td><b>Set an explicit response-rate target against ACAPS's own published baseline</b></td><td>10 responses from 60+ invitations in their Afghanistan risk survey.</td><td>Pilot success criterion #1: <b>≥50% response within 72 hours</b>, instrumented from invitation to submission. Report the drop-off curve in the pitch — a number nobody else will have.</td></tr>
+      <tr><td class="num">4</td><td><b>Split the two clocks: 3-month prompts, 6-month horizon</b></td><td>ACAPS methodology: updates every 3 months, accuracy review every 6 months.</td><td>Round 2 lands <em>before</em> the analyst's quarterly revision, so the panel has a real effect on the revision rather than commenting after it.</td></tr>
+      <tr><td class="num">5</td><td><b>Use ACAPS's two distinct label sets</b></td><td>Probability uses very low→very high; impact uses very low→moderate/significant/major.</td><td>Never render "High impact." Impact is <em>significant</em> or <em>major</em>. Two-line fix, high credibility return with an ACAPS jury.</td></tr>
+      <tr><td class="num">6</td><td><b>Add a previous-round comparison to the analyst view</b></td><td>The methodology says ACAPS revises every three months considering developments that might change the chain of events.</td><td>A5 (new screen): "your rationale changed, your probability didn't" and its inverse. This is the most quotable analyst insight in the product and it is only visible because the dated history exists in the export.</td></tr>
+      <tr><td class="num">7</td><td><b>Make "unresolvable" two-axis</b></td><td>Risk = probability × impact, and either can fail independently.</td><td>A3 resolver offers: materialised as stated · occurred with different impact · did not occur · <b>cannot be judged</b> — each with a required one-line reason. "Cannot be judged" never counts against the expert.</td></tr>
+      <tr><td class="num">8</td><td><b>Add the surprisingly-popular field as an analyst-only signal</b></td><td>Nature 2017: −21.3% error vs majority, −24.2% vs confidence-weighted.</td><td>E4 gains one optional question: "what will most other panellists say?" A4 shows the expectation gap. The single most credentialled method no humanitarian product uses.</td></tr>
+      <tr><td class="num">9</td><td><b>Refuse performance weighting in v1</b></td><td>Cooke needs seed variables and n; we have 5–10 people and few resolutions each.</td><td>Equal weights plus a revision round. A4 displays calibration but does not act on it. State the reason openly if asked — it demonstrates command of the method.</td></tr>
+      <tr><td class="num">10</td><td><b>Add a published-misses surface to P1</b></td><td>Every system that published its misses kept credibility (Swift Centre, Metaculus, VIEWS); the one that went quiet lost its crowd (EWP).</td><td>P1 shows the wrong calls with the same prominence as the right ones, and names the dissent that was overruled.</td></tr>
+      <tr><td class="num">11</td><td><b>Pre-load the buy-vs-build answer</b></td><td>Cultivate/Hinsley is SOC 2, G-Cloud 14, government-proven, and lost RAND RFI in 2026.</td><td>One Q&amp;A answer: generic engine, no risk model, improper scoring rule, no place to land in the Risk Radar cycle — and a track record of institutional customers winding programmes up.</td></tr>
+      <tr><td class="num">12</td><td><b>Keep the AI baseline, never the AI headline</b></td><td>o3 0.135 vs crowd 0.149 vs experts 0.023; parity projected ~Aug 2027; LLMs overconfident on high-probability events.</td><td>The model is the second baseline the human is invited to beat — and its known top-end overconfidence is exactly the ACAPS pattern (84% of High risks materialised), which makes the divergence meaningful rather than decorative.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout evidence">
+    <span class="lab">What does not change</span>
+    <p>The seven design laws hold. The four surfaces hold. The "ninety seconds, nobody knows it was me" promise holds. The build pathway holds apart from the E7 promotion. What the research changed is the <em>justification</em> for each of those decisions — and justification is what wins a jury that has already heard six other pitches using the same adjectives.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 12 -->
+<section id="s12">
+  <div class="sec-head"><div class="sec-num">12</div><h2>Buy, borrow, or build</h2></div>
+
+  <p>The honest answer, component by component. If someone asks "why are you building any of this," this table is the answer.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:22%">Component</th><th style="width:12%">Verdict</th><th style="width:36%">Source / justification</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Aggregation mathematics</td><td><span class="badge b-low">Borrow</span></td><td>Cooke's Classical Model (TU Delft, 45 panels); IDEA protocol; equal-weight mean with a revision round; extremising from GJP. All published.</td><td>Nothing to invent. Cite it, implement it, and say so — "we did not invent the maths, and neither should we have."</td></tr>
+      <tr><td>Proper scoring</td><td><span class="badge b-low">Borrow</span></td><td>Absolute Brier and log score; floor probabilities at 0.1%/99.9% as Metaculus does.</td><td>Avoid the improper relative-scoring trap documented in arXiv 2106.11248.</td></tr>
+      <tr><td>Question-design craft</td><td><span class="badge b-low">Borrow</span></td><td>CSET Foretell's rolling multi-window format and its warning that bucketing biases forecasters; Metaculus's resolution-criteria-as-contract.</td><td>Cheapest possible quality gain: read the people who already made the mistakes.</td></tr>
+      <tr><td>Risk vocabulary and scales</td><td><span class="badge b-low">Borrow</span></td><td>ACAPS Risk Methodology, verbatim, including the two distinct five-point label sets.</td><td>Nothing we design can beat the publisher's own language inside the publisher's own product.</td></tr>
+      <tr><td>Peer-review quality bar</td><td><span class="badge b-low">Borrow</span></td><td>OCHA Centre for Humanitarian Data, <em>Peer Review Framework for Predictive Analytics in Humanitarian Response</em>.</td><td>Write the validation story to satisfy the sector's existing accepted standard, not one we invent.</td></tr>
+      <tr class="hi"><td><b>Trigger parser and dated history</b></td><td><span class="badge b-med">Build</span></td><td>266 trigger blocks, 140 with completion-rate history, dates on every block — and the starter notebook ignores all of it.</td><td>Nobody has it. It is the reason questions can be generated at all, and it is a weekend of work.</td></tr>
+      <tr class="hi"><td><b>Dual baselines</b></td><td><span class="badge b-med">Build</span></td><td>Empty across all eight systems surveyed.</td><td>The core differentiator. Requires the ACAPS number <em>and</em> a model number on the same screen — which only exists if you have the risk bank.</td></tr>
+      <tr class="hi"><td><b>Anonymity tiers</b></td><td><span class="badge b-med">Build</span></td><td>Empty. Commercial expert networks solve a compliance problem, not a physical-safety problem.</td><td>Expert networks screen for insider trading; a national staff member in a conflict zone needs something else entirely.</td></tr>
+      <tr class="hi"><td><b>Publication gate</b></td><td><span class="badge b-med">Build</span></td><td>Empty. No forecasting platform has a refuse-to-publish mechanism.</td><td>The only feature in the product that a jury can watch <em>fail</em> — and refusing correctly is more impressive than answering.</td></tr>
+      <tr class="hi"><td><b>Receipt loop</b></td><td><span class="badge b-med">Build</span></td><td>Empty at the individual level. EWP, Metaculus and Cultivate all return scores to a leaderboard, not an outcome to a person.</td><td>The documented survival condition. Nothing to buy, because no vendor has needed it.</td></tr>
+      <tr><td>The platform shell</td><td><span class="badge b-danger" style="background:var(--danger-bg);color:var(--danger)">Do not buy</span></td><td>Cultivate/Hinsley, Good Judgment.</td><td>Buying the shell buys the wrong product: a tournament engine with no risk model, an improper scoring rule and no institutional landing point. It also invites the question "then what is yours?"</td></tr>
+      <tr><td>A prediction market</td><td><span class="badge b-danger" style="background:var(--danger-bg);color:var(--danger)">Do not build</span></td><td>Polymarket/Kalshi as contrast only.</td><td>ACAPS needs a small trusted panel, not liquid betting. Markets add resolution ambiguity and confident-bettor bias to a problem that already has both.</td></tr>
+      <tr><td>An AI forecaster</td><td><span class="badge b-danger" style="background:var(--danger-bg);color:var(--danger)">Do not build</span></td><td>Frontier models trail superforecasters by roughly 6× on Brier and are closing fast.</td><td>Any moat built on model quality evaporates within about 18 months. Build the institution instead.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ 13 -->
+<section id="s13">
+  <div class="sec-head"><div class="sec-num">13</div><h2>Pitch language this research unlocks</h2></div>
+
+  <p>Verbatim lines, each with its source. The previous deliverables supplied copy for the product; these are the lines for the <em>room</em>.</p>
+
+  <div class="cards">
+    <article class="card">
+      <header><h3>On why this hasn't been done</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"Someone proposed a humanitarian forecasting tournament in January 2016, at Start Network, with the right panel size and the right horizon. It was never built — because it had no answer to the finding that early warning doesn't change decisions. This is the answer."</dd>
+        <dt>Because</dt><dd>It converts "is this credible?" into "why now?", which is a question only we have prepared for.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On the hard problem</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"The closest thing in the world to this product lost 89% of its participants in three years. 10,825 votes became 1,148. We aren't pretending that won't happen to us. We built the one thing nobody else built to stop it: the receipt."</dd>
+        <dt>Because</dt><dd>It demonstrates you know the graveyard, which is rarer and more persuasive than optimism.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On what ACAPS already says</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"Your methodology says probability is not mathematically calculated — it is assigned through expert judgement. We don't change that. We make it auditable. And your own Afghanistan survey got 10 responses from more than 60 invitations. We're setting the pilot target at 50% in 72 hours."</dd>
+        <dt>Because</dt><dd>It quotes them back to themselves, with a falsifiable promise attached.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On the model</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"The best model in the world trails human experts sixfold on this kind of question, and parity is projected around August 2027. So we did not build a better forecaster. We built the thing that doesn't get better with compute: the panel, the anonymity, and the receipt."</dd>
+        <dt>Because</dt><dd>It answers the AI question before it is asked, and reframes the model as a foil rather than a feature.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On small panels</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"Five to ten isn't a compromise on scale. Most of the accuracy gain comes from about five independent estimates, a 125-person pool decayed to nothing, and a two-person shop in London scores 0.115 Brier with a published record. Small is the design."</dd>
+        <dt>Because</dt><dd>It defends the brief's own constraint with three independent pieces of evidence.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On "why not just buy it"</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"You could buy a tournament engine. Two institutions did, with more money than us. One is a proof of concept that never scaled; the other shut down in 2026. A forecasting programme without a permanent place in the publisher's workflow is a grant, not a product. Ours lands in your quarterly revision."</dd>
+        <dt>Because</dt><dd>It is the only answer that uses the competitors' own outcomes rather than their feature lists.</dd>
+      </dl>
+    </article>
+    <article class="card">
+      <header><h3>On methodological rigour</h3></header>
+      <dl>
+        <dt>Say</dt><dd>"We use absolute proper scoring. Relative scoring — the kind used across most of this field — has been formally shown to be gameable. We also found that the aggregation method makes no measurable difference on our 104 resolved risks, so we chose the one a jury can audit rather than the one that sounds clever."</dd>
+        <dt>Because</dt><dd>Refusing to overclaim is the most persuasive thing a technical team can do, and almost nobody does it.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<!-- ============================================================ 14 -->
+<section id="s14">
+  <div class="sec-head"><div class="sec-num">14</div><h2>Questions this research creates — and things to stop saying</h2></div>
+
+  <h3>New questions for ACAPS</h3>
+  <ul>
+    <li><strong>"Your methodology says probability is assigned through expert judgement and revised every three months, with accuracy reviewed every six. Is there any record today of <em>who</em> judged, and what they disagreed about?"</strong> — the answer defines the size of the gap we are filling.</li>
+    <li><strong>"In the Afghanistan product, a survey went to 60+ people and got 10 responses. What would make a busy national expert answer in 90 seconds instead?"</strong> — invites them to design the product with us.</li>
+    <li><strong>"You've published a formal methodology with two five-point scales that use different words for impact and probability. Should the panel see both scales, or only the risk level?"</strong> — signals we read the method, not just the brief.</li>
+    <li><strong>"Has anyone proposed a forecasting tournament to ACAPS before? What happened?"</strong> — if they know about 2016, we look rigorous; if they don't, we have handed them something valuable.</li>
+    <li><strong>"Would you ever buy or adapt an existing platform — Hinsley, Good Judgment, Metaculus — rather than build? What stopped you?"</strong> — the single most useful procurement question, and it surfaces the real objection early.</li>
+    <li><strong>"When a High risk doesn't materialise, what happens internally? Is there any review?"</strong> — tests whether the receipt loop is culturally possible.</li>
+  </ul>
+
+  <h3>Things to stop saying</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:38%">Stop saying</th><th>Say instead</th></tr></thead>
+    <tbody>
+      <tr><td>"We combine AI with expert judgement."</td><td>"We put a model baseline next to your number so the expert has something specific to disagree with."</td></tr>
+      <tr><td>"We crowdsource expert opinion."</td><td>"We run a capped panel of 5–10 named people per country, because that is where the accuracy gain stops."</td></tr>
+      <tr><td>"This is a novel approach."</td><td>"This was proposed in 2016 and never built. Here is why it dies and what we changed."</td></tr>
+      <tr><td>"Our aggregation method outperforms alternatives."</td><td>"On our 104 resolved risks it makes no measurable difference, so we chose the auditable one."</td></tr>
+      <tr><td>"Experts earn a track record and become superforecasters."</td><td>"Experts get their outcome back. Whether they become better at this is their business; our business is that they come back."</td></tr>
+      <tr><td>"The platform will scale to thousands of experts."</td><td>"It is designed to stay small, because every system that scaled its panel lost it."</td></tr>
+      <tr><td>"Anonymity protects experts."</td><td>"Anonymity is enforced on the server, not promised in a policy — and the publication gate refuses to publish when the cell is too small to protect anyone."</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ 15 -->
+<section id="s15">
+  <div class="sec-head"><div class="sec-num">15</div><h2>Sources and confidence</h2></div>
+
+  <p>Every quantitative claim above traces to one of the following. Where a figure comes from a vendor's own reporting rather than independent evaluation, it is marked. Where I could not verify something, it is not in the document.</p>
+
+  <h4>Layer 1 — ACAPS</h4>
+  <ul class="srcs">
+    <li><b>ACAPS Risk Methodology</b> — as reproduced in published country risk reports (Sudan 2026, Afghanistan 2022/2023, Palestine anticipatory note 2026). Probability/impact scales, the "assigned through expert judgement" sentence, 3-month update and 6-month accuracy-review cadence, the 60-invitation/10-response survey.</li>
+    <li><b>ACAPS.org</b> — Risk Radar product pages, HNPW 2026 session description ("translates diverse signals into comparable risk levels and plausible rationales").</li>
+    <li><b>Devex (2018) and organisational profiles</b> — ~$2.7M annual budget, funders, consortium oversight, 10–15 countries per analyst, informant roster. Headcount figures conflict across sources (50, ~60, 136 incl. affiliates) — cite as "about 50–60 professionals".</li>
+  </ul>
+
+  <h4>Layer 2 — statistical early warning</h4>
+  <ul class="srcs">
+    <li><b>VIEWS / PRIO</b> — viewsforecasting.org; PRIO publications; AUROC ≈ 0.95, Brier 0.0062, 1–36 month horizon, coverage/false-positive trade-off, 2023–2024 country hit rates.</li>
+    <li><b>INFORM</b> — EU JRC DRMKC; indicator counts, three dimensions, 0–10 scale, twice-yearly publication, five classes.</li>
+    <li><b>WFP HungerMap LIVE</b> — WFP predictive-model technical deck (training on 63 countries / 14 years, XGBoost, validation against IPC); April 2026 relaunch coverage (94 countries, 300+ analysts, 16 hotspots, $7-per-$1 claim, Google support). The "82% of districts within 0.5 IPC phases" figure is from a peer-reviewed review of operational AI platforms.</li>
+    <li><b>OCHA Centre for Humanitarian Data</b> — Predictive Analytics for Anticipatory Action (2020 Data Fellow report); Peer Review Framework; Catalogue of Predictive Models; the two-stage trigger architecture.</li>
+    <li><b>DRC Foresight</b> — Nair et al., <i>An explainable forecasting system for humanitarian needs assessment</i>, AI Magazine (2023).</li>
+    <li><b>ICG eEARTH</b> — eearth.io; CrisisWatch scope.</li>
+    <li><b>Verisk Maplecroft</b> — Crunchbase/Growjo profile (~$15M revenue, ~177 staff, 198 countries); IRC Emergency Watchlist technical notes (2026) showing Maplecroft as an input.</li>
+  </ul>
+
+  <h4>Layer 3 — judgement platforms</h4>
+  <ul class="srcs">
+    <li><b>Early Warning Project</b> — USHMM accuracy pages and 2015 opinion-pool results (Brier 0.12 / 0.09 / 0.06; ~125 participants, 83 questions); SRA AUROC 0.81, Top-30 capture, precision discussion; the 10,825 → 1,148 participation collapse across the 2018 and 2021 comparison surveys.</li>
+    <li><b>Good Judgment</b> — goodjudgment.com superforecaster track record page, retrieved August 2026 (831 resolved questions; 73%; 79%; ~30% vs classified-access analysts; 35–72% vs IARPA; 66% vs Fed futures; 400/150-day comparison). Vendor-reported.</li>
+    <li><b>Metaculus</b> — FAQ, medals FAQ and third-party analyses; ~50k users, 1M+ predictions, log-score floor, Baseline/Peer scoring Nov 2023, Metaculus Prediction deprecated Nov 2024, BSD-2 2024, Brier ~0.107, Pro Forecaster vs AI p = 0.00001.</li>
+    <li><b>Cultivate Labs / Hinsley</b> — cultivatelabs.com and hinsley.ai (Cosmic Bazaar, INFER, Shell, 10M+ forecasts, SOC 2, G-Cloud 14); PitchBook/company profile for size and founding.</li>
+    <li><b>RAND Forecasting Initiative</b> — rand.org programme page and randforecastinginitiative.org archive (298 scored questions; programme concluded; Cultivate-built).</li>
+    <li><b>CSET Foretell</b> — CSET Future Indices report; crowd error 0.28 vs projection 0.54, 56% of metrics; question-design findings.</li>
+    <li><b>Swift Centre</b> — 2025 public forecasts year-in-review (13 resolved, aggregate Brier 0.115, Polymarket comparisons, published misses); Future Fund grant and staffing from public profiles.</li>
+    <li><b>Hypermind</b> — hypermind.com product structure; <b>SSPP</b> — socialscienceprediction.org platform statistics.</li>
+    <li><b>Not-proper scoring rule</b> — arXiv 2106.11248 on relative-Brier scoring in forecasting platforms.</li>
+  </ul>
+
+  <h4>Methods literature</h4>
+  <ul class="srcs">
+    <li><b>Gaba et al. (2017)</b> — most accuracy gain from ~5 independent estimates (as cited in USHMM accuracy discussion).</li>
+    <li><b>Cooke &amp; Goossens</b> — TU Delft expert judgment database, 45 applied panels, seed-variable performance weighting.</li>
+    <li><b>SHELF / IDEA / Delphi / MRC protocol</b> — York CHE structured expert elicitation overview; IDEA + Classical Model combined application in Australian Department of Defence reliability assessment (severe baseline overconfidence: 90% intervals contained truth only 36% of the time; equal weighting plus discussion-and-revision recovered much of the loss).</li>
+    <li><b>Prelec, Seung &amp; McCoy (2017)</b> — "surprisingly popular," <i>Nature</i>; −21.3% / −24.2% / −48% error reductions.</li>
+    <li><b>Mellers / Chang / Tetlock</b> — GJP training effects (~10%), recruitment-and-retention share of advantage (~10%), extremising, teaming.</li>
+    <li><b>Hauenstein et al. (2025)</b> — methodological challenge to the training-effect literature.</li>
+    <li><b>Forecasting Existential Risks tournament commentary</b> — 51% expert vs 19% superforecaster dropout; recruitment difficulty.</li>
+    <li><b>MSF forecasting analysis</b> — ~70% of medical items over-forecast, ~40% intermittent demand (via the humanitarian operations forecasting literature review).</li>
+    <li><b>LLM forecasting</b> — Lu (2025/2026), <i>Evaluating LLMs on Real-World Forecasting Against Expert Forecasters</i> (o3 0.1352, crowd 0.149, superforecasters 0.0225 median / 0.1222 mean); ForecastBench leaderboard summaries to May 2026; parity projection.</li>
+  </ul>
+
+  <h4>Layer 4 — UNICRI</h4>
+  <ul class="srcs">
+    <li><b>Project Intercept</b> — Lucy Faithfull Foundation impact report and project page (70M+ warnings, ~700K click-throughs, 95,000/day, 131 countries, partner list, four message components, four-in-five engagement); BBC coverage with Prof. Sonia Livingstone's critique.</li>
+    <li><b>Thorn / NCMEC</b> — 230 companies deploying detection (+21% since 2020), 29M reports / 85M unique files in 2021 (+38%), 1.22-day average takedown; Thorn Safer scale figures via AWS Marketplace disclosure.</li>
+    <li><b>INHOPE / IWF</b> — ~57 hotline network; splash-page mechanism (UK, from 2013).</li>
+    <li><b>EU CSAR</b> — Commission proposal 11 May 2022; Council position November 2025; trilogue chronology through 2026; Regulation (EU) 2026/1881 (ePrivacy derogation extension to 3 April 2028); COM(2026) 681 (minors/safety-by-design); EuroISPA position paper; DSA Article 28 and the 45M MAU VLOP threshold.</li>
+    <li><b>Warning-design research</b> — interstitial vs contextual warning comparisons (Kaiser et al. 2021; Sharevski et al. 2022); warning habituation / "informed reduced behaviour" (2022 study).</li>
+    <li><b>AI-generated CSAM</b> — IWF <i>Harm Without Limits</i> (2026): 8,029 realistic AI-CSAM items in 2025; 3,443 AI-generated video against 13 in 2024 (+26,385%); 65% Category A versus 43% for non-AI video. <i>(Correction: the earlier +26.4% figure was a mainstream-coverage approximation of a different IWF measure and understates the video category badly.)</i></li>
+    <li><b>Detection tooling</b> — Cloudflare CSAM Scanning Tool (free on all plans, dashboard toggle, 451 block, NCMEC report); Project Arachnid Shield API (free, four SDKs, 176bn images processed / 141M notices by July 2026); Microsoft PhotoDNA Cloud (free for qualified organisations); IWF Image Intercept (built for small businesses); Tech Coalition Pathways and Lantern; Google CSAI Match; Thorn Safer.</li>
+    <li><b>Help-services and treatment evidence</b> — Insoll et al. 2024 (<i>JOTS</i> 2(4), n=4,493; 55% want to stop, 70.2% could not find anonymous help, 40.4% could not access help at all); Insoll et al. 2022 (<i>JOTS</i> 1(2), n=1,546; 42% sought contact after viewing); Nurmi et al. 2024 (<i>Sci Rep</i> 14:7849; 73.9% of help-seekers could not get help); Lätth et al. 2022 (Prevent It, n=160, d=0.18); Prevent It 2.0 (NCT05831657, n=203, d=−1.01, −1.87 h/week); Protect Children / Ofcom <i>Tell Me More About Tech</i> (2026; 31% avoid platforms with age limits, 21% name it the single strongest deterrent; 35% have viewed or created AI-CSAM).</li>
+    <li><b>Netherlands</b> — art. 252 Sr in force 1 July 2024 (max 6 years; art. 254(1)(c) 9 years; <i>zich de toegang verschaffen</i> criminalised); OM <i>Richtlijn voor strafvordering kinderpornografie</i> 2024R006 (240-hour base offence, art. 22b Sr task-penalty prohibition, ten-year probation); Offlimits preventielijn (renamed from Stop it Now, January 2026), 0800 266 64 36; EOKM Jaarverslag 2022 (943 contacts, +32%, 27% repeat).</li>
+    <li><b>Warning-design and habituation</b> — Ö Ciardha et al. 2026 (arXiv:2606.06417; 19.6M searches, 15.84% triggered, 12.44% CTR, platform CTR 8.73%→15.67%, <i>no</i> detectable reduction in searching); Umbach et al. 2026 (arXiv:2606.06126; −3.8pp within-session, Europe −5.6pp, 0.73% help CTR); Scanlan et al. 2024 reThink evaluation (4.4M warnings, 490 click-throughs, ~68 helpline contacts, 99.83–99.87% of sessions never triggering); Watters, Scanlan &amp; Jain 2026 (<i>Electronics</i> 15(17):4045; dual-process model, 18-day optimum).</li>
+  </ul>
+
+  <h4>What I did not find, and would check next</h4>
+  <ul class="srcs">
+    <li>No direct competitor doing trigger-level expert elicitation against a publisher's own risk statements. If one exists it is inside a humanitarian consortium and unpublished; the closest published adjacent work is Start Network's FOREWARN expert network, which is a technical advisory function rather than a scored panel.</li>
+    <li>No public accuracy evaluation of ACAPS Risk Radar as a whole. If one exists internally, it is the most valuable thing to ask for at the event.</li>
+    <li>No independent evaluation of Good Judgment's performance outside its own and IARPA reporting. Treat the 831-question track record as vendor-reported.</li>
+    <li>No published retention data for Cultivate/Hinsley deployments. The RAND RFI shutdown is the only public signal and it may reflect funding, not engagement.</li>
+    <li>Did not verify whether any implementation followed the 2016 Currion proposal inside Start Network beyond FOREWARN. Worth one question to the Start Network booth if present.</li>
+  </ul>
+</section>
+
+<footer>
+  <p style="max-width:74ch"><b>Research pass · 6 November 2026.</b> Compiled for the Hackathon for Good #8 ACAPS challenge, as a precursor to build planning. Companion documents: <code>PRODUCT-blueprint.html</code> (screen-by-screen spec), <code>mockups/benchmark-expert-flow.html</code> (visual mock), <code>REPO-audit.html</code> (repo re-read), <code>BENCHMARK-plan.html</code> (the unlimited-time plan).</p>
+  <p style="max-width:74ch;margin-bottom:0">Twenty-six entities profiled across four layers. Five findings do most of the work. Twelve changes to the build. One sentence the whole document exists to support: <em>everyone either forecasts numbers or aggregates strangers, and ACAPS needs judgement on its own sentences from its own people.</em></p>
+</footer>
+
+</div>
+</body>
+</html>

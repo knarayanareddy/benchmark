@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BENCHMARK — interface mockups</title>
+<style>
+  :root{
+    --ink:#14181d; --ink2:#3d4650; --muted:#79838e; --faint:#a3abb4;
+    --rule:#e2e0da; --paper:#efece6; --screen:#fbfaf8; --card:#fff;
+    --accent:#a8321c; --teal:#0d6567; --good:#1e7a4a; --gold:#8a6a1f;
+    --band:#e8e4dc;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1220px;margin:0 auto;padding:54px 28px 100px}
+  .head{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:14px}
+  .kick{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:12px}
+  h1{font-size:34px;margin:0 0 10px;letter-spacing:-.024em;font-weight:800;line-height:1.1}
+  .sub{font-size:15.5px;color:var(--ink2);max-width:52em;margin:0}
+  .note{font-size:13px;color:var(--muted);margin:16px 0 0;max-width:60em;line-height:1.55}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:34px 30px;margin-top:40px}
+  .item{display:flex;flex-direction:column;gap:12px}
+  .cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+  .cap b{color:var(--accent)}
+
+  /* phone */
+  .phone{
+    background:#15191e;border-radius:34px;padding:9px;box-shadow:0 18px 40px rgba(20,24,29,.18);
+    width:100%;max-width:352px;margin:0 auto;
+  }
+  .screen{background:var(--screen);border-radius:26px;overflow:hidden;height:660px;display:flex;flex-direction:column;position:relative}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:11px 20px 5px;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  .sbicons{display:flex;gap:4px;align-items:center}
+  .bar{height:3px;width:34px;background:#c9c5bd;border-radius:2px;margin:4px auto 0}
+
+  .body{flex:1;overflow:hidden;padding:8px 20px 18px;display:flex;flex-direction:column}
+
+  .eyebrow{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:10px 0 14px;display:flex;justify-content:space-between;align-items:center}
+  .eyebrow .dots{display:flex;gap:4px}
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:#d3cfc7}
+  .eyebrow .dot.on{background:var(--ink)}
+
+  h2.q{font-size:21px;line-height:1.28;letter-spacing:-.018em;margin:0 0 12px;font-weight:750}
+  .provenance{font-size:12.5px;line-height:1.5;color:var(--muted);margin:0 0 20px}
+  .provenance b{color:var(--ink2);font-weight:650}
+
+  .basecard{background:var(--card);border:1px solid var(--rule);border-radius:11px;padding:14px 15px;margin-bottom:12px}
+  .baselabel{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--faint);margin-bottom:7px}
+  .basenumber{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+  .basenote{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+  .basenote b{color:var(--ink2);font-weight:650}
+
+  .resolve{background:var(--card);border:1px solid var(--rule);border-radius:11px;padding:13px 15px;margin-bottom:18px}
+  .resolve .rl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--faint);margin-bottom:6px}
+  .resolve p{font-size:12.5px;line-height:1.5;margin:0;color:var(--ink2)}
+  .link{color:var(--teal);text-decoration:underline;text-underline-offset:2px}
+
+  .ask{font-size:15px;font-weight:700;margin:0 0 4px}
+  .hint{font-size:11.5px;color:var(--muted);margin:0 0 12px}
+
+  /* probability scale */
+  .scale{margin-top:auto}
+  .scalehead{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);font-weight:700;letter-spacing:.04em;margin-bottom:7px}
+  .track{position:relative;height:40px;background:var(--band);border-radius:9px;overflow:hidden}
+  .seg{position:absolute;top:0;bottom:0;border-right:1px solid #d6d1c7}
+  .marker{position:absolute;top:-3px;bottom:-3px;width:2.5px;background:var(--ink);border-radius:2px}
+  .marker::after{content:"ACAPS";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:800;letter-spacing:.06em;color:var(--ink2);white-space:nowrap}
+  .thumb{position:absolute;top:-6px;width:20px;height:52px;background:var(--accent);border-radius:6px;box-shadow:0 2px 8px rgba(168,50,28,.35)}
+  .thumb::after{content:"you";position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;letter-spacing:.05em;color:var(--accent)}
+  .scalelegend{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-top:24px;font-weight:600}
+
+  .cta{margin-top:16px;background:var(--ink);color:#fff;text-align:center;padding:14px;border-radius:10px;font-size:14.5px;font-weight:700;letter-spacing:.01em}
+  .cta.ghost{background:transparent;color:var(--ink2);border:1px solid var(--rule);margin-top:9px;font-weight:650}
+
+  /* divergence */
+  .divhead{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+  .divbig{font-family:ui-monospace,Menlo,monospace;font-size:32px;font-weight:750;letter-spacing:-.03em;margin:0 0 16px;font-variant-numeric:tabular-nums}
+  .opt{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:13px 15px;margin-bottom:8px;font-size:13.5px;line-height:1.35;color:var(--ink2)}
+  .opt:first-of-type{border-color:var(--ink);color:var(--ink);font-weight:600}
+  .skipopt{text-align:center;font-size:12.5px;color:var(--muted);padding:9px 0;margin-top:2px}
+
+  /* distribution */
+  .distmeta{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+  .dist{position:relative;height:56px;background:var(--band);border-radius:9px;margin-bottom:9px}
+  .dp{position:absolute;bottom:9px;width:9px;height:9px;border-radius:50%;background:var(--ink2);transform:translateX(-50%)}
+  .dp.you{background:var(--accent);width:12px;height:12px;bottom:22px;box-shadow:0 0 0 3px rgba(168,50,28,.16)}
+  .dp.mine::after{content:"you";position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:800;color:var(--accent);letter-spacing:.05em}
+  .axis{display:flex;justify-content:space-between;font-size:9px;color:var(--faint);font-weight:600;margin-bottom:14px}
+  .statline{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-bottom:16px}
+  .statline b{color:var(--ink2);font-weight:700}
+  .rlabel{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--faint);margin:0 0 8px}
+  .reason{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:12.5px;line-height:1.5;color:var(--ink2);font-style:italic}
+  .reason.dissent{border-left:2.5px solid var(--accent)}
+
+  /* receipt */
+  .rcpthead{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:var(--good);margin:12px 0 10px}
+  .rcpttitle{font-size:19px;font-weight:750;letter-spacing:-.015em;line-height:1.3;margin:0 0 8px}
+  .rcptsub{font-size:13px;color:var(--ink2);line-height:1.5;margin:0 0 16px}
+  .scoregrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:6px}
+  .scorebox{background:var(--card);border:1px solid var(--rule);border-radius:9px;padding:10px 8px;text-align:center}
+  .scorebox.me{border-color:var(--accent);background:#fdf6f4}
+  .sbl{font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--faint);margin-bottom:4px}
+  .sbv{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .scorenote{font-size:11px;color:var(--muted);text-align:center;margin:0 0 16px}
+  .changed{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:13px 15px;margin-bottom:12px}
+  .changed .cl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--faint);margin-bottom:8px}
+  .changed p{font-size:11.5px;line-height:1.55;margin:0 0 8px;color:var(--ink2)}
+  .changed p:last-child{margin:0}
+  .changed .ins{background:#f4f2ed;border-radius:6px;padding:8px 10px;font-style:italic}
+  .pctline{background:var(--ink);color:#f4f2ee;border-radius:9px;padding:12px 14px;font-size:12px;line-height:1.5}
+  .pctline b{font-family:ui-monospace,Menlo,monospace;font-size:14px}
+
+  /* gate (desktop card) */
+  .gate{background:#fff;border-radius:14px;border:1px solid var(--rule);padding:26px 28px;box-shadow:0 14px 34px rgba(20,24,29,.10);max-width:520px;margin:0 auto;height:660px;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+  .gateflag{display:inline-flex;align-items:center;gap:7px;background:#fbeae6;color:var(--accent);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;padding:5px 10px;border-radius:5px;margin-bottom:16px}
+  .gatedot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .gate h3{font-size:22px;margin:0 0 12px;letter-spacing:-.018em;font-weight:750;line-height:1.25}
+  .gate p.gp{font-size:13.5px;line-height:1.6;color:var(--ink2);margin:0 0 18px}
+  .route{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--rule);font-size:13px;line-height:1.45}
+  .route:last-of-type{border-bottom:1px solid var(--rule);margin-bottom:18px}
+  .rnum{flex:none;width:19px;height:19px;border-radius:50%;background:var(--band);color:var(--ink2);font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .gatefoot{font-size:11.5px;color:var(--muted);line-height:1.55;margin:0}
+
+  @media(max-width:700px){.screen{height:620px}}
+  footer{margin-top:70px;padding-top:20px;border-top:2px solid var(--ink);font-size:12px;color:var(--muted);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div class="kick">Interface mockup · BENCHMARK · ACAPS track</div>
+    <h1>The product, as it would actually look</h1>
+    <p class="sub">Six screens from the expert journey and the analyst's gate. Real copy, real numbers drawn from the Risk Radar export (R1043 · Chad), rendered at phone scale. All figures shown are illustrative panel results; the ACAPS ratings, triggers and completion rates are the real values from the dataset.</p>
+  </div>
+
+  <p class="note">Design intent: near-monochrome, one accent reserved for dissent, refusal and error. No gamification, no celebration, no chatbot. The number is the only thing allowed to be large. Everything the expert needs to judge the question honestly — the baseline, the historical base rate, and how the question will resolve — appears before they are asked to answer.</p>
+
+  <div class="grid">
+
+    <!-- E2 ANONYMITY -->
+    <div class="item">
+      <div class="cap"><b>E2</b> · Anonymity, before any data</div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>09:41</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
+        <div class="bar"></div>
+        <div class="body">
+          <div class="eyebrow"><span>Before you start</span><span class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></span></div>
+          <h2 class="q">How anonymous do you want to be?</h2>
+          <p class="provenance">You can change this at any time. Changing it applies to everything not yet published.</p>
+
+          <div class="opt"><b>Known to ACAPS</b><br><span style="font-size:12px;color:var(--muted)">ACAPS can see this came from you. Nobody else, ever. We can follow up.</span></div>
+          <div class="opt"><b>Pseudonymous to peers</b><br><span style="font-size:12px;color:var(--muted)">ACAPS knows it's you. Other panelists see "Expert B". The public sees nothing.</span></div>
+          <div class="opt"><b>Fully anonymous</b><br><span style="font-size:12px;color:var(--muted)">ACAPS does not know this came from you — the link is destroyed on receipt. We cannot follow up, and cannot credit you. That is the trade.</span></div>
+          <div class="skipopt">Nothing is recorded until you choose.</div>
+          <div class="cta" style="margin-top:auto">Continue</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- E3 QUESTION -->
+    <div class="item">
+      <div class="cap"><b>E3</b> · The question, both baselines visible</div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>09:43</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
+        <div class="bar"></div>
+        <div class="body">
+          <div class="eyebrow"><span>Question 2 of 3 · Eastern Chad</span><span class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></span></div>
+          <h2 class="q">Will attacks on strategic infrastructure in Chad occur before 30 April 2027?</h2>
+          <p class="provenance">Trigger <b>T0619</b> of risk <b>R1043</b> — escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad.</p>
+
+          <div class="basecard">
+            <div class="baselabel">ACAPS estimate · trigger completion</div>
+            <div class="basenumber">40%</div>
+            <div class="basenote">Risks rated <b>High</b> overall have materialised <b>84%</b> of the time historically — this trigger sits well below its parent risk.</div>
+          </div>
+
+          <div class="resolve">
+            <div class="rl">Resolves 30 April 2027</div>
+            <p>Yes, if at least two independent sources report an attack on strategic infrastructure in Chad between now and then. <span class="link">Read the full rule</span></p>
+          </div>
+
+          <div class="scale">
+            <p class="ask">What do you think?</p>
+            <p class="hint">Tap once to place it. Adjust only if you want to.</p>
+            <div class="track">
+              <div class="seg" style="left:20%"></div><div class="seg" style="left:40%"></div><div class="seg" style="left:60%"></div><div class="seg" style="left:80%"></div>
+              <div class="marker" style="left:40%"></div>
+              <div class="thumb" style="left:69%"></div>
+            </div>
+            <div class="scalelegend"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
+            <div class="cta">Submit · 72%</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- E4 DIVERGENCE -->
+    <div class="item">
+      <div class="cap"><b>E4</b> · The divergence moment</div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>09:44</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
+        <div class="bar"></div>
+        <div class="body" style="justify-content:center">
+          <div class="eyebrow"><span>One more thing</span></div>
+          <p class="divhead">You said</p>
+          <p class="divbig">72%</p>
+          <p class="provenance" style="margin-bottom:20px">ACAPS rates this risk <b>High</b> overall — but this specific trigger sits at <b>40%</b>. That gap is unusual, and worth twenty seconds.</p>
+          <p class="rlabel">Which is closer to what you're seeing?</p>
+          <div class="opt">The risk as a whole is worse than the trigger suggests</div>
+          <div class="opt" style="font-weight:400">The trigger is the real story — the risk rating is stale</div>
+          <div class="opt" style="font-weight:400">Both, for different reasons</div>
+          <div class="skipopt">Skip</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- E6 GROUP VIEW -->
+    <div class="item">
+      <div class="cap"><b>E6</b> · Round 2, and holding is a real choice</div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>Wed 08:12</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
+        <div class="bar"></div>
+        <div class="body">
+          <div class="eyebrow"><span>Eastern Chad · round 2</span></div>
+          <h2 class="q" style="font-size:19px">Here's where the panel landed.</h2>
+          <p class="distmeta">Six of seven have answered.</p>
+
+          <div class="dist">
+            <div class="dp" style="left:15%"></div>
+            <div class="dp" style="left:55%"></div>
+            <div class="dp" style="left:60%"></div>
+            <div class="dp" style="left:62%"></div>
+            <div class="dp" style="left:68%"></div>
+            <div class="dp you" style="left:72%"></div>
+            <div class="dp" style="left:80%"></div>
+          </div>
+          <div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>
+          <div class="statline"><span><b>3 of 7</b> above 60%</span><span><b>1</b> well below</span><span>spread <b>65 pts</b></span></div>
+
+          <p class="rlabel">Reasons the panel gave</p>
+          <div class="reason">"Road access to the east has been cut twice since June — the infrastructure target is no longer theoretical."</div>
+          <div class="reason dissent">"I'd disagree with the group here. The attacks so far have been symbolic, not strategic."</div>
+
+          <div class="cta" style="margin-top:auto">Change my answer</div>
+          <div class="cta ghost">Hold at 72%</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- E7 RECEIPT -->
+    <div class="item">
+      <div class="cap"><b>E7</b> · The receipt — why anyone returns</div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>Thu 17:30</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
+        <div class="bar"></div>
+        <div class="body">
+          <div class="rcpthead">Your call resolved</div>
+          <h2 class="rcpttitle">It did not happen.</h2>
+          <p class="rcptsub">T0619 — attacks on strategic infrastructure in Chad — did not occur before 30 April 2027.</p>
+
+          <div class="scoregrid">
+            <div class="scorebox me"><div class="sbl">You</div><div class="sbv">72%</div></div>
+            <div class="scorebox"><div class="sbl">Panel</div><div class="sbv">61%</div></div>
+            <div class="scorebox"><div class="sbl">ACAPS</div><div class="sbv">40%</div></div>
+          </div>
+          <p class="scorenote">You were 5 points off. The panel was 10. ACAPS was 21.</p>
+
+          <div class="changed">
+            <div class="cl">What changed because of your dissent</div>
+            <p>Your round-2 note went into the R1043 rationale. Alexander rewrote this paragraph on 12 December.</p>
+            <p class="ins">"…though attacks on strategic infrastructure have so far remained symbolic rather than strategic, a judgement shared by the panel…"</p>
+          </div>
+
+          <div class="pctline">Your calibration: <b>84th</b> percentile across 12 resolved questions.<br><span style="opacity:.7;font-size:11px">Visible only to you. We never rank people publicly.</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- G1 GATE -->
+    <div class="item">
+      <div class="cap"><b>G1</b> · The gate refuses — analyst surface</div>
+      <div class="gate">
+        <div class="gateflag"><span class="gatedot"></span>Publication blocked</div>
+        <h3>Cannot publish this view.</h3>
+        <p class="gp">2 experts in this cell, one of them fully anonymous. A reader who knows which two people work on eastern Chad could work out which position was whose by elimination.</p>
+
+        <div class="route"><span class="rnum">1</span><span><b>Wait —</b> a third contributor makes the cell safe. Currently 2 of 3 needed.</span></div>
+        <div class="route"><span class="rnum">2</span><span><b>Publish the country-level aggregate instead</b> — safe today.</span></div>
+        <div class="route"><span class="rnum">3</span><span><b>Widen the date range</b> so the cell is no longer distinctive.</span></div>
+
+        <p class="gatefoot">Why you're seeing this: every publication is checked for small-cell, differencing and attribute-combination risk before it goes out. <span class="link">How the check works</span></p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p><b>Note on the numbers.</b> ACAPS ratings, trigger IDs, completion rates (T0619 at 40%, T0618 at 40%, T0620 at 20%), the 84% historical materialisation rate for High-rated risks, and R1043's title and exposure are real values from <code>risk-radar-export.csv</code>. The panel results (61%, 72%, the distribution, the percentile) are illustrative and would come from a live panel — during the hackathon they would be synthetic, per the brief's rule against using real experts' personal data.</p>
+    <p><b>Companion.</b> <code>PRODUCT-blueprint.html</code> — the full screen-by-screen specification with copy rationale and ground-rule mapping.</p>
+  </footer>
+
+</div>
+</body>
+</html>

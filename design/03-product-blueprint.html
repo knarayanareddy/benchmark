@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BENCHMARK — the product blueprint</title>
+<style>
+  :root{
+    --ink:#12161c; --ink2:#3b444f; --muted:#6b7480; --rule:#dcd8d0;
+    --paper:#f8f6f2; --card:#fff; --accent:#a8321c; --teal:#0d6567;
+    --gold:#8a6a1f; --good:#1e7a4a; --deep:#0b1118;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16.5px;line-height:1.64;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px 140px}
+  header.hero{padding:68px 0 38px;border-bottom:3px solid var(--ink);margin-bottom:14px}
+  .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
+  h1{font-size:44px;line-height:1.07;margin:0 0 18px;letter-spacing:-.026em;font-weight:800}
+  .sub{font-size:19px;color:var(--ink2);max-width:45em;margin:0 0 24px}
+  .metaline{display:flex;flex-wrap:wrap;gap:10px 26px;font-size:13px;color:var(--muted)}
+  .metaline b{color:var(--ink);font-weight:600}
+  h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--accent);
+     margin:68px 0 8px;padding-top:24px;border-top:1px solid var(--rule)}
+  h3{font-size:25px;line-height:1.22;margin:10px 0 14px;letter-spacing:-.014em;font-weight:750}
+  h4{font-size:17px;margin:28px 0 8px;font-weight:700}
+  h5{font-size:12.5px;margin:22px 0 6px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.08em}
+  p{margin:0 0 15px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:7px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em;background:#eceae5;padding:1.5px 5px;border-radius:3px}
+  .lede{font-size:19px;color:var(--ink2)}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;margin:22px 0}
+  table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.2px;background:#fff}
+  th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;
+     border-bottom:2px solid var(--ink);padding:9px 10px;vertical-align:bottom}
+  td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.46}
+  tr:last-child td{border-bottom:1px solid var(--ink)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .tbl-note{font-size:12.5px;color:var(--muted);margin:-12px 0 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+  .stat .n{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-top:5px}
+  .stat .s{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.42}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;
+       padding:3px 8px;border-radius:4px;background:#eceae5;color:var(--ink2);margin-right:6px}
+  .tag.red{background:#f6e3de;color:var(--accent)}
+  .tag.green{background:#dff0e6;color:var(--good)}
+  .tag.blue{background:#dde9ea;color:var(--teal)}
+  .tag.gold{background:#f3ead4;color:var(--gold)}
+  .verdict{border-left:4px solid var(--accent);background:#fff;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0}
+  .verdict.ok{border-left-color:var(--good)}
+  .verdict.teal{border-left-color:var(--teal)}
+  .verdict p:last-child{margin-bottom:0}
+  .callout{background:var(--deep);color:#f4f2ee;border-radius:10px;padding:24px 26px;margin:26px 0}
+  .callout h4{color:#fff;margin-top:0}
+  .callout code{background:#2a323c;color:#e8e4dc}
+  .callout .small{color:#a9b0b8}
+  .small{font-size:13.5px;color:var(--muted)}
+
+  /* screen spec blocks */
+  .screen{background:#fff;border:1px solid var(--rule);border-radius:10px;margin:22px 0;overflow:hidden}
+  .screen-head{display:flex;gap:14px;align-items:baseline;padding:14px 20px;background:#fcfbf9;border-bottom:1px solid var(--rule)}
+  .screen-id{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-weight:800;color:#fff;background:var(--ink);border-radius:5px;padding:3px 8px;flex:none}
+  .screen-head h4{margin:0;font-size:17.5px;flex:1}
+  .screen-when{font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;flex:none}
+  .screen-body{padding:16px 20px 20px}
+  .copy{background:#f4f2ed;border-radius:8px;padding:16px 18px;margin:12px 0;font-size:15px;line-height:1.55}
+  .copy .who{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted);margin-bottom:8px}
+  .copy p{margin:0 0 10px}
+  .copy p:last-child{margin:0}
+  .copy em{color:var(--muted);font-style:normal;font-size:13.5px}
+  .why{font-size:13.5px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:14px;margin:12px 0 0}
+  .why b{color:var(--ink)}
+
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:20px 24px;margin:26px 0 8px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px;font-size:14px}
+  .toc li{margin-bottom:5px}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  .toc a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+  @media(max-width:760px){.toc ol{columns:1}}
+  .never{background:#fff;border-left:3px solid var(--accent);padding:12px 16px;margin:10px 0;font-size:14.6px}
+  .never b{color:var(--accent)}
+  footer{margin-top:80px;padding-top:22px;border-top:3px solid var(--ink);font-size:12.5px;color:var(--muted)}
+  .stage{display:flex;gap:0;margin:24px 0}
+  .stageitem{flex:1;padding:14px 16px;border:1px solid var(--rule);border-right:none;background:#fff;font-size:13.5px}
+  .stageitem:first-child{border-radius:8px 0 0 8px}
+  .stageitem:last-child{border-right:1px solid var(--rule);border-radius:0 8px 8px 0}
+  .stageitem .sn{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;font-weight:800;color:var(--accent);letter-spacing:.08em}
+  .stageitem h6{margin:4px 0 4px;font-size:14px;font-weight:750}
+  @media(max-width:800px){.stage{flex-direction:column}.stageitem{border-right:1px solid var(--rule);border-bottom:none;border-radius:0}.stageitem:first-child{border-radius:8px 8px 0 0}.stageitem:last-child{border-bottom:1px solid var(--rule);border-radius:0 0 8px 8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">Product blueprint · BENCHMARK · ACAPS track, HFG #8</div>
+  <h1>What the winning product<br>actually is</h1>
+  <p class="sub">Screen by screen, word by word, state by state. Seven expert screens, four analyst screens, one public page, and a gate that refuses. Every design decision mapped to the ground rule it satisfies.</p>
+  <div class="metaline">
+    <span><b>Surfaces</b> Expert · Analyst · Public · Gate</span>
+    <span><b>Expert journey</b> 7 screens, ~90 s each</span>
+    <span><b>Rules</b> 5 must · 3 should · 2 should-not</span>
+    <span><b>Companion</b> live visual mock</span>
+  </div>
+</header>
+
+<div class="toc">
+  <div class="small" style="margin-bottom:10px"><b>Contents</b></div>
+  <ol>
+    <li><a href="#promise">The promise, and the posture</a></li>
+    <li><a href="#laws">Seven design laws</a></li>
+    <li><a href="#map">The four surfaces</a></li>
+    <li><a href="#expert">The expert journey — 7 screens</a></li>
+    <li><a href="#analyst">The analyst journey — 4 screens</a></li>
+    <li><a href="#public">The public page</a></li>
+    <li><a href="#gate">The gate — refusal as product</a></li>
+    <li><a href="#rules">Ground rules compliance</a></li>
+    <li><a href="#never">Nine things it must never do</a></li>
+    <li><a href="#system">The visual system</a></li>
+    <li><a href="#demo">The five-minute demo</a></li>
+    <li><a href="#path">Build pathway in order</a></li>
+  </ol>
+</div>
+
+<h2 id="promise">01 — The promise, and the posture</h2>
+
+<p class="lede">BENCHMARK asks seven people who know a country to spend ninety seconds each telling ACAPS where it is wrong — and then it goes to the trouble of proving whether they were right.</p>
+
+<p>That is the whole product. Everything below is in service of two sentences a panelist should be able to say after their first session:</p>
+
+<div class="callout">
+  <p style="font-size:19px;line-height:1.5;margin-bottom:12px">"That took me a minute and a half, and nobody will ever know it was me."</p>
+  <p style="font-size:19px;line-height:1.5;margin-bottom:0">"<em style="color:#e8b4a4;font-style:normal">Six weeks later they told me what happened, and my dissent changed the paragraph.</em>"</p>
+</div>
+
+<h4>The posture this dictates</h4>
+<p>The product must feel like <b>a considered instrument, not an app</b>. The people using it are country directors, field MEAL officers and conflict researchers. They have been asked to join a hundred platforms and abandoned all of them. The way to earn their attention is not delight — it is <b>demonstrable restraint</b>.</p>
+
+<div class="grid3">
+  <div class="stat"><div class="n">1:30</div><div class="l">Per question</div><div class="s">The budget. Every design decision is subordinate to it.</div></div>
+  <div class="stat"><div class="n">7</div><div class="l">People per country</div><div class="s">Hard cap in the schema. It cannot become a crowd.</div></div>
+  <div class="stat"><div class="n">0</div><div class="l">AI in the expert flow</div><div class="s">Not one generated word reaches a panelist.</div></div>
+</div>
+
+<p>Where most products signal quality with features, this one signals it by <b>doing less in view</b>. No onboarding carousel. No progress ring. No badge. No "Welcome back, Alex! 👋" — the panelist is anonymous by default, so the product cannot even greet them by name unless they chose the tier that allows it.</p>
+
+<h2 id="laws">02 — Seven design laws</h2>
+
+<table>
+  <tr><th style="width:4%">#</th><th style="width:26%">Law</th><th>What it means in practice</th></tr>
+  <tr><td class="num">1</td><td><b>Blindness before judgement</b></td><td>A panelist cannot see any other number before committing their own. Enforced in the data model, not the interface — round 1 forecasts are rejected by the server if a group display was rendered for that user. Independence is a property of the system.</td></tr>
+  <tr><td class="num">2</td><td><b>Every question states how it dies</b></td><td>The resolution criterion and the date are visible <i>before</i> the forecast, in the same breath as the question. You cannot forecast honestly without knowing how you will be judged.</td></tr>
+  <tr><td class="num">3</td><td><b>Show the uncertainty, not the estimate</b></td><td>Never display a single number where a range belongs. ACAPS says 20% — the product also says <i>risks rated Low have historically materialised 43% of the time</i>. The expert sees the honest picture.</td></tr>
+  <tr><td class="num">4</td><td><b>Holding is as respectable as moving</b></td><td>In round 2, keeping your answer and changing it get identical visual weight. Convergence must never be rewarded by design.</td></tr>
+  <tr><td class="num">5</td><td><b>Refusal is a feature</b></td><td>When the system will not publish something, it says so, explains why, and offers a route. A product that visibly declines to act is more trustworthy than one that always complies.</td></tr>
+  <tr><td class="num">6</td><td><b>No metric rewards presence</b></td><td>There is no streak, no count of visits, no "you're in the top 10% of contributors". The only score is accuracy, and it is private.</td></tr>
+  <tr><td class="num">7</td><td><b>Close the loop or don't open it</b></td><td>No contribution is ever accepted without a commitment to come back to that person with what happened. If the resolution queue is not staffed, the question does not open.</td></tr>
+</table>
+
+<h2 id="map">03 — The four surfaces</h2>
+
+<table>
+  <tr><th style="width:20%">Surface</th><th style="width:20%">Who</th><th style="width:16%">Device</th><th>Job</th></tr>
+  <tr><td><b>Expert</b></td><td>Panelist, 5–10 per country</td><td>Mobile PWA, offline-tolerant</td><td>Answer, see the panel, revise, receive the receipt. Seven screens, ninety seconds.</td></tr>
+  <tr><td><b>Analyst</b></td><td>ACAPS moderator</td><td>Desktop</td><td>Exception queue, cited synthesis, resolution workflow. Twenty minutes a week.</td></tr>
+  <tr><td><b>Public</b></td><td>Anyone</td><td>Any</td><td>Resolved questions, verdicts, panel vs ACAPS. No individuals, ever.</td></tr>
+  <tr><td><b>The gate</b></td><td>System</td><td>—</td><td>Computes whether a publication can expose someone, and blocks it if so.</td></tr>
+</table>
+
+<p class="tbl-note">The gate is not a surface — it is a fourth actor that appears inside the analyst surface. It is listed separately because it is the product's most distinctive behaviour and should be designed as carefully as any screen.</p>
+
+<h2 id="expert">04 — The expert journey</h2>
+
+<p class="lede">Seven screens. Each with the actual copy, and the reason it is written that way.</p>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E1</span><h4>First contact — the invitation</h4><span class="screen-when">once · 40 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>Eastern Chad panel</b></p>
+      <p>Alexander at ACAPS invited you. Seven people who know eastern Chad are being asked the same three questions about a risk ACAPS published in October.</p>
+      <p>Each takes about ninety seconds. Answer as many as you want. Stop at any point.</p>
+      <p><em>Nothing you say is published with your name. You will choose how anonymous you are on the next screen — before you tell us anything.</em></p>
+    </div>
+    <p class="why"><b>Why this copy:</b> it names a real person, states the panel size, gives the exact time cost, grants permission to stop, and puts the anonymity guarantee <i>before</i> any data capture. "Before you tell us anything" is the trust hook — it proves the ordering is real, not a settings page buried later.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E2</span><h4>Anonymity — chosen first, not last</h4><span class="screen-when">once · changeable anytime</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>How anonymous do you want to be?</b></p>
+      <p><b>Known to ACAPS</b><br><em>ACAPS can see this came from you. Nobody else, ever. We can follow up, and we can credit you inside ACAPS.</em></p>
+      <p><b>Pseudonymous to peers</b><br><em>ACAPS knows it's you. Other panelists see "Expert B". The public sees nothing. We can ask you a follow-up without naming you.</em></p>
+      <p><b>Fully anonymous</b><br><em>ACAPS does not know this came from you — the link between you and your answer is destroyed on receipt. We cannot follow up, and we cannot credit you. That is the trade.</em></p>
+      <p><em>You can change this at any time. Changing it applies to everything not yet published.</em></p>
+    </div>
+    <p class="why"><b>Why this works:</b> three options with <i>concrete consequences</i>, including the cost of the most private one. Saying "we cannot follow up" out loud is what makes the promise credible — a tier that only lists benefits reads like marketing. The changeable-anytime line removes the fear of choosing wrong.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "Each expert chooses their own level of anonymity (for example: known to ACAPS, pseudonymous to peers, or fully anonymous)."</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E3</span><h4>The question — with both baselines visible</h4><span class="screen-when">per question · 90 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><em>Question 2 of 3 · eastern Chad</em></p>
+      <p><b>Will attacks on strategic infrastructure in Chad occur before 30 April 2027?</b></p>
+      <p><em>This is trigger T0619 of risk R1043 — "Escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad."</em></p>
+      <p><b>ACAPS currently estimates 40%.</b><br>
+      <em>Risks rated this level have materialised 84% of the time historically.</em></p>
+      <p><b>Resolves 30 April 2027.</b><br>
+      <em>Yes, if at least two independent sources report an attack on strategic infrastructure in Chad between now and then.</em> <u>Read the full rule</u></p>
+      <p><b>What do you think?</b></p>
+      <p><em>Tap to start near your view, then adjust. Most people stop after one tap.</em></p>
+    </div>
+    <div class="grid2">
+      <div class="card tight" style="margin:0">
+        <h5 style="margin-top:0">The two baselines</h5>
+        <p class="small" style="margin:0">ACAPS's <i>probability rating</i> for the parent risk (84% historical materialisation at High) and the trigger's own <i>completion rate</i> (40%) are both shown. Where they diverge by more than 20 points — as here — the product asks one extra question (E4). This is the feature that comes from parsing all 266 trigger blocks, and no other team will have it.</p>
+      </div>
+      <div class="card tight" style="margin:0">
+        <h5 style="margin-top:0">The input</h5>
+        <p class="small" style="margin:0">Two-step: tap a coarse band, optionally nudge. Fast path is one tap; precise path is three. No slider, no pre-filled default, no anchoring thumb. The five ACAPS labels appear as reference marks on the scale so the expert can see exactly where their number sits against ACAPS's own vocabulary.</p>
+      </div>
+    </div>
+    <p class="why"><b>Why the honest base rate:</b> showing "ACAPS says 20%" alone would be a point estimate masquerading as certainty. Showing <i>and here is how risks at that level actually behaved</i> is the difference between a survey and an instrument — and it is computed directly from the 104 resolved risks in the export.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "How can an expert contribute something valuable in a few minutes, at the moment it matters?" — ninety seconds, one screen, no scrolling required on a phone.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E4</span><h4>The divergence moment — the signature interaction</h4><span class="screen-when">conditional · 20 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen — appears only when the two baselines disagree by &gt;20 points</div>
+      <p><b>You said 72%.</b></p>
+      <p>ACAPS rates this risk High overall — but the specific trigger sits at 40%.</p>
+      <p><b>Which is closer to what you're seeing?</b></p>
+      <p><em>The risk as a whole is worse than the trigger suggests</em><br>
+      <em>The trigger is the real story — the risk rating is stale</em><br>
+      <em>Both, for different reasons</em><br>
+      <em>Skip</em></p>
+    </div>
+    <p class="why"><b>Why this is the product's best idea:</b> the divergence between a risk-level rating and its trigger-level completion rate is a genuine signal, computed from data almost nobody will parse. Putting it in front of an expert as a single four-way question converts a subtle analytic insight into twenty seconds of work — and produces a structured object ACAPS has never had: <i>where the risk model and the trigger model disagree, and which one practitioners trust.</i></p>
+    <p class="why"><b>Restraint:</b> it only appears when the baselines genuinely conflict. Conditional, rare, meaningful. A product that asked this every time would be exhausting; one that asks it once every four questions feels like it is paying attention.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E5</span><h4>The reason — optional, one line</h4><span class="screen-when">per question · 15 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>One sentence on why?</b></p>
+      <p><em>Optional. Skip it if you'd rather not — but a line here is what turns a number into something an analyst can use.</em></p>
+      <p><em>[ text field, one line, 140 characters ]</em></p>
+      <p><em>Skip · Done</em></p>
+    </div>
+    <p class="why"><b>Why optional matters:</b> making the reason mandatory would double the completion time and lose a third of the panel. Making it optional but <i>honestly valuable</i> gets you reasons from the people who have them — and those are the reasons worth having. The 140-character cap forces the discipline that makes a reason usable.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E6</span><h4>The group view — round 2</h4><span class="screen-when">48 hours later · 60 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>Here's where the panel landed.</b></p>
+      <p><em>Six of seven have answered.</em></p>
+      <p>[ distribution band: 15% ● · 55% · 60% · 62% · 68% · 72% · 80% ]</p>
+      <p><b>3 of 7 above 60% · 1 well below · spread 65 points</b></p>
+      <p><em>You said 72%.</em></p>
+      <p><b>Reasons the panel gave:</b><br>
+      <em>"Road access to the east has been cut twice since June — the infrastructure target is no longer theoretical."</em><br>
+      <em>"I'd disagree with the group here. The attacks so far have been symbolic, not strategic."</em></p>
+      <p><b>Change your answer, or hold it?</b></p>
+      <p><em>Change · Hold at 72%</em></p>
+    </div>
+    <p class="why"><b>Why the dissent is visible and named as dissent:</b> the second reason is the most valuable object on the screen — an expert explicitly disagreeing with the emerging consensus. Most products would bury it as "comment 2". Here it is the point.</p>
+    <p class="why"><b>Why "Hold" is a real button:</b> if changing your mind is a button and keeping it is a back arrow, the interface is telling people to conform. Equal weight is a design commitment to Law 4 — and it is measurable, because the product records how many people held under pressure. That number is the answer to the brief's groupthink question.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "Experts respond independently, see an anonymised summary of the group, and can refine their view in the next round" — Delphi, literally, and the anonymity holds because no individual is ever attributed to a position.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">E7</span><h4>The receipt — why anyone comes back</h4><span class="screen-when">weeks or months later · 30 seconds</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen — the retention moment, and the whole brief in one screen</div>
+      <p><b>Your call resolved.</b></p>
+      <p>T0619 — attacks on strategic infrastructure in Chad — <b>did not happen</b> before its deadline.</p>
+      <p><b>You said 72%. The panel said 61%. ACAPS said 40%.</b><br>
+      <em>You were 5 points off. The panel was 10. ACAPS was 21.</em></p>
+      <p><b>What changed because of your dissent:</b><br>
+      <em>Your round-2 note — "the attacks so far have been symbolic, not strategic" — went into the R1043 rationale. Alexander rewrote the paragraph on 12 December. Here it is.</em></p>
+      <p><em>[ the before-and-after paragraph ]</em></p>
+      <p><b>Your calibration: 84th percentile across 12 resolved questions.</b><br>
+      <em>Visible only to you. We never rank people publicly.</em></p>
+    </div>
+    <p class="why"><b>Why this is the single most important screen:</b> the brief states the failure mode explicitly — comparable forecasting pools lose participation after launch. The cause is never the interface; it is that contributors never learn whether they mattered. This screen is the answer, and it is cheap to build.</p>
+    <p class="why"><b>Why the percentile is private:</b> the brief lists a super-estimator scoreboard as a <i>could</i>. A public ranking of named experts would destroy the anonymity model and turn a trusted panel into a leaderboard. A private percentile gives the same recognition with none of the exposure.</p>
+    <p class="why"><b>Note what it admits:</b> "you were 5 points off." The product does not flatter. A receipt that only ever says "great call!" is not evidence — it is a notification.</p>
+  </div>
+</div>
+
+<h2 id="analyst">05 — The analyst journey</h2>
+
+<p class="lede">Desktop. Twenty minutes a week. The rule is that the moderator sees only exceptions — everything routine is automatic.</p>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">A1</span><h4>The exception queue</h4><span class="screen-when">weekly · 20 min budget</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>3 things need you. Everything else is handled.</b></p>
+      <p><b>① Strong dissent — Chad, T0619</b><br>
+      <em>1 of 7, fully anonymous, answered 15% against a panel of 61%. Reason attached. This is the highest-value item in the queue.</em></p>
+      <p><b>② Resolution due — Chad, T0618</b><br>
+      <em>Deadline in 4 days. Two candidate sources already linked.</em></p>
+      <p><b>③ Publication blocked — Chad, country aggregate</b><br>
+      <em>The gate refused. Reason available.</em></p>
+      <p><em>See all 6 panels ›</em></p>
+    </div>
+    <p class="why"><b>Why an exception queue and not a dashboard:</b> a dashboard invites browsing; a queue invites finishing. The brief asks how ACAPS moderates "without adding a heavy workload" — the answer is that the product decides what deserves a human and presents only that. Twenty minutes a week is a target with a measurement behind it, not a hope.</p>
+    <p class="why"><b>Note the ordering:</b> the dissent is item ①, above the operational tasks. The product is opinionated about what matters.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">A2</span><h4>Cited synthesis</h4><span class="screen-when">per cycle · 10 min</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen — AI behind the glass, every sentence traceable</div>
+      <p><b>Draft rationale — R1043, updated cycle</b></p>
+      <p>The panel was materially more pessimistic than the published rating on cross-border attacks <sup>[1]</sup>, though one anonymous expert dissented sharply <sup>[2]</sup>. Reported road closures since June were cited as the main driver <sup>[3]</sup>.</p>
+      <p><em>[1] 5 of 7 forecasts · [2] contribution #14 · [3] contribution #9</em></p>
+      <p><b style="color:#a8321c">Not generated:</b> claims about Chadian military movements — no panelist raised it and no source is attached. <em>Write this yourself or leave it out.</em></p>
+      <p><em>Approve · Edit · Reject</em></p>
+    </div>
+    <p class="why"><b>Why every sentence carries a citation:</b> one uncited generated sentence, spotted by an analyst who knows the domain, and the whole system loses credibility. The refusal line at the bottom is more valuable than the draft itself — it shows the model declining to invent in front of the person whose job is to check.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "AI support behind the scenes that helps ACAPS moderators synthesise expert input, as long as the experience for experts stays human." This is the only place AI appears, and the expert never sees it.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">A3</span><h4>Resolution — the promise kept</h4><span class="screen-when">at the horizon · 5 min</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>Resolve T0619 — due 30 April 2027</b></p>
+      <p><b>Criterion:</b> <em>at least two independent sources report an attack on strategic infrastructure in Chad between 1 Nov 2026 and 30 Apr 2027.</em></p>
+      <p><b>Evidence attached:</b> 2 sources · <em>add another</em></p>
+      <p><b>Verdict:</b> Fired · Did not fire · <em>Unresolvable</em></p>
+      <p><em>Second resolver required before this closes.</em></p>
+    </div>
+    <p class="why"><b>Why "unresolvable" is a first-class option:</b> pretending every question resolves cleanly is how forecasting systems rot. Logging a question as unresolvable is a design failure with a name — it gets counted, and it changes the templates.</p>
+    <p class="why"><b>Why two resolvers:</b> a single person deciding whether a forecast was right turns scoring into one person's judgement. Two, with a documented tie-break, makes the track record defensible.</p>
+  </div>
+</div>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">A4</span><h4>Panel health</h4><span class="screen-when">monthly · 2 min</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>Chad · 7 of 10 places filled</b></p>
+      <p><em>Median completion 1 m 22 s · week-8 retention 86% · moderator load 18 min/week · 0 anonymity incidents</em></p>
+      <p><b>⚠ One number to watch:</b> <em>4 of 7 held their round-1 answer in round 2. If that stays high, the panel is anchored rather than deliberating — see the protocol note.</em></p>
+    </div>
+    <p class="why"><b>Why "held" is a warning sign, not a success:</b> if everyone holds, the round-2 discussion added nothing and the panel is anchored on round 1. If everyone moves, they are being swept by the group. The healthy band is in between, and the product watches for it.</p>
+    <p class="why"><b>Why moderator minutes are on screen:</b> the adoption constraint is stated and measured in the same place, in front of the person who has to live with it.</p>
+  </div>
+</div>
+
+<h2 id="public">06 — The public page</h2>
+
+<p class="lede">The brief asks that outcomes be shared publicly. This is the accountability layer — and the only place a stranger meets the product.</p>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">P1</span><h4>Resolved questions and verdicts</h4><span class="screen-when">continuous</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen</div>
+      <p><b>What we predicted, and what happened</b></p>
+      <p><em>Every question this panel has resolved, including the ones they got wrong.</em></p>
+      <p><b>T0619 — attacks on strategic infrastructure, Chad</b><br>
+      <em>Panel 61% · ACAPS 40% · Did not fire · 30 Apr 2027</em></p>
+      <p><b>T0618 — cross-border attacks, Chad</b><br>
+      <em>Panel 78% · ACAPS 40% · Fired · 3 Apr 2027</em></p>
+      <p><em>Panel calibration to date: 92% of forecasts within ±15 points · 14 resolved · 3 wrong</em></p>
+      <p><em>No individual expert is ever named or identifiable on this page. Panel sizes are small by design; where publishing a breakdown could expose a member, we publish less.</em></p>
+    </div>
+    <p class="why"><b>Why the wrong ones are listed:</b> a public scoreboard that only shows wins is a marketing page. The credibility of the whole instrument comes from publishing the misses alongside the hits — and it costs nothing, because the data is already there.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "outcomes shared publicly" and "individual contributions are always anonymous to the public," in the same screen, with the tension between them acknowledged rather than hidden.</p>
+  </div>
+</div>
+
+<h2 id="gate">07 — The gate</h2>
+
+<p class="lede">The single behaviour that no other team will have, and the one you should demo first.</p>
+
+<div class="screen">
+  <div class="screen-head"><span class="screen-id">G1</span><h4>Publish refused</h4><span class="screen-when">whenever an aggregate would expose someone</span></div>
+  <div class="screen-body">
+    <div class="copy">
+      <div class="who">On screen — analyst surface, red state</div>
+      <p><b style="color:#a8321c">Cannot publish this view.</b></p>
+      <p><em>2 experts in this cell, one of them fully anonymous. A reader who knows which two people work on eastern Chad could work out which position was whose by elimination.</em></p>
+      <p><b>Three routes:</b></p>
+      <p><em>① Wait — a third contributor makes the cell safe (currently 2 of 3 needed)<br>
+      ② Publish the country-level aggregate instead<br>
+      ③ Widen the date range so the cell is no longer distinctive</em></p>
+      <p><em>Why you're seeing this: we check every publication against small-cell, differencing and attribute-combination risk before it goes out. <u>How the check works</u></em></p>
+    </div>
+    <p class="why"><b>Why refusal beats a policy document:</b> every submission will claim anonymity. Almost none will be able to <i>show</i> it. Ten seconds of the system declining to publish — with a plain-language reason — is worth more than a page of threat-model prose, and it is unforgettable in a room of judges who have seen forty dashboards.</p>
+    <p class="why"><b>Why three routes and not just "blocked":</b> a gate that only says no is a nuisance. A gate that says no <i>and</i> offers a safe alternative is a colleague. This is also what makes it usable by ACAPS after the pilot — the moderator needs a way forward, not a wall.</p>
+    <p class="why"><b>Ground rule satisfied:</b> "guarantee that nothing is attributed publicly" — turned from a promise into an enforced precondition.</p>
+  </div>
+</div>
+
+<h2 id="rules">08 — Ground rules compliance</h2>
+
+<p>Every rule in the ACAPS brief, mapped to the specific product behaviour that satisfies it. No rule left to policy.</p>
+
+<table>
+  <tr><th style="width:7%">Rule</th><th style="width:36%">Brief language</th><th>Product behaviour</th></tr>
+  <tr><td class="num"><span class="tag red">MUST</span></td><td>"Be easy to use and feel like an interesting community and experience that experts want to come back to"</td><td>Seven screens, 90-second budget, no gamification. Returning is driven by E7 (the receipt), not by notifications.</td></tr>
+  <tr><td class="num"><span class="tag red">MUST</span></td><td>"Each expert chooses their own level of anonymity"</td><td>E2, presented <i>before</i> any data capture, changeable at any time, with retroactive effect on unpublished output.</td></tr>
+  <tr><td class="num"><span class="tag red">MUST</span></td><td>"Individual contributions are always anonymous to the public"</td><td>The gate (G1) plus the public page's explicit statement of what it withholds.</td></tr>
+  <tr><td class="num"><span class="tag gold">SHOULD</span></td><td>"Maintain deep engagement over time while respecting the experts' time"</td><td>Event-driven prompts only — a prompt fires when a risk analysis is published or a trigger moves, never on a calendar.</td></tr>
+  <tr><td class="num"><span class="tag gold">SHOULD</span></td><td>"Short, focused contributions rather than long sessions"</td><td>One question per screen. Median completion is measured and published internally against the 90-second target.</td></tr>
+  <tr><td class="num"><span class="tag gold">SHOULD</span></td><td>"Fit a known, trusted group moderated by ACAPS, deliberately kept small (5–10 per country)"</td><td>Hard schema constraint: the panel table rejects an 11th member. Recruitment is ACAPS's, never the product's.</td></tr>
+  <tr><td class="num"><span class="tag blue">SHOULD NOT</span></td><td>"Focus solely on time spent in the app"</td><td>No session-length metric exists. The north star is <i>documented changes to published analysis</i>. Time-in-app is deliberately not tracked.</td></tr>
+  <tr><td class="num"><span class="tag blue">SHOULD NOT</span></td><td>"Feel like an AI chatbot"</td><td>Zero AI in the expert surface. Not one generated word reaches a panelist. AI exists only in A2.</td></tr>
+  <tr><td class="num"><span class="tag">COULD</span></td><td>"Scoreboard of super estimators"</td><td>Private percentile in E7 only. No public ranking of named experts, ever.</td></tr>
+  <tr><td class="num"><span class="tag">COULD</span></td><td>"Show where experts agree and disagree, including by geography"</td><td>E6 shows spread and names dissent as dissent; the moderator view disaggregates by in-country vs. outside.</td></tr>
+  <tr><td class="num"><span class="tag">COULD</span></td><td>"Work on mobile and low bandwidth"</td><td>PWA, offline queue, a <b>light mode</b> that strips everything but text, payload budget enforced in CI.</td></tr>
+  <tr><td class="num"><span class="tag">COULD</span></td><td>"Support French and other working languages of field experts"</td><td>French ships with the Chad pilot, chosen at E1, not buried in settings. Arabic and Spanish at scale.</td></tr>
+  <tr><td class="num"><span class="tag">CAN</span></td><td>"AI support behind the scenes for moderators"</td><td>A2, citation-mandatory, explicitly refuses to generate unsupported claims.</td></tr>
+  <tr><td class="num"><span class="tag">DATA</span></td><td>"Do not use personal data of real experts during the hackathon — work with synthetic users and example contributions"</td><td>All demo personas synthetic. Real experts appear only in the research study (E3), with informed consent and no personal data stored.</td></tr>
+  <tr><td class="num"><span class="tag">DELIVER</span></td><td>"A working prototype, a 3-minute pitch, a repository link and a short description"</td><td>The repo contains the benchmark script, the red-team suite and a README that states what works and what does not. The pitch is written to 2:45 with five Q&amp;A answers prepared.</td></tr>
+</table>
+
+<h2 id="never">09 — Nine things it must never do</h2>
+
+<p>Ground rules tell you what to build. This list tells you what would quietly break the trust the rules exist to protect.</p>
+
+<div class="never"><b>1.</b> Show a panelist another panelist's number before they have committed their own. Independence is enforced in the data model, not the interface.</div>
+<div class="never"><b>2.</b> Publish an aggregate that could let a reader identify a contributor — even if the aggregate is convenient, even if the moderator asks twice.</div>
+<div class="never"><b>3.</b> Put a single generated sentence into an analyst draft without a citation. The refusal is the feature.</div>
+<div class="never"><b>4.</b> Rank named experts, publicly or to peers. Percentiles are private, always.</div>
+<div class="never"><b>5.</b> Ask for more than a few minutes in one sitting, or open a question whose resolution is not staffed.</div>
+<div class="never"><b>6.</b> Count engagement as success. No streaks, no badges, no "you're in the top 10% of contributors."</div>
+<div class="never"><b>7.</b> Reward convergence. Holding and moving carry identical weight, and the split is monitored for anchoring.</div>
+<div class="never"><b>8.</b> Claim anonymity it cannot deliver. The threat model is scoped in the product and names what it does not defend against.</div>
+<div class="never"><b>9.</b> Let a resolved question go unreported to the person who forecast it. No receipt, no right to have asked.</div>
+
+<h2 id="system">10 — The visual system</h2>
+
+<div class="grid2">
+  <div class="card tight">
+    <h4 style="margin-top:0">Type and density</h4>
+    <p class="small" style="margin:0">One family, two weights. Body 16–17px on mobile with generous leading — experts read this in a gap between meetings, often outdoors. Numbers are tabular and monospace, because figures that shift horizontally look untrustworthy. Headings are small and quiet; the number is the only thing allowed to be large on a screen.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="margin-top:0">Colour</h4>
+    <p class="small" style="margin:0">Near-monochrome. One accent (a deep red) reserved for exactly three things: the dissent, the refusal, and a miss. Green appears only for a resolved-and-correct outcome. Risk levels use a warm-to-cool ramp matched to ACAPS's own conventions so the product feels native to their world, not ours.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="margin-top:0">Motion</h4>
+    <p class="small" style="margin:0">Almost none. One transition: when a distribution appears after you submit, the band settles over 400ms — enough to read as a response, not enough to be a performance. No confetti, no celebration, no haptics beyond a single confirm tap.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="margin-top:0">Language</h4>
+    <p class="small" style="margin:0">Plain, specific, unhedged. No exclamation marks. No emoji. No "Let's get started!" Written like a competent colleague who respects your time: short sentences, concrete nouns, numbers where numbers exist. French is a first-class language, not a translated afterthought.</p>
+  </div>
+</div>
+
+<div class="verdict teal">
+  <p><b>The feel in one line:</b> it should look like something a research institute built for its own use, not something a startup built to impress a jury. That is precisely why it will impress the jury.</p>
+</div>
+
+<h2 id="demo">11 — The five-minute demo</h2>
+
+<p>The UNICRI pitch guide states the format: <b>3 minutes of pitch, then 2 minutes of Q&amp;A.</b> Assume ACAPS runs the same. Build both halves.</p>
+
+<h4>The 3-minute pitch, with its visual beats</h4>
+<div class="card">
+  <p><b>0:00 — The finding.</b> <em>Screen: the calibration table.</em><br>
+  "ACAPS rates a risk Low. In ACAPS's own resolved history, Low risks materialised 43% of the time. Their analysis is good — and it is systematically under-confident at exactly the moment it matters most. Before we asked anyone for four minutes, we measured the number an expert panel has to beat."</p>
+  <p><b>0:40 — The bar.</b> <em>Screen: Brier comparison.</em><br>
+  "A logistic regression on ACAPS's own structured fields reaches 0.218 with no human input. ACAPS's own analysts reach 0.217. Here is our panel's number, with confidence intervals — and if it does not beat the analysts, we will tell you that too."</p>
+  <p><b>1:05 — The demo.</b> <em>Live, on a phone, mirrored.</em><br>
+  "Chad. One trigger, two baselines shown honestly. Ninety seconds. The panel lands at 61%, ACAPS at 40% — and one anonymous expert says 15% and explains why."</p>
+  <p><b>1:50 — The gate.</b> <em>The refusal.</em><br>
+  "Now the part we are proudest of. We try to publish the sub-national view. The system refuses, and tells us why: with two experts in this cell, one anonymous, the position is identifiable by elimination. Three routes forward, one of them safe today."</p>
+  <p><b>2:20 — The receipt.</b> <em>E7.</em><br>
+  "Six weeks later the question resolves. She was wrong — and the product tells her so, with her score, and with the note that her dissent changed the published paragraph anyway. That is the entire retention strategy, and it is why the panel is still there in December."</p>
+  <p><b>2:45 — The ask.</b><br>
+  "Chad, seven experts, two cycles, eight weeks. The analyst material is already in place. Say yes on Monday and it starts Monday."</p>
+</div>
+
+<h4>The five Q&amp;A answers to have ready</h4>
+<table>
+  <tr><th style="width:44%">Likely question</th><th>The answer, in one breath</th></tr>
+  <tr><td>"How do you know the panel beats ACAPS rather than just agreeing with it?"</td><td>That is exactly why we built the baseline first. An expert who copies ACAPS scores zero skill by construction — the scoring is relative to their number, not to 50%.</td></tr>
+  <tr><td>"What stops an expert ignoring the prompt?"</td><td>Nothing, and that is correct — the panel is seven people, not a market. The design answer is the receipt: people return for evidence that they mattered, not for reminders. If retention drops below 50% by week four we stop and diagnose before adding a second country.</td></tr>
+  <tr><td>"How does this work across countries and languages?"</td><td>Panels are per-country and independent, 5–10 each. French ships with Chad. The anonymity gate is per-panel, so a small country panel simply publishes less — the model degrades safely, it does not fail.</td></tr>
+  <tr><td>"What data does ACAPS have to share?"</td><td>The Risk Radar export, which they already publish, plus a resolution decision when a question closes. Everything else is derived. No personal data about experts leaves their systems.</td></tr>
+  <tr><td>"Isn't this just a survey?"</td><td>A survey has no resolution date, no baseline, and no consequence. Every question here states how it dies, is scored against what ACAPS already believed, and returns to the person who answered it. That is an instrument.</td></tr>
+</table>
+
+<h2 id="path">12 — Build pathway in order</h2>
+
+<p class="lede">The order matters more than the list. Each stage produces the thing the next stage depends on.</p>
+
+<div class="stage">
+  <div class="stageitem"><div class="sn">STAGE 1</div><h6>The number</h6><p class="small" style="margin:0">Benchmark script. Base rate, ACAPS probability, structured-field model, cross-validated. Nothing else can be designed until this exists.</p></div>
+  <div class="stageitem"><div class="sn">STAGE 2</div><h6>The parser</h6><p class="small" style="margin:0">Full 266-block parse: completion rate, trend, dates, history. This is the moat and it unlocks E3, E4 and A4.</p></div>
+  <div class="stageitem"><div class="sn">STAGE 3</div><h6>E3 + E4</h6><p class="small" style="margin:0">The question screen with both baselines, and the divergence prompt. The expert-facing core.</p></div>
+  <div class="stageitem"><div class="sn">STAGE 4</div><h6>E6 + E7</h6><p class="small" style="margin:0">Group view and receipt. The two screens that make it a loop instead of a form.</p></div>
+  <div class="stageitem"><div class="sn">STAGE 5</div><h6>G1</h6><p class="small" style="margin:0">The gate and its refusal. Build the red-team suite first, then the engine that passes it.</p></div>
+</div>
+
+<table>
+  <tr><th style="width:14%">Stage</th><th style="width:34%">Deliverable</th><th style="width:26%">Done when</th><th>What it unlocks</th></tr>
+  <tr><td><b>1</b></td><td>Benchmark harness, cross-validated</td><td>A reproducible number in the repo</td><td>Every claim you make on stage</td></tr>
+  <tr><td><b>2</b></td><td>Trigger table: 266 rows, dates, completion, trend</td><td>Every block parsed, no truncation</td><td>Dual baselines, dated questions</td></tr>
+  <tr><td><b>3</b></td><td>E1–E5 on a real phone</td><td>Median completion under 90 s with one domain expert</td><td>The demo's first half</td></tr>
+  <tr><td><b>4</b></td><td>E6, E7, and the scoring engine behind them</td><td>A full cycle runs end to end on synthetic panelists</td><td>The retention story and the loop</td></tr>
+  <tr><td><b>5</b></td><td>Gate + red-team suite</td><td>10,000 simulated publications, zero re-identifications</td><td>The ten-second demo moment</td></tr>
+  <tr><td><b>6</b></td><td>A1–A4, the analyst surface</td><td>Moderator completes a cycle in 20 min</td><td>The pilot's operating case</td></tr>
+  <tr><td><b>7</b></td><td>P1 and the outcomes page</td><td>Public view with the wrong answers listed</td><td>"Shared publicly" satisfied</td></tr>
+  <tr><td><b>8</b></td><td>Chad pilot kit</td><td>Panel recruited, two cycles scheduled</td><td>The December ask</td></tr>
+</table>
+
+<div class="verdict ok">
+  <p><b>If you only get through stage 5</b>, you have: the number, the parser, the question screen, the receipt, and a refusal. That is a complete, demoable, defensible product — and it already contains every claim in the pitch. Stages 6 and 7 make it a pilot; they do not make it a winner. The first five do.</p>
+</div>
+
+<footer>
+  <p><b>Basis.</b> Grounded in the ACAPS challenge brief and the ACAPS repository (all 106 files, including <code>docs/evaluation-criteria.md</code>'s MoSCoW criteria, <code>risk-methodology.md</code>'s 5×5 matrix and the starter notebook's 200-character trigger parser), the UNICRI repository's <code>PITCH_GUIDE.md</code> for pitch format and jury questions, and the computed analysis of <code>risk-radar-export.csv</code>: base rate 0.587, ACAPS Brier 0.2168, structured-field model 0.2177 (leave-one-out — the model loses), AUC 0.703, 266 date-stamped trigger blocks, completion-rate AUC 0.745.</p>
+  <p><b>Companion files.</b> <code>mockups/benchmark-expert-flow.html</code> — the visual mock of screens E2, E3, E4, E6 and E7. <code>BENCHMARK-plan.html</code> — strategy, research programme, pilot ops. <code>REPO-audit.html</code> — the corrections this blueprint incorporates.</p>
+  <p class="small">The ACAPS probability-to-numeric mapping used in the interface (Very Low 5%, Low 20%, Medium 50%, High 75%, Very High 95%) is an inferred midpoint assumption and should be confirmed with ACAPS before the pilot — it is the one interface element resting on an unverified convention.</p>
+</footer>
+
+</div>
+</body>
+</html>

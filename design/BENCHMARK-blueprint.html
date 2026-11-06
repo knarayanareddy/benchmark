@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doorway &amp; Benchmark — The Build Blueprint</title>
+<style>
+  :root{
+    --paper:#faf8f4; --panel:#fff; --ink:#1b1a18; --muted:#6d665e; --faint:#9a938a;
+    --rule:#e2ddd4; --rule2:#d2cbc0;
+    --ev:#1a6b4f; --ev-bg:#eaf3ee;
+    --warn:#a8541a; --warn-bg:#fbeee2;
+    --danger:#9b2226; --danger-bg:#f9e7e7;
+    --blue:#1f4e79; --blue-bg:#e8eff5;
+    --purple:#5b3a7e; --purple-bg:#f0eaf6;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1090px;margin:0 auto;padding:0 28px 120px}
+  h1,h2,h3,h4{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+  a{color:var(--blue);text-decoration:none;border-bottom:1px solid #c3d3e0}
+  a:hover{border-bottom-color:var(--blue)}
+
+  .masthead{padding:60px 0 38px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+  .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:17px}
+  h1{font-size:clamp(30px,4.2vw,47px);margin:0 0 19px;max-width:23ch}
+  .deck{font-size:18.5px;line-height:1.55;color:#3d3934;max-width:64ch;margin:0 0 25px}
+  .meta{display:flex;flex-wrap:wrap;gap:23px;font-size:13px;color:var(--muted);border-top:1px solid var(--rule);padding-top:15px}
+  .meta b{color:var(--ink);font-weight:600}
+
+  nav.toc{position:sticky;top:0;z-index:50;background:rgba(250,248,244,.96);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--rule);margin:0 -28px 42px;padding:10px 28px;overflow-x:auto;white-space:nowrap}
+  nav.toc a{display:inline-block;font-size:12px;color:var(--muted);border:none;padding:5px 11px;border-radius:4px;font-weight:500}
+  nav.toc a:hover{background:#efeae2;color:var(--ink)}
+  nav.toc a b{color:var(--ink);font-weight:700;margin-right:5px;font-variant-numeric:tabular-nums}
+
+  section{margin:0 0 60px;scroll-margin-top:64px}
+  .sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--rule2);padding-bottom:10px;margin-bottom:25px}
+  .sec-num{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--faint);font-variant-numeric:tabular-nums;padding-top:6px}
+  h2{font-size:clamp(22px,2.8vw,30px);margin:0}
+  h3{font-size:19.5px;margin:33px 0 10px}
+  h4{font-size:15px;margin:23px 0 8px;font-family:inherit;font-weight:700;letter-spacing:.01em}
+  p{margin:0 0 15px;max-width:74ch}
+  ul,ol{margin:0 0 16px;padding-left:22px;max-width:74ch}
+  li{margin-bottom:8px}
+  code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.86em;background:#efeae2;padding:1px 5px;border-radius:3px}
+  pre{background:#26241f;color:#e8e3d9;padding:15px 17px;border-radius:5px;overflow-x:auto;font-size:12.5px;line-height:1.55;margin:16px 0}
+  pre code{background:none;padding:0;color:inherit;font-size:1em}
+  pre .c{color:#8d9187}
+  pre .k{color:#e0b98a}
+  pre .s{color:#a8cfa0}
+
+  .callout{border-left:3px solid var(--rule2);padding:15px 19px;margin:20px 0;border-radius:0 5px 5px 0}
+  .callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+  .callout.evidence{border-color:var(--ev);background:var(--ev-bg)}
+  .callout.warn{border-color:var(--warn);background:var(--warn-bg)}
+  .callout.danger{border-color:var(--danger);background:var(--danger-bg)}
+  .callout.blue{border-color:var(--blue);background:var(--blue-bg)}
+  .callout.purple{border-color:var(--purple);background:var(--purple-bg)}
+  .callout .lab{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+  .callout.evidence .lab{color:var(--ev)} .callout.warn .lab{color:var(--warn)}
+  .callout.danger .lab{color:var(--danger)} .callout.blue .lab{color:var(--blue)}
+  .callout.purple .lab{color:var(--purple)}
+
+  blockquote{margin:20px 0;padding:0 0 0 19px;border-left:3px solid var(--ink);font-family:Georgia,serif;
+    font-size:17px;line-height:1.5;color:#2c2925;font-style:italic}
+  blockquote cite{display:block;font-family:-apple-system,sans-serif;font-size:12px;font-style:normal;color:var(--muted);margin-top:9px}
+
+  .tbl-wrap{overflow-x:auto;margin:20px 0;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.45}
+  th{background:#f3efe8;text-align:left;padding:10px 13px;font-weight:700;font-size:10.5px;
+    letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule2);vertical-align:bottom}
+  td{padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  tr.hi td{background:#fdfaf3}
+  tr.bad td{background:#fdf6f6}
+  tr.zero td{background:#f2f6f4}
+
+  .badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:2.5px 8px;border-radius:3px;white-space:nowrap;vertical-align:1px}
+  .b-high{background:var(--danger-bg);color:var(--danger)}
+  .b-med{background:var(--warn-bg);color:var(--warn)}
+  .b-low{background:var(--ev-bg);color:var(--ev)}
+  .b-none{background:#eee9e1;color:#7a736a}
+  .b-blue{background:var(--blue-bg);color:var(--blue)}
+  .b-purple{background:var(--purple-bg);color:var(--purple)}
+
+  .cards{display:grid;gap:15px;margin:22px 0}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:7px;padding:18px 20px 16px;
+    box-shadow:0 1px 2px rgba(27,26,24,.03)}
+  .card>header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:3px}
+  .card h3{font-size:17.5px;margin:0;flex:1 1 auto;min-width:170px}
+  .card .loc{font-size:12px;color:var(--faint);width:100%;margin:0 0 12px}
+  .card dl{margin:0;display:grid;grid-template-columns:86px 1fr;gap:8px 15px;font-size:14px}
+  .card dt{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--faint);padding-top:3px}
+  .card dd{margin:0;max-width:70ch}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--rule);
+    border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin:22px 0}
+  .stat{background:var(--panel);padding:13px 15px}
+  .stat .v{font-family:Georgia,serif;font-size:23px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .stat .v small{font-size:12.5px;color:var(--muted)}
+  .stat .k{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .stat.bad .v{color:var(--danger)} .stat.good .v{color:var(--ev)}
+
+  /* spine diagram */
+  .spine{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:26px 0}
+  .sp{border:1px solid var(--rule);border-radius:7px;background:var(--panel);padding:15px 15px 13px;position:relative}
+  .sp:after{content:'→';position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+    font-size:16px;color:var(--faint);z-index:2}
+  .sp:last-child:after{display:none}
+  .sp .n{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--faint);margin-bottom:7px}
+  .sp h4{margin:0 0 6px;font-size:16px;font-family:Georgia,serif}
+  .sp p{font-size:12.5px;line-height:1.45;margin:0 0 9px;color:#4a453f;max-width:none}
+  .sp .who{font-size:11px;border-top:1px solid var(--rule);padding-top:7px;color:var(--muted)}
+  .sp .who b{color:var(--ink)}
+
+  /* flow */
+  .flow{margin:24px 0;border-left:2px solid var(--rule2)}
+  .step{position:relative;padding:0 0 20px 28px}
+  .step:before{content:'';position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;
+    background:var(--paper);border:2px solid var(--blue)}
+  .step.term:before{background:var(--blue)}
+  .step.stop:before{border-color:var(--danger);background:var(--danger)}
+  .step h4{margin:0 0 3px;font-size:14.5px}
+  .step .who{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700;margin-bottom:5px}
+  .step p{font-size:14px;margin:0 0 5px;max-width:72ch}
+  .step .note{font-size:12.5px;color:var(--muted);background:#f2eee6;border-radius:4px;padding:7px 11px;margin-top:7px;max-width:72ch}
+  .step .note b{color:var(--ink)}
+
+  .verdict{display:grid;grid-template-columns:auto 1fr;gap:4px 15px;align-items:start;
+    background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 17px;margin:16px 0}
+  .verdict .v{font-family:Georgia,serif;font-size:14.5px;font-weight:600;padding-top:1px;white-space:nowrap}
+  .verdict .t{font-size:14px;margin:0;max-width:none}
+  .verdict.pass{border-left:3px solid var(--ev)} .verdict.pass .v{color:var(--ev)}
+  .verdict.warn{border-left:3px solid var(--warn)} .verdict.warn .v{color:var(--warn)}
+  .verdict.fail{border-left:3px solid var(--danger)} .verdict.fail .v{color:var(--danger)}
+
+  .mark{font-weight:700;font-size:14px}
+  .mark.y{color:var(--ev)} .mark.n{color:#c9c2b8} .mark.p{color:var(--warn)}
+
+  .pill{display:inline-block;font-size:11px;padding:1.5px 7px;border-radius:10px;background:#eee9e1;color:#615b53;margin-right:4px}
+  .pill.d{background:var(--blue-bg);color:var(--blue)}
+  .pill.b{background:var(--purple-bg);color:var(--purple)}
+
+  footer{border-top:2px solid var(--ink);padding-top:20px;font-size:13px;color:var(--muted);margin-top:64px}
+
+  @media (max-width:760px){
+    .wrap{padding:0 18px 80px}
+    .masthead{padding:38px 0 28px}
+    .card dl{grid-template-columns:1fr;gap:3px 0}
+    .card dt{padding-top:9px}
+    .spine{grid-template-columns:1fr 1fr}
+    .sp:after{display:none}
+    .step{padding-left:20px}
+  }
+  @media print{nav.toc{display:none}.card,.verdict,.spine{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="kicker">Hackathon for Good #8 · build blueprint · 6 November 2026</div>
+  <h1>Doorway and Benchmark, built</h1>
+  <p class="deck">The capstone document. Two products, one shared architecture, complete schemas, state machines, repository layout, an hour-by-hour build order, acceptance tests, rubric mapping, a kill list for when you fall behind, and both pitch scripts. Everything decided, everything traceable, nothing left as an adjective.</p>
+  <div class="meta">
+    <span><b>Products</b> Doorway (UNICRI) · Benchmark (ACAPS)</span>
+    <span><b>Shared core</b> Card · Route · Counter · Loop</span>
+    <span><b>Build window</b> 18 working hours</span>
+    <span><b>Submit</b> Sunday 10:30 CET</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#s0"><b>00</b>One page</a>
+  <a href="#s1"><b>01</b>The spine</a>
+  <a href="#s2"><b>02</b>What's decided</a>
+  <a href="#s3"><b>03</b>Doorway arch</a>
+  <a href="#s4"><b>04</b>Doorway schemas</a>
+  <a href="#s5"><b>05</b>The Shift</a>
+  <a href="#s6"><b>06</b>Install + privacy</a>
+  <a href="#s7"><b>07</b>Benchmark arch</a>
+  <a href="#s8"><b>08</b>Benchmark schemas</a>
+  <a href="#s9"><b>09</b>Dissent + ping</a>
+  <a href="#s10"><b>10</b>Scoring</a>
+  <a href="#s11"><b>11</b>The repo</a>
+  <a href="#s12"><b>12</b>Build order</a>
+  <a href="#s13"><b>13</b>Acceptance</a>
+  <a href="#s14"><b>14</b>Rubric map</a>
+  <a href="#s15"><b>15</b>Kill list</a>
+  <a href="#s16"><b>16</b>Pitch + Q&amp;A</a>
+  <a href="#s17"><b>17</b>What kills it</a>
+</nav>
+
+<!-- ===================================================== 00 -->
+<section id="s0">
+  <div class="sec-head"><div class="sec-num">00</div><h2>The blueprint in one page</h2></div>
+
+  <p class="deck" style="font-size:17px;margin-bottom:22px">Two challenges, two products, and one realisation that makes building both defensible: <b>they are the same machine pointed at different people.</b> A trigger fires, a ninety-second card appears, a routing decision sends the person somewhere that can help, an anonymous counter records that it happened, and a loop closes back to the person so they come back. Doorway routes a person searching for abuse material to a help service. Benchmark routes a risk statement to the expert who can judge it. Same four parts.</p>
+
+  <div class="spine">
+    <div class="sp">
+      <div class="n">Part 1</div>
+      <h4>The Card</h4>
+      <p>Ninety seconds, one decision, phone-first, accessible, never a form.</p>
+      <div class="who"><b>Doorway:</b> the warning gate<br><b>Benchmark:</b> the estimate</div>
+    </div>
+    <div class="sp">
+      <div class="n">Part 2</div>
+      <h4>The Route</h4>
+      <p>A deterministic decision from a small signal to the right destination.</p>
+      <div class="who"><b>Doorway:</b> to a help service<br><b>Benchmark:</b> to an expert</div>
+    </div>
+    <div class="sp">
+      <div class="n">Part 3</div>
+      <h4>The Counter</h4>
+      <p>Aggregate counts only. No identifier, ever, in either product.</p>
+      <div class="who"><b>Doorway:</b> eight fields<br><b>Benchmark:</b> Brier + interval</div>
+    </div>
+    <div class="sp">
+      <div class="n">Part 4</div>
+      <h4>The Loop</h4>
+      <p>Tell the person what their action caused. This is what makes anyone return.</p>
+      <div class="who"><b>Doorway:</b> the arrival count<br><b>Benchmark:</b> "your dissent changed it"</div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <span class="lab">The decision this document executes</span>
+    <p><b>Doorway is the primary submission. Benchmark is a second pod with its own lead.</b> That is not a preference, it is the conclusion of the two audits: Doorway's remaining risks are all <em>build</em> risks, which a hackathon is good at; Benchmark's central risk is empirical and cannot be closed in 48 hours. Building both only works if they are run by separate people against the shared spine in <a href="#s1">§01</a> — one core library, two skins, roughly 60% shared.</p>
+    <p style="margin-bottom:0">If you have fewer than five people, or one lead, <b>build Doorway only and take the ACAPS submission off the board.</b> A half-built second product scores zero and costs the first one its polish.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat good"><div class="v">18<small>h</small></div><div class="k">Real working hours between now and the freeze</div></div>
+    <div class="stat"><div class="v">4</div><div class="k">Primitives in the shared core</div></div>
+    <div class="stat good"><div class="v">8</div><div class="k">Fields in Doorway's counter. No session ID.</div></div>
+    <div class="stat"><div class="v">2</div><div class="k">Notification types that must ship for Benchmark</div></div>
+    <div class="stat bad"><div class="v">0</div><div class="k">Personal data collected by either product</div></div>
+    <div class="stat"><div class="v">3<small>min</small></div><div class="k">The only artifact every juror sees</div></div>
+  </div>
+</section>
+
+<!-- ===================================================== 01 -->
+<section id="s1">
+  <div class="sec-head"><div class="sec-num">01</div><h2>The shared spine, and why it is real</h2></div>
+
+  <p>It would be easy to claim the two products share an architecture and then build two unrelated codebases. So let's be specific about what is genuinely shared and what is not.</p>
+
+  <h3>What is actually shared code</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:20%">Module</th><th style="width:14%">Lines</th><th style="width:32%">What it does</th><th>Used by</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><code>@core/card</code></td><td>~180</td><td>Shadow-DOM mounted, phone-first, one-action layout, focus trap, ESC, reduced-motion, 44px targets, renders from a JSON descriptor. Knows nothing about warnings or forecasts.</td><td><span class="pill d">Doorway</span><span class="pill b">Benchmark</span></td></tr>
+      <tr class="hi"><td><code>@core/route</code></td><td>~90</td><td>Pure function: takes a small signal object, returns a destination from a versioned table. Deterministic, testable, no network.</td><td><span class="pill d">Doorway</span><span class="pill b">Benchmark</span></td></tr>
+      <tr class="hi"><td><code>@core/counter</code></td><td>~120</td><td>Fire-and-forget aggregate emit. Strips headers, no retry, no buffer, respects k-suppression at read time.</td><td><span class="pill d">Doorway</span><span class="pill b">Benchmark</span></td></tr>
+      <tr class="hi"><td><code>@core/loop</code></td><td>~80</td><td>The return path: composes the message that tells someone what their action caused, and delivers it.</td><td><span class="pill d">Doorway</span><span class="pill b">Benchmark</span></td></tr>
+      <tr><td><code>@core/a11y</code></td><td>~60</td><td>Screen-reader announcements, contrast tokens, reduced motion, plain-language lint rules for the copy.</td><td><span class="pill d">Doorway</span><span class="pill b">Benchmark</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>That is roughly <b>530 lines shared out of about 2,900 total</b> — call it 60% shared by surface area once you count the build tooling and deployment, and it is the reason a five-person team can plausibly run two tracks.</p>
+
+  <h3>What is definitely not shared</h3>
+  <ul>
+    <li>The <b>content</b> — a warning message and a probability slider have nothing in common.</li>
+    <li>The <b>routing table</b> — help services by language versus experts by region and theme.</li>
+    <li>The <b>inference</b> — Doorway counts; Benchmark scores against a resolution event weeks later.</li>
+    <li>The <b>buyer</b> — a forum moderator versus a humanitarian analyst.</li>
+  </ul>
+
+  <div class="callout evidence">
+    <span class="lab">Why this matters for the pitch</span>
+    <p style="margin:0">If you build both, the line is: <b>"we built one machine that puts a decision in front of a person at the right moment and tells them what it caused — and we pointed it at two problems that share that shape."</b> That is a coherent story. What is <em>not</em> coherent is "we built two hackathon projects." The difference is entirely whether the shared core is real in the repository, which is why it is in the repo tree at <a href="#s11">§11</a> and not just in this paragraph.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 02 -->
+<section id="s2">
+  <div class="sec-head"><div class="sec-num">02</div><h2>What's decided, what's mine, what's still yours</h2></div>
+
+  <p>You said "as we agreed upon or you decided." Those are two different things and it matters which is which, especially in a Q&amp;A.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:12%">Status</th><th style="width:34%">Decision</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr class="zero"><td><b>Forced by evidence</b></td><td>Doorway collects no session identifier</td><td>A random identifier stops being anonymous the moment it appears twice. The kit's <code>sessionScopedId</code> is better than a user ID and still wrong.</td></tr>
+      <tr class="zero"><td><b>Forced by evidence</b></td><td>No deterrence claim; claim interruption and routing</td><td>Ahmia randomised 3.1M warnings over 140 days and found no detectable reduction in searching. Google's −3.8pp is within-session. Nobody has shown anything beyond minutes.</td></tr>
+      <tr class="zero"><td><b>Forced by brief</b></td><td>No user classification model, no target lists</td><td>"Nothing that identifies, tracks or exposes individuals" — three separate lines of the brief.</td></tr>
+      <tr class="zero"><td><b>Forced by brief</b></td><td>Trigger packs private, signed, verified installs only</td><td>Safety rule 3: no public trigger lists. My earlier "community-maintained" advice was wrong and is withdrawn.</td></tr>
+      <tr class="hi"><td><b>My recommendation</b></td><td>Doorway primary, Benchmark as a second pod</td><td>Build risk versus empirical risk. Reversible only before tonight.</td></tr>
+      <tr class="hi"><td><b>My recommendation</b></td><td>Gate in front of results, not a banner beside them</td><td>The 700-fold spread across deployments tracks available alternatives, not message copy. Narrowed to a buildable claim: gate versus banner.</td></tr>
+      <tr class="hi"><td><b>My recommendation</b></td><td>PWA for Benchmark, nothing for Doorway</td><td>The intervention renders on someone else's website; the estimate is a phone task. Two hours versus two days.</td></tr>
+      <tr><td><b>Still yours</b></td><td>One product or two</td><td>Depends on headcount and whether someone will own the ACAPS pod. Nobody can decide that from a document.</td></tr>
+      <tr><td><b>Still yours</b></td><td>Whether the ACAPS pod exists at all</td><td>Gated on a Friday conversation with the ACAPS team about expert response rates (<a href="#s17">§17</a>).</td></tr>
+      <tr><td><b>Still yours</b></td><td>Company or solo brand for the submission</td><td>No bearing on score; settle it in five minutes and stop discussing it.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 03 -->
+<section id="s3">
+  <div class="sec-head"><div class="sec-num">03</div><h2>Doorway — architecture</h2></div>
+
+  <div class="callout blue">
+    <span class="lab">Definition, final</span>
+    <p style="margin:0">A free, self-serve install that turns on the detection tools a small platform would never find, puts a gate in front of the search rather than a banner beside it, changes shape every time it fires, and hands the person to the right help service in the right language — without the platform, or anyone else, learning who they are.</p>
+  </div>
+
+  <h3>Six components</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:16%">Component</th><th style="width:10%">Size</th><th style="width:32%">Responsibility</th><th>Build cost</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>The Door</b><br><code>widget</code></td><td>14 KB</td><td>Renders the card in one of five formats. Shadow-DOM mounted so no platform's CSS can break it and it cannot break theirs. Zero dependencies.</td><td>4 h</td></tr>
+      <tr class="hi"><td><b>The Shift</b><br><code>scheduler</code></td><td>2 KB</td><td>Pure function from <code>(exposureCount, lastSeenAt, config)</code> to <code>(format, variantId)</code>. All state in <code>localStorage</code>, never transmitted.</td><td>1.5 h</td></tr>
+      <tr class="hi"><td><b>The Routes</b><br><code>routes.json</code></td><td>8 KB</td><td>Versioned, signed, language-first lookup of help services with honest per-jurisdiction confidentiality text.</td><td>2 h + content</td></tr>
+      <tr><td><b>The Counter</b><br><code>edge</code></td><td>70 lines</td><td>One POST endpoint. Validates the eight fields, strips connection metadata, writes an hourly aggregate row.</td><td>2 h</td></tr>
+      <tr><td><b>The Desk</b><br><code>dashboard</code></td><td>Static</td><td>Reads the aggregate API. Honest denominator, exposure-bucket curve, format mix, arrivals.</td><td>3 h</td></tr>
+      <tr><td><b>The Badge</b><br><code>badge.js</code></td><td>1 KB</td><td>Calls the status endpoint and renders only if the install is live. Two states, never three.</td><td>45 min</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Runtime sequence</h3>
+  <div class="flow">
+    <div class="step"><div class="who">Platform</div><h4>Search handler decides a trigger fired</h4><p>Calls <code>Doorway.trigger({type:'search'})</code>. <b>A boolean. Never the query.</b></p></div>
+    <div class="step"><div class="who">Widget</div><h4>Reads local state, asks the Shift</h4><p><code>localStorage</code> → exposure count, last timestamp, variants seen. Degrades to first-exposure behaviour if storage is blocked.</p></div>
+    <div class="step"><div class="who">Widget</div><h4>Renders in a shadow root</h4><p>Format and variant chosen. Results withheld if the format is <code>gate</code>.</p></div>
+    <div class="step"><div class="who">Person</div><h4>One of five outcomes</h4><p><code>clicked_help</code> · <code>left_page</code> · <code>dismissed</code> · <code>continued</code> · <code>timeout</code>. Dismissed and continued are different and must not be merged.</p></div>
+    <div class="step"><div class="who">Edge</div><h4>Eight fields are posted once</h4><p>No retry, no queue, no identifier. A lost count is cheaper than a buffered one.</p></div>
+    <div class="step term"><div class="who">Person → service</div><h4>Navigation leaves our infrastructure entirely</h4><p><code>offlimits.nl/?src=doorway</code>. No redirect through us, no pixel, no callback.</p></div>
+  </div>
+
+  <h3 style="margin-top:36px">The five formats</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:12%">Format</th><th style="width:26%">What the person sees</th><th style="width:20%">When the Shift uses it</th><th>Why it exists</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>Gate</b></td><td>Full-screen panel; the results are withheld until they act.</td><td>First and second exposure</td><td>The strongest thing an installable module can do. Not Ahmia-level (it cannot remove the site), but the closest available.</td></tr>
+      <tr><td><b>Blur</b></td><td>Results visible but unreadable; one tap to reveal.</td><td>Platforms where a full gate would be commercially impossible</td><td>The middle path for an adult site that will accept friction but not a wall.</td></tr>
+      <tr><td><b>Card</b></td><td>Inline panel above the results.</td><td>Third and fourth exposure</td><td>Lower friction as they persist — and persistence is the signal that a wall is being tolerated, not obeyed.</td></tr>
+      <tr><td><b>Chat</b></td><td>Three-turn button-driven conversation, escalating to a human link.</td><td>Fifth and beyond</td><td>Changing <em>form</em> rather than volume. reThink's own finding: 80% of users chose buttons, so make buttons excellent.</td></tr>
+      <tr><td><b>Quiet</b></td><td>A single line, no interruption.</td><td>Inside the minimum re-warning interval</td><td>Anti-nagging. Repeating loudly inside the habituation window costs salience and gains nothing.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 04 -->
+<section id="s4">
+  <div class="sec-head"><div class="sec-num">04</div><h2>Doorway — schemas and API</h2></div>
+
+  <h3>The counter payload, final</h3>
+  <pre><code>POST /v1/c
+Content-Type: application/json
+<span class="c">// no cookies, no Authorization, no Referer, no UA</span>
+
+{
+  <span class="s">"i"</span>: <span class="s">"inst_7f3a2c"</span>,   <span class="c">// install id — ONE PER PLATFORM</span>
+  <span class="s">"v"</span>: <span class="s">"harm-02"</span>,      <span class="c">// message variant shown</span>
+  <span class="s">"f"</span>: <span class="s">"gate"</span>,         <span class="c">// format shown</span>
+  <span class="s">"t"</span>: <span class="s">"search"</span>,       <span class="c">// trigger CLASS only, never the term</span>
+  <span class="s">"o"</span>: <span class="s">"clicked_help"</span>, <span class="c">// one of five outcomes</span>
+  <span class="s">"r"</span>: <span class="s">"nl-offlimits"</span>, <span class="c">// route offered</span>
+  <span class="s">"e"</span>: <span class="s">"5+"</span>,           <span class="c">// exposure BUCKET — 1 | 2 | 3 | 4 | 5+</span>
+  <span class="s">"b"</span>: 14              <span class="c">// hour of day 0–23. No date, no minute.</span>
+}</code></pre>
+
+  <div class="callout danger">
+    <span class="lab">Three omissions that are the whole privacy argument</span>
+    <ul style="margin-bottom:8px">
+      <li><b>No session id.</b> The kit specifies one. We don't. A random id that appears twice is a linkage.</li>
+      <li><b>No timestamp.</b> Only the hour. A precise timestamp plus an install id plus a variant is close to a fingerprint at low volume; an hour bucket is not.</li>
+      <li><b>No exact exposure count.</b> Only a bucket. <code>5+</code> is shared by millions; <code>7</code> is shared by few.</li>
+    </ul>
+    <p style="margin-bottom:0">Together those three are why the sentence "we cannot identify a single person who used this" is true rather than aspirational — and it is falsifiable in the demo by opening the network panel.</p>
+  </div>
+
+  <h3>routes.json</h3>
+  <pre><code>{
+  <span class="s">"version"</span>: <span class="s">"2026.11.06"</span>,
+  <span class="s">"sig"</span>: <span class="s">"ed25519:..."</span>,
+  <span class="s">"byLanguage"</span>: {
+    <span class="s">"nl"</span>: { <span class="s">"default"</span>: {
+        <span class="s">"id"</span>: <span class="s">"nl-offlimits"</span>,
+        <span class="s">"name"</span>: <span class="s">"Offlimits preventielijn"</span>,
+        <span class="s">"channel"</span>: <span class="s">"chat"</span>,          <span class="c">// selfhelp | chat | phone | clinic</span>
+        <span class="s">"capacity"</span>: <span class="s">"human"</span>,         <span class="c">// selfhelp | human — drives the default</span>
+        <span class="s">"languages"</span>: [<span class="s">"nl"</span>],
+        <span class="s">"hours"</span>: <span class="s">"Mo-Fr 09:00-22:00; Sa-Su 09:30-18:00"</span>,
+        <span class="s">"url"</span>: <span class="s">"https://offlimits.nl/?src=doorway"</span>,
+        <span class="s">"conf"</span>: <span class="s">"anonymous; ZIE §06 — VERIFY BEFORE SHIP"</span>
+    }},
+    <span class="s">"en"</span>: { <span class="s">"default"</span>: { <span class="s">"id"</span>: <span class="s">"fi-redirection"</span>, <span class="s">"channel"</span>: <span class="s">"selfhelp"</span>, <span class="c">/* 6 languages */</span> } }
+  },
+  <span class="s">"selfHelpAlways"</span>: [<span class="s">"fi-redirection"</span>, <span class="s">"nl-stoppen"</span>]
+}</code></pre>
+
+  <p><b>Lookup rule:</b> <code>byLanguage[navigator.language.split('-')[0]]</code> → fallback <code>byLanguage.en</code> → fallback generic. Never country-first, because a Dutch forum has English-speaking members and telling them to call a Dutch-language line is worse than telling them nothing.</p>
+
+  <h3>API surface — nine endpoints</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:26%">Endpoint</th><th style="width:10%">Method</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>/v1/c</code></td><td>POST</td><td>The eight-field counter. The only write path in the system.</td></tr>
+      <tr><td><code>/v1/agg</code></td><td>GET</td><td>Aggregates for one install, k=10 suppressed. Powers the Desk.</td></tr>
+      <tr><td><code>/v1/status/:install</code></td><td>GET</td><td>Live / not live, last heartbeat, trigger count in 30 days. Powers the Badge.</td></tr>
+      <tr><td><code>/v1/routes</code></td><td>GET</td><td>Signed routes bundle, cacheable for 24h, falls back to the bundled copy.</td></tr>
+      <tr><td><code>/v1/heartbeat</code></td><td>POST</td><td>Version and last-seen. Catches silent non-operation, which is the most common failure of every tool ever shipped to a small platform.</td></tr>
+      <tr><td><code>/v1/triggers</code></td><td>GET</td><td>Signed trigger bundle. <b>Requires a verified install token.</b> Never public.</td></tr>
+      <tr><td><code>/v1/verify</code></td><td>POST</td><td>Domain-ownership check at install time. One DNS TXT record or a meta tag.</td></tr>
+      <tr><td><code>/v1/arrivals</code></td><td>POST</td><td>Partner services report one number per month. No identifiers cross in either direction.</td></tr>
+      <tr><td><code>/v1/export</code></td><td>GET</td><td>Signed monthly public release. Anyone can re-derive the headline numbers.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 05 -->
+<section id="s5">
+  <div class="sec-head"><div class="sec-num">05</div><h2>The Shift — the state machine</h2></div>
+
+  <p>This is the differentiator, so it gets a real specification rather than a paragraph. It answers a question the brief asks directly: <em>how do you avoid habituation when someone sees it for the fifth time?</em></p>
+
+  <h3>Local state, and only local state</h3>
+  <pre><code><span class="c">// localStorage["doorway:v1"] — never transmitted, user-deletable</span>
+{ <span class="s">"n"</span>: 5, <span class="s">"last"</span>: 1762432000, <span class="s">"seen"</span>: [<span class="s">"harm-02"</span>,<span class="s">"leg-01"</span>,<span class="s">"ctrl-03"</span>] }</code></pre>
+
+  <h3>Selection function</h3>
+  <pre><code><span class="k">function</span> pick(st, cfg, now) {
+  <span class="k">const</span> hours = (now - st.last) / 3.6e6;
+
+  <span class="c">// 1. Anti-nagging: inside the re-warning window, degrade to quiet.</span>
+  <span class="k">if</span> (hours &lt; cfg.minIntervalHours) <span class="k">return</span> { f: <span class="s">'quiet'</span>, v: fam(<span class="s">'hurt'</span>) };
+
+  <span class="c">// 2. Exposure drives form, not volume.</span>
+  <span class="k">const</span> n = st.n + 1;
+  <span class="k">if</span> (n &lt;= 2)       <span class="k">return</span> { f: <span class="s">'gate'</span>,  v: fam(<span class="s">'harm'</span>) };   <span class="c">// what it does</span>
+  <span class="k">if</span> (n &lt;= 4)       <span class="k">return</span> { f: <span class="s">'card'</span>,  v: fam(<span class="s">'legal'</span>) };  <span class="c">// what it costs you</span>
+  <span class="k">return</span>                  { f: <span class="s">'chat'</span>,  v: fam(<span class="s">'control'</span>) }; <span class="c">// the exit</span>
+}</code></pre>
+
+  <div class="callout evidence">
+    <span class="lab">Why these three families in this order</span>
+    <p style="margin-bottom:0"><b>Harm → Legal → Control</b> maps directly onto the psychological sequence in the research. First exposure, the operative belief is "nobody's hurt" — answer it. By the third, they know it is illegal and are still doing it, so the question becomes consequence. By the fifth, a threat has failed four times, so the only message with a chance is the one that offers a way out. <b>This is the neutralisation-mapped copy from the review, expressed as a schedule rather than a paragraph.</b> Nobody else will have this, and it takes fifteen seconds to explain.</p>
+  </div>
+
+  <h3>Parameters</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:28%">Parameter</th><th style="width:14%">Default</th><th>Basis and honesty</th></tr></thead>
+    <tbody>
+      <tr><td><code>minIntervalHours</code></td><td class="num">72</td><td>Conservative floor. Watters et al. put the per-warning optimum near 18 days; 72 h is deliberately shorter because at hackathon volumes a 432-hour floor is undemoable. <b>Configurable, and the docs say the number is a hypothesis.</b></td></tr>
+      <tr><td><code>gateUntil</code></td><td class="num">2</td><td>First two exposures gate. Later ones are too costly for a platform to tolerate indefinitely.</td></tr>
+      <tr><td><code>chatFrom</code></td><td class="num">5</td><td>Form change, not volume change.</td></tr>
+      <tr><td><code>bucket</code></td><td class="num">5+</td><td>Exposure is transmitted bucketed, so the schedule is fully local.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The five states</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:14%">State</th><th style="width:16%">Condition</th><th style="width:16%">Renders</th><th>What it is doing psychologically</th></tr></thead>
+    <tbody>
+      <tr><td><b>FIRST</b></td><td>n = 1</td><td>Gate · harm</td><td>Answering "nobody was hurt" before they have had a chance to believe it.</td></tr>
+      <tr><td><b>RETURNING</b></td><td>n = 2–4</td><td>Gate then card · legal</td><td>Shifting from what the material does to what it costs them. Certainty, not severity.</td></tr>
+      <tr><td><b>PERSISTENT</b></td><td>n ≥ 5</td><td>Chat · control</td><td>Threat has failed four times. Offering the exit is the only move left.</td></tr>
+      <tr><td><b>HABITUATED</b></td><td>any, inside minInterval</td><td>Quiet</td><td>Repeating inside the depletion window costs salience and buys nothing.</td></tr>
+      <tr><td><b>DEGRADED</b></td><td>storage blocked</td><td>Gate · harm, always</td><td>Private browsing, no <code>localStorage</code>. Falls back to first-exposure behaviour rather than failing closed.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 06 -->
+<section id="s6">
+  <div class="sec-head"><div class="sec-num">06</div><h2>Install paths, and the privacy proof</h2></div>
+
+  <h3>Five ways in, one of which wins the pitch</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:24%">Path</th><th style="width:10%">Time</th><th style="width:12%">Skill</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>Cloudflare Worker</b></td><td class="num">4 min</td><td>None</td><td>"Deploy to Cloudflare", paste one line. Cloudflare already proxies the traffic, so the Worker injects the module at the edge. <b>And the trigger list never enters the platform's repository — a safety property, not a convenience.</b></td></tr>
+      <tr><td><b>WordPress plugin</b></td><td class="num">3 min</td><td>None</td><td>Search, install, activate. Two fields, both pre-filled.</td></tr>
+      <tr><td><b>Discourse component</b></td><td class="num">6 min</td><td>Low</td><td>Paste a JSON settings object into the admin theme picker.</td></tr>
+      <tr><td><b>Script tag</b></td><td class="num">12 min</td><td>Low</td><td>One tag, one config, three lines of wiring in the search handler.</td></tr>
+      <tr><td><b>npm</b></td><td class="num">40 min</td><td>Developer</td><td><code>npm i @doorway/core</code>, call <code>trigger()</code> where the platform blocks a query.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <span class="lab">The test that decides the adoptability score</span>
+    <p style="margin:0"><b>Can somebody who is not a developer finish it in fifteen minutes, on camera, without reading documentation?</b> Not "can a developer integrate it." The demo should be a person who runs a forum doing it with a stopwatch visible. If you can only rehearse one thing, rehearse that.</p>
+  </div>
+
+  <h3>The privacy claim, and how to prove it in ninety seconds</h3>
+  <div class="flow">
+    <div class="step"><div class="who">Demo step 1</div><h4>Open the network panel before the trigger</h4><p>Empty. Then trigger the warning. One request appears.</p></div>
+    <div class="step"><div class="who">Demo step 2</div><h4>Click it and read the payload aloud</h4><p>Eight fields. <code>"i"</code> is an install, not a person. <code>"e"</code> is <code>5+</code>, not five. <code>"b"</code> is an hour, not a time. No cookies set — show the application tab, it's empty.</p></div>
+    <div class="step"><div class="who">Demo step 3</div><h4>Trigger five times, show the payload is identical in shape</h4><p>Only <code>"e"</code> changes, from <code>1</code> toward <code>5+</code>. Nothing else accumulates. <b>That is the proof that there is no identifier: an identifier would have to change something else.</b></p></div>
+    <div class="step term"><div class="who">Demo step 4</div><h4>Click help and land on Offlimits with no redirect</h4><p>The URL is Offlimits' own. Nothing of ours is in the path. Say the reason out loud: a redirect would have given us the IP of everyone who asked for help.</p></div>
+  </div>
+
+  <div class="callout danger">
+    <span class="lab">The one gap that must close before you ship any copy</span>
+    <p style="margin:0"><b>The confidentiality text is unverified.</b> The kit's <code>confidentiality-nl-1</code> block claims nothing is reported to police or justice. That is a stated <i>Should</i> in the brief — <i>"be honest about … what is confidential"</i> — and it is the single line most likely to be challenged by a juror from the sector. Ten minutes: read Offlimits' own confidentiality statement, or ask Emma Persson. Until then the routes bundle ships with <code>"conf": "VERIFY"</code> and the UI must not render a confidentiality claim it cannot source.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 07 -->
+<section id="s7">
+  <div class="sec-head"><div class="sec-num">07</div><h2>Benchmark — architecture</h2></div>
+
+  <div class="callout blue">
+    <span class="lab">Definition, final</span>
+    <p style="margin:0">A ninety-second elicitation that turns each of ACAPS' own risk statements into a probability, without asking any expert to read more than one card — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.</p>
+  </div>
+
+  <h3>Six components</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:18%">Component</th><th style="width:10%">Build</th><th style="width:32%">Responsibility</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>Ingest + Gate</b></td><td>3 h</td><td>Parse the Risk Radar export into one statement per card. Decontaminate outcome-leaking language. Run five deterministic checks; anything that fails is returned with a reason.</td><td><span class="badge b-low">The credibility</span> Cheap, deterministic, and the difference between a forecast and an opinion.</td></tr>
+      <tr class="hi"><td><b>The Card</b></td><td>3 h</td><td>One statement, its window, the historical base rate, the model baseline, a slider, one optional sentence, one flag option.</td><td>Shared <code>@core/card</code>. Phone-first.</td></tr>
+      <tr><td><b>The Declaration</b></td><td>1 h</td><td>Regions × themes grid filled in on first use. Two minutes. Drives dispatch, <b>not</b> weighting.</td><td>New. <a href="#s9">§09</a>.</td></tr>
+      <tr><td><b>Aggregation</b></td><td>2 h</td><td>Median, dispersion, one revision round with the distribution visible but names hidden.</td><td>Two rounds maximum.</td></tr>
+      <tr><td><b>Dissent</b></td><td>3 h</td><td>First-class object with a lifecycle: open → routed → actioned → closed → notified.</td><td>The product. <a href="#s9">§09</a>.</td></tr>
+      <tr><td><b>Scoring</b></td><td>2 h</td><td>Brier per expert and panel, bootstrap intervals, <b>paired</b> difference against the model baseline.</td><td><a href="#s10">§10</a>. Non-negotiable.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The order that makes it fast</h3>
+  <p>Something subtle and important: <b>compute the model baseline before eliciting anything.</b> Then the expert's job is to adjust a number rather than invent one. That is the difference between a ninety-second task and a nine-minute one, and task length is the single biggest driver of non-completion in every elicitation study in the literature.</p>
+</section>
+
+<!-- ===================================================== 08 -->
+<section id="s8">
+  <div class="sec-head"><div class="sec-num">08</div><h2>Benchmark — schemas</h2></div>
+
+  <h3>Card</h3>
+  <pre><code>{
+  <span class="s">"card_id"</span>: <span class="s">"r1043"</span>,
+  <span class="s">"statement"</span>: <span class="s">"[cleaned] Food insecurity in [region] will affect &gt;25% of households by [date]"</span>,
+  <span class="s">"original"</span>: <span class="s">"[verbatim, analyst view only]"</span>,
+  <span class="s">"window"</span>:   { <span class="s">"from"</span>: <span class="s">"2026-11-01"</span>, <span class="s">"to"</span>: <span class="s">"2027-04-30"</span> },
+  <span class="s">"region"</span>:   <span class="s">"ML"</span>,  <span class="s">"theme"</span>: <span class="s">"food"</span>,
+  <span class="s">"base_rate"</span>: 0.40,   <span class="c">// historical, this band</span>
+  <span class="s">"model_p"</span>:   0.61,   <span class="c">// structured-field logistic — the bar to beat</span>
+  <span class="s">"gate"</span>:      { <span class="s">"ok"</span>: true, <span class="s">"checks"</span>: [<span class="s">"window"</span>,<span class="s">"observable"</span>,<span class="s">"single"</span>,<span class="s">"no_leak"</span>,<span class="s">"condition"</span>] }
+}</code></pre>
+
+  <h3>Estimate · Dissent · Notification</h3>
+  <pre><code>{ <span class="s">"card_id"</span>:<span class="s">"r1043"</span>, <span class="s">"expert"</span>:<span class="s">"e_8f21"</span>, <span class="s">"p"</span>:0.55,
+  <span class="s">"why"</span>:<span class="s">"…"</span>, <span class="s">"flag"</span>:<span class="k">null</span>, <span class="s">"round"</span>:1 }
+
+{ <span class="s">"id"</span>:<span class="s">"d_1"</span>, <span class="s">"card_id"</span>:<span class="s">"r1043"</span>, <span class="s">"expert"</span>:<span class="s">"e_8f21"</span>,
+  <span class="s">"kind"</span>:<span class="s">"two_risks"</span>, <span class="c">// window | two_risks | already_happening | intent_not_condition</span>
+  <span class="s">"text"</span>:<span class="s">"…"</span>,
+  <span class="s">"status"</span>:<span class="s">"open"</span>, <span class="c">// open → routed → actioned → closed → notified</span>
+  <span class="s">"action"</span>:<span class="k">null</span>   <span class="c">// rewrite | split | retire | resolve_early</span>
+}
+
+{ <span class="s">"to"</span>:<span class="s">"e_8f21"</span>, <span class="s">"type"</span>:<span class="s">"dissent_actioned"</span>,
+  <span class="s">"body"</span>:<span class="s">"You said this was two risks. It has been split. Here are both."</span>,
+  <span class="s">"deep_link"</span>:<span class="s">"/c/r1043a"</span> }</code></pre>
+
+  <h3>API surface — seven endpoints</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:28%">Endpoint</th><th style="width:10%">Method</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/ingest</code></td><td>POST</td><td>Risk Radar export in, gated cards out.</td></tr>
+      <tr><td><code>/api/cards/:id</code></td><td>GET</td><td>One card for one expert. Never peers' numbers.</td></tr>
+      <tr><td><code>/api/estimate</code></td><td>POST</td><td>Store one estimate. Round 1 or 2.</td></tr>
+      <tr><td><code>/api/dissent</code></td><td>POST</td><td>Open a dissent object.</td></tr>
+      <tr><td><code>/api/dissent/:id/action</code></td><td>POST</td><td>Analyst rewrites, splits, retires, resolves early. <b>Fires the notification.</b></td></tr>
+      <tr><td><code>/api/desk</code></td><td>GET</td><td>Median, dispersion, model divergence, dissent queue, dispatch health.</td></tr>
+      <tr><td><code>/api/score</code></td><td>GET</td><td>Brier, calibration curve, bootstrap interval, paired difference against the model.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 09 -->
+<section id="s9">
+  <div class="sec-head"><div class="sec-num">09</div><h2>The dissent loop and the dispatch layer</h2></div>
+
+  <h3>The dissent lifecycle — six states and a notification</h3>
+  <div class="flow">
+    <div class="step"><div class="who">Expert</div><h4>1 · Objects on the card</h4><p>One tap plus optional text: "this is two risks", "the window is wrong", "this is already happening", "this is a statement of intent, not a condition".</p></div>
+    <div class="step"><div class="who">System</div><h4>2 · Becomes a routed object</h4><p>Attached to the statement, not to a comment thread. Enters the analyst's queue with the card beside it.</p></div>
+    <div class="step"><div class="who">Analyst</div><h4>3 · Chooses an action</h4><p>Rewrite · split · retire · resolve early. Each produces a specific diff on the statement.</p></div>
+    <div class="step"><div class="who">System</div><h4>4 · Applies it and records who caused it</h4><p>The diff is attributable to the dissent internally, and unattributed in every output.</p></div>
+    <div class="step term"><div class="who">Expert</div><h4>5 · Is told</h4><p><b>"You said this was two risks. It has been split. Here are both."</b> Deep link straight to the new cards.</p></div>
+    <div class="step term"><div class="who">Loop</div><h4>6 · Dissents on their dissent are tracked</h4><p>If the analyst rewrites and the expert objects again, that is a quality signal about the <em>statement</em>, and it goes to the gate.</p></div>
+  </div>
+
+  <div class="callout evidence">
+    <span class="lab">Why step 5 is the whole product</span>
+    <p style="margin:0">An expert who objects into silence does not object twice — and then does not forecast twice. Every forecasting programme in the literature leaks participants partly because nothing ever comes back. This one notification is the cheapest retention mechanism available, it is the only feature that literally delivers <b>"my dissent changed the paragraph,"</b> and it demonstrates in two clicks. If Benchmark ships one thing, it ships this.</p>
+  </div>
+
+  <h3>Four notification types, one of which you build</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:26%">Trigger</th><th style="width:16%">Priority</th><th>Suppression rule</th></tr></thead>
+    <tbody>
+      <tr class="bad"><td class="num">4</td><td><b>Your dissent was acted on</b></td><td><span class="badge b-low">Build this first</span></td><td>Never suppress. This one is always welcome, by construction.</td></tr>
+      <tr><td class="num">3</td><td>Your estimate is an outlier (after submission, private)</td><td><span class="badge b-med">If time</span></td><td>Only once per card, only ever to the divergent expert, never framed as "you're wrong".</td></tr>
+      <tr><td class="num">2</td><td>You are the reliable one on a contested statement</td><td><span class="badge b-med">If time</span></td><td>Only to experts with a track record in that domain. <b>Never</b> reveal the split before the estimate — that is anchoring.</td></tr>
+      <tr><td class="num">1</td><td>A new statement in your declared domain</td><td><span class="badge b-none">Cut before 4</span></td><td>Hard cap three per week. Never notify about a statement that failed the gate.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <span class="lab">The design rule that makes the ping safe to accept</span>
+    <p style="margin:0">Show the cap as a commitment on the settings screen: <b>"You will get at most three a week, ever."</b> Not "you'll be notified." A bounded promise is what makes a push notification acceptable rather than another app to mute. Add "not this week" as one tap that does not affect standing, and make every notification open a ninety-second card — never a form.</p>
+  </div>
+
+  <div class="callout danger">
+    <span class="lab">The self-declaration trap</span>
+    <p style="margin:0">People are reliably overconfident about what they know, and the errors correlate — which makes a self-weighted panel look tight and be wrong. So: <b>the Declaration is an onboarding mechanism, not a weighting mechanism.</b> It decides who gets told. Track record decides how much weight.</p>
+    <p style="margin:0"><b>The mechanism for "track record" is Cooke's Classical Model, with its documented limit.</b> Each expert answers <b>6–10 seed questions</b> drawn from already-resolved risks in their declared domain; answers are known, so calibration and informativeness are immediately scoreable, and nobody can game the seeds. <b>But the out-of-sample evidence is mixed:</b> Eggstaff et al. (2014) found performance weighting incurs an out-of-sample penalty and no longer dominates equal weighting, and Clemen's re-analysis found no significant advantage. Clemen's safe threshold is <b>more than ten seed items</b>.</p>
+    <p style="margin:0"><b>So the rule is conditional:</b> performance-weight an expert in a domain <b>only where that domain has ≥ 10 resolved seed items</b>; use equal weights everywhere else. Refusing to weight on thin data is the part that makes the claim credible.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 10 -->
+<section id="s10">
+  <div class="sec-head"><div class="sec-num">10</div><h2>Scoring — and the interval that saves the pitch</h2></div>
+
+  <div class="callout danger">
+    <span class="lab">The number that reframes the whole ACAPS submission</span>
+    <p><b>The ladder, as measured — and it does not flatter us.</b> Naive floor <b>0.2425</b> → <b>ACAPS' own ratings 0.2168</b> → a logistic regression on two independent fields <b>0.2177</b> out of sample. Lower is better, so <b>the regression loses to the analysts — narrowly, and not significantly.</b> ACAPS is the bar, not the model. Any slide claiming a model beat the experts is false and will be caught.</p>
+    <p style="margin-bottom:0">All three rungs are computed by scripts in the repo (<code>npm run ladder</code>), not quoted. Gaps: floor→ACAPS <b>0.0257</b>, ACAPS→model <b>+0.0009</b> against us. Both sit inside a bootstrap interval spanning zero at n=104 — so the honest reading is <b>expert judgement carries a real signal that sits just under this sample's noise floor</b>, and no model we can build clears it. The in-sample fit scores 0.1965 and must never be quoted: its optimism (0.021) is larger than the entire effect under test.</p>
+  </div>
+
+  <h3>What the scoring module must do</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:26%">Requirement</th><th>Implementation</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>Bootstrap interval on every score</b></td><td>10,000 resamples over resolved risks. Report the interval beside the point estimate, always, including when it is embarrassing.</td></tr>
+      <tr class="hi"><td><b>Paired difference, not two independent scores</b></td><td>Same risks, two methods. The errors are correlated, so the paired comparison has far more power than comparing 0.2168 to 0.2177 as unrelated numbers.</td></tr>
+      <tr><td><b>State the power</b></td><td>"At n=104 we can detect a large effect, not a small one." One sentence, and it converts the weakest point into a demonstration of rigour.</td></tr>
+      <tr><td><b>Unobservable ≠ miss</b></td><td>Fixed in writing before the first card. Anything unobservable is recorded as unobservable, or the Brier score becomes a measure of ambition.</td></tr>
+      <tr><td><b>No leaderboard</b></td><td>Publicly, panel only. Individually, private calibration curves. A leaderboard converts experts into competitors and destroys the calibration that made the number worth having.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>The honest claim, in one paragraph</h3>
+  <blockquote>
+    "We fitted the baseline instead of quoting one. A logistic regression on ACAPS' own structured fields scores 0.2177 out of sample; ACAPS' own analysts score 0.2168 on the same 104 resolved risks. The model loses, and neither gap from the base rate is significant at this n. No panel has ever been run against either. Our argument is specific: the model reads the fields, the panel reads the sentence, and the sentence carries what the fields do not. That is a hypothesis, and it is the one we can test — which is why we ship the protocol next to the product."
+    <cite>The Q&amp;A answer to "does it work?" Do not deviate from it.</cite>
+  </blockquote>
+</section>
+
+<!-- ===================================================== 11 -->
+<section id="s11">
+  <div class="sec-head"><div class="sec-num">11</div><h2>The repository</h2></div>
+
+  <h3>Two repos, one shared spine</h3>
+  <p>Each product is a standalone repository. Neither imports from the other, neither needs a package registry, and each one runs <code>npm run verify</code> green on a fresh clone. <code>packages/shared/</code> is a byte-identical copy in both — copying is the distribution mechanism, and CI compares the hashes so the two copies cannot drift apart silently.</p>
+  <pre><code>&lt;product&gt;/                          <span class="c">// doorway/  or  benchmark/  — either one, alone</span>
+├── packages/
+│   ├── shared/                   <span class="c">// ── the spine. BYTE-IDENTICAL in both repos</span>
+│   │   ├── card.js               <span class="c">// the decision surface</span>
+│   │   ├── validate.js           <span class="c">// strict whitelist, unknown keys rejected</span>
+│   │   ├── loop.js               <span class="c">// the return path</span>
+│   │   ├── a11y.js               <span class="c">// focus trap, plain-language rule</span>
+│   │   └── core.test.js          <span class="c">// 16 tests, runs in both CIs</span>
+│   ├── core/src/                 <span class="c">// pure, network-free, tested</span>
+│   │                             <span class="c">//   doorway:   shift · route · counter</span>
+│   │                             <span class="c">//   benchmark: scoring · gate · dispatch</span>
+│   └── doorway/ | benchmark/     <span class="c">// product-specific only</span>
+├── edge/                         <span class="c">// doorway only: POST /v1/c + D1 schema</span>
+├── data/                         <span class="c">// benchmark only: the real export + ingest</span>
+├── scripts/                      <span class="c">// gates, baselines, the e2e journeys</span>
+├── docs/                         <span class="c">// the challenge brief, the documents</span>
+└── .github/workflows/ci.yml      <span class="c">// verify on every push</span></code></pre>
+
+  <div class="callout">
+    <span class="lab">The one thing not to break</span>
+    <p style="margin-bottom:0">The shared spine is what lets both pitches say "one machine, two problems" without shipping the same 430 lines twice under two names. It only works while the two copies are identical. <code>REPOS.md</code> carries the <code>md5sum</code> check, and both CI files fail on drift.</p>
+  </div>
+
+  <h3>Stack, and the reasons</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:20%">Layer</th><th style="width:20%">Choice</th><th>Why this and not the obvious alternative</th></tr></thead>
+    <tbody>
+      <tr><td><b>Doorway widget</b></td><td>Vanilla ES module, zero deps, Shadow DOM</td><td>A React bundle injected into a stranger's forum will collide with their CSS and their React. Shadow DOM eliminates the entire class of problem, and 14 KB loads on a phone in a field office.</td></tr>
+      <tr><td><b>Benchmark app</b></td><td>Vite + React + PWA plugin</td><td>Fast to build, and the PWA plugin generates the service worker in minutes. No native app: two codebases, store review you cannot demo, and zero rubric points.</td></tr>
+      <tr><td><b>Edge</b></td><td>Cloudflare Workers + D1</td><td>Free tier, no server to run, and Workers are already the recommended install path — so the demo and the production path are the same object.</td></tr>
+      <tr><td><b>Storage</b></td><td>Nothing on device except <code>localStorage["doorway:v1"]</code></td><td>No cookies, no IndexedDB, no service-worker cache of anything personal.</td></tr>
+      <tr><td><b>Auth for Benchmark</b></td><td>Magic link, no passwords</td><td>Five lines with any provider. An identity system is not a hackathon feature — but experts do need to be told their name is visible only to the analyst.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Four documents that earn points on their own</h3>
+  <p>Write these before the last hour, not during it. Each is 200–400 words and each answers a question a juror will ask:</p>
+  <ul>
+    <li><b><code>PRIVACY.md</code></b> — the eight fields, the three deliberate omissions, and why <code>sessionScopedId</code> was rejected despite being in the kit.</li>
+    <li><b><code>THREAT-MODEL.md</code></b> — what we refuse to build and why: no user classification, no public trigger lists, no redirect through our domain, no counselling chatbot.</li>
+    <li><b><code>PROTOCOL.md</code></b> — the stepped-wedge design, the endpoints, the ethics path. This is the answer to "does it work?"</li>
+    <li><b><code>INSTALL.md</code></b> — four paths with real timings, and the fifteen-minute test written as a pass/fail.</li>
+  </ul>
+</section>
+
+<!-- ===================================================== 12 -->
+<section id="s12">
+  <div class="sec-head"><div class="sec-num">12</div><h2>Build order — hour by hour</h2></div>
+
+  <p>Eighteen working hours. The sequence is chosen so that <b>every checkpoint leaves you with something demoable</b>, because at a hackathon the failure mode is not finishing late — it is finishing with nothing that runs.</p>
+
+  <h3>Friday evening · 5 h · <span class="pill">the spine and the hard thing</span></h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:8%">Hour</th><th style="width:30%">Doorway pod</th><th style="width:30%">Benchmark pod</th><th>Checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Decide and announce. Write the decision in the README.</td><td>Conversation with the ACAPS team on response rates.</td><td><b>Go / no-go on the second pod.</b></td></tr>
+      <tr><td class="num">2</td><td><code>@core/card</code> — shadow-DOM mount, one-action layout, focus trap.</td><td>Ingest the CSV, print 266 parsed statements to the console.</td><td>Card renders on the mock platform.</td></tr>
+      <tr><td class="num">3</td><td>Gate format plus the harm/legal/control message families in NL + EN.</td><td>Gate checks implemented; count how many of the 266 fail and why.</td><td><b>The gate produces a number for the first time.</b></td></tr>
+      <tr><td class="num">4</td><td><code>shift.js</code> as a pure function + unit tests.</td><td>Card screen with slider, base rate, model baseline.</td><td>Five exposures produce five different renders.</td></tr>
+      <tr><td class="num">5</td><td><code>counter.js</code> and the edge endpoint; payload visible in the network panel.</td><td>Aggregation: median, dispersion, one revision round.</td><td><b>An honest count exists end to end.</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Saturday morning · 5 h · <span class="pill">the only uninterrupted block</span></h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:8%">Hour</th><th style="width:30%">Doorway pod</th><th style="width:30%">Benchmark pod</th><th>Checkpoint</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td class="num">6</td><td><code>routes.json</code> with NL/EN, language-first lookup, capacity flags.</td><td><b>Dissent object + lifecycle</b> and the "your dissent was acted on" notification.</td><td>Benchmark's core promise works in two clicks.</td></tr>
+      <tr class="hi"><td class="num">7</td><td>Cloudflare Worker install path, end to end, on the mock forum.</td><td>Declaration grid and dispatch, capped at three a week.</td><td><b>The four-minute install actually takes four minutes.</b></td></tr>
+      <tr><td class="num">8</td><td>Blur and chat formats. Chat is three buttons, not free text.</td><td>Scoring: Brier + bootstrap + paired difference.</td><td>All five formats render on a 320 px screen.</td></tr>
+      <tr><td class="num">9</td><td>The Desk — aggregates, honest denominator, exposure-bucket curve.</td><td>Analyst desk view with dissent queue and dispatch health.</td><td>Both dashboards show a number you can defend.</td></tr>
+      <tr><td class="num">10</td><td>Badge + status endpoint. Two states, minimum trigger requirement.</td><td>PWA manifest and service worker.</td><td>Benchmark installs to a home screen.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Saturday afternoon · 5 h · <span class="pill">demo path, then honesty</span></h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:8%">Hour</th><th style="width:38%">Both pods</th><th>Checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td class="num">11</td><td><b>Freeze the feature list.</b> Write it down and put it where everyone can see it. Nothing is added after this point — only removed.</td><td>The list is public and agreed.</td></tr>
+      <tr><td class="num">12</td><td>Write the demo script, step by step, with timings. Then run it. It will break.</td><td>A script exists that a stranger could follow.</td></tr>
+      <tr><td class="num">13</td><td>Fix what broke in the demo run. Nothing else. This hour is not for features.</td><td>The demo runs twice in a row without a manual fix.</td></tr>
+      <tr class="hi"><td class="num">14</td><td><b>Write the four docs:</b> PRIVACY, THREAT-MODEL, PROTOCOL, INSTALL. Delegate to whoever did not build.</td><td>Every juror question has a written answer.</td></tr>
+      <tr><td class="num">15</td><td>Rehearse the pitch three times with a timer. Cut whatever does not fit. Rehearse again.</td><td>Three minutes, under time, with the numbers correct.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Saturday evening · 3 h · <span class="pill">polish and stop</span></h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:8%">Hour</th><th style="width:38%">What happens</th><th>Checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td class="num">16</td><td>Accessibility pass: keyboard only, screen reader once, contrast check, plain-language check on every message block.</td><td>The gate works with a mouse unplugged.</td></tr>
+      <tr><td class="num">17</td><td>Privacy proof run: open the network panel, show eight fields, show no cookies, show no redirect. Then break it deliberately and see what happens.</td><td><b>The claim survives a hostile reading.</b></td></tr>
+      <tr><td class="num">18</td><td>Commit, tag, write the README, and <b>stop</b>. Sleep.</td><td>Repository is public and the README is 400 words.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Sunday · 3 h · <span class="pill">freeze early, submit early</span></h3>
+  <div class="callout warn">
+    <span class="lab">The only rule for Sunday</span>
+    <p style="margin:0"><b>Freeze at 08:00. Submit by 10:30. Do not touch the repository between submitting and pitching.</b> Every year teams push a "small fix" at 10:55 and demo a broken build. The submission deadline is printed as 12:00 and the real one is 11:00 — treat 10:30 as the wall and spend the last ninety minutes rehearsing rather than coding.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 13 -->
+<section id="s13">
+  <div class="sec-head"><div class="sec-num">13</div><h2>Acceptance tests — what "done" means</h2></div>
+
+  <p>Ten binary tests. Not aspirational criteria — things you can check in thirty seconds and that are either true or not.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:42%">Test</th><th style="width:10%">Product</th><th>How to run it</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td class="num">1</td><td><b>A non-developer installs it in under fifteen minutes</b>, on camera, without documentation</td><td><span class="pill d">Doorway</span></td><td>Hand a laptop to someone who has not seen it. Visible stopwatch.</td></tr>
+      <tr class="hi"><td class="num">2</td><td><b>The network panel shows exactly eight fields and zero cookies</b></td><td><span class="pill d">Doorway</span></td><td>DevTools, application tab, trigger, inspect the POST.</td></tr>
+      <tr class="hi"><td class="num">3</td><td><b>Five consecutive triggers produce five visibly different responses</b></td><td><span class="pill d">Doorway</span></td><td>Clear storage, trigger five times, screenshot the sequence.</td></tr>
+      <tr><td class="num">4</td><td>The gate fits one screen at 320 px with no scrolling</td><td><span class="pill d">Doorway</span></td><td>Responsive mode, 320 × 568, trigger.</td></tr>
+      <tr><td class="num">5</td><td>Keyboard-only completion, and one successful screen-reader pass</td><td><span class="pill d">Doorway</span></td><td>Unplug the mouse. Then close your eyes and use VoiceOver or NVDA once.</td></tr>
+      <tr><td class="num">6</td><td>Every confidentiality claim in the shipped copy cites a source you can name</td><td><span class="pill d">Doorway</span></td><td>Grep the message bundle for "conf": every entry resolves to a real statement.</td></tr>
+      <tr><td class="num">7</td><td><b>A dissent can be raised, actioned, and notified in under sixty seconds</b></td><td><span class="pill b">Benchmark</span></td><td>Two browser windows: expert and analyst.</td></tr>
+      <tr><td class="num">8</td><td><b>Every score on screen has an interval beside it</b></td><td><span class="pill b">Benchmark</span></td><td>Look at the scoring page. No naked point estimates.</td></tr>
+      <tr><td class="num">9</td><td>The gate rejects at least one real statement from the export, with a reason</td><td><span class="pill b">Benchmark</span></td><td>Run the export through and read the failure list out loud in the pitch.</td></tr>
+      <tr><td class="num">10</td><td>The card completes in ninety seconds on a phone, one thumb</td><td><span class="pill b">Benchmark</span></td><td>Timer, actual handset, standing up.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout evidence">
+    <span class="lab">If only three can be guaranteed</span>
+    <p style="margin:0"><b>1, 2 and 7.</b> Test 1 is the adoptability score. Test 2 is the entire privacy argument and it is the only claim in either product that is falsifiable in front of the jury. Test 7 is the only feature in Benchmark that nobody else will have built. Everything else is craft that a good jury will assume rather than reward.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 14 -->
+<section id="s14">
+  <div class="sec-head"><div class="sec-num">14</div><h2>Rubric mapping — every point has a feature</h2></div>
+
+  <h3>UNICRI · Impact 25 · Adoptability 25 · Creativity 20 · Safety 20 · Clarity 10</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:14%">Criterion</th><th style="width:34%">The feature that earns it</th><th>The moment in the pitch</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>Impact 25</b></td><td>The Route. Seven in ten who want help cannot find an anonymous service; 73.9% of help-seekers could not get help at all. Doorway installs the missing door on the tail of platforms that Project Intercept structurally cannot reach.</td><td>Second 20–60: the <em>70%</em> statistic and why routing rather than persuasion is the binding constraint.</td></tr>
+      <tr class="hi"><td><b>Adoptability 25</b></td><td>Four minutes on Cloudflare. Free forever. Detection bundled. The monthly one-pager and the verified badge. <b>Test 1, on camera.</b></td><td>Second 60–110: the install runs live with a stopwatch.</td></tr>
+      <tr class="hi"><td><b>Creativity 20</b></td><td>The Shift. Same user, fifth trigger, the intervention has changed shape — and it is grounded in a published dual-process model rather than a hunch.</td><td>Second 110–150: five triggers, five different responses.</td></tr>
+      <tr class="hi"><td><b>Safety 20</b></td><td>Eight fields, no session ID, no query text, no redirect, no public trigger lists, no classification model. <code>THREAT-MODEL.md</code> names what is refused.</td><td>Second 150–170: the network panel, read aloud.</td></tr>
+      <tr><td><b>Clarity 10</b></td><td>One sentence, one demo, one number that is honest.</td><td>Second 170–180: the closing line.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>ACAPS · concept-led, with three rubrics in circulation</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:20%">What the jury looks for</th><th style="width:38%">The feature that answers it</th><th>Evidence it is real, not claimed</th></tr></thead>
+    <tbody>
+      <tr><td><b>Novel concept</b></td><td>Judgement as a matching problem rather than a supply problem: Declaration, dispatch, and a dissent object that can rewrite a sentence.</td><td>The dissent loop runs in sixty seconds, live.</td></tr>
+      <tr><td><b>Methodological rigour</b></td><td>Bootstrap intervals, paired comparison, unobservable ≠ miss, two rounds, no leaderboard, no market, no LLM as forecaster.</td><td>Interval beside every score; the model baseline shown and named.</td></tr>
+      <tr><td><b>Addresses the brief's own problem</b></td><td>266 dated statements, 104 resolved, and 73% of the triggers ACAPS scores are scored against an unwritten criterion. The product is triage and loop-closing, not coverage.</td><td>The gate's failure list, read from the real export.</td></tr>
+      <tr><td><b>Feasibility</b></td><td>Magic-link auth, one ingestion path, an export that returns numbers beside the statements ACAPS already publishes.</td><td>The output is a better Risk Radar paragraph, not a dashboard.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================================================== 15 -->
+<section id="s15">
+  <div class="sec-head"><div class="sec-num">15</div><h2>The kill list</h2></div>
+
+  <p>Written in advance, so that cutting is a decision rather than a panic. <b>Cut in this order, and only in this order.</b> The top of the list is what to kill first.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:5%">Cut</th><th style="width:26%">Feature</th><th style="width:14%">Cost saved</th><th>What you lose, honestly</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Benchmark's PWA layer</td><td>2 h</td><td>Nothing on the rubric. The web app still works on a phone.</td></tr>
+      <tr><td class="num">2</td><td>Doorway's badge and status endpoint</td><td>45 min</td><td>The adoption mechanic loses its most elegant proof. Mention it as roadmap.</td></tr>
+      <tr><td class="num">3</td><td>Notification types 1, 2 and 3 — keep 4</td><td>2 h</td><td>Dispatch becomes a single, perfect notification. Which is the right minimum anyway.</td></tr>
+      <tr><td class="num">4</td><td>Benchmark's revision round</td><td>1 h</td><td>Panel aggregation becomes one-shot. Say so; it weakens methodological rigour slightly.</td></tr>
+      <tr><td class="num">5</td><td>Doorway's blur and quiet formats</td><td>1.5 h</td><td>Three formats instead of five. The shift still happens, gate → card → chat.</td></tr>
+      <tr><td class="num">6</td><td>WordPress and Discourse install paths</td><td>2 h</td><td>Cloudflare and script tag only. Still two paths, still four minutes on one of them.</td></tr>
+      <tr class="bad"><td class="num">✗</td><td><b>Never cut</b> — the eight-field counter, the Shift, the routes bundle, the dissent loop, the interval</td><td>—</td><td>These five <em>are</em> the products. Cutting any of them leaves a demo of nothing in particular.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <span class="lab">The decision rule when you are behind</span>
+    <p style="margin:0"><b>Cut the second product, not the first product's quality.</b> A complete Doorway with five formats and a working dissent loop in nothing is worth more than two half-products. If at hour 12 Benchmark has no dissent loop, stop Benchmark and put both people on Doorway's remaining tests.</p>
+  </div>
+</section>
+
+<!-- ===================================================== 16 -->
+<section id="s16">
+  <div class="sec-head"><div class="sec-num">16</div><h2>The three-minute pitch and the Q&amp;A sheet</h2></div>
+
+  <h3>Doorway · minute by minute</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:12%">Time</th><th style="width:34%">Say</th><th style="width:26%">Show</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0:00–0:20</td><td>"Seven free tools exist to find an illegal image on a small platform. Zero exist to interrupt the person looking. We built the missing half."</td><td>Two columns, seven logos, one empty box.</td><td>The gap, in one sentence.</td></tr>
+      <tr><td class="num">0:20–0:50</td><td>"55% of people using this material want to stop. 70% who look for help cannot find an anonymous route. 74% who find one still don't get help. This is not a persuasion problem. It is a routing problem."</td><td>Three numbers, large.</td><td>Impact. Every number sourced.</td></tr>
+      <tr class="hi"><td class="num">0:50–1:20</td><td>"A Dutch forum with 20,000 members and one part-time moderator. Four minutes, no developer."</td><td><b>Live install, stopwatch on screen.</b></td><td>Adoptability, demonstrated rather than claimed.</td></tr>
+      <tr class="hi"><td class="num">1:20–1:50</td><td>"Everyone else shows the same warning every time. It becomes wallpaper. Watch what happens on the fifth search."</td><td><b>Five triggers, five different responses.</b></td><td>Creativity, with a mechanism.</td></tr>
+      <tr><td class="num">1:50–2:25</td><td>"It also bundles the detection nobody installs — and it knows nothing about you. Eight fields, no session, no query, no redirect."</td><td><b>Network panel, read aloud.</b></td><td>Safety, proven rather than asserted.</td></tr>
+      <tr><td class="num">2:25–2:50</td><td>"It is not proven that warnings reduce use beyond minutes — Ahmia ran three million of them and found no reduction in searching. So we ship the test with the product."</td><td>The protocol, one slide.</td><td>Honesty. This is the differentiator.</td></tr>
+      <tr><td class="num">2:50–3:00</td><td>"Nine in ten platforms that need this will never get a bespoke intervention. We made it installable."</td><td>Closing frame.</td><td>One sentence to remember.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Five answers you must be able to give without flinching</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th style="width:34%">Question</th><th>The answer</th></tr></thead>
+    <tbody>
+      <tr class="hi"><td><b>"Does it work?"</b></td><td>"Not proven — and nobody's is. Ahmia randomised 3.1 million warnings over 140 days and found no detectable reduction in searching. What we can show is that people reach help at a measurable rate and that we can measure it honestly. The test is in the repository."</td></tr>
+      <tr><td>"Isn't this just what Project Intercept does?"</td><td>"Intercept is better than us at what it does and it is a consultancy with a clinical team doing roughly one bespoke build a month. It cannot reach a 20,000-member forum, and that is not a criticism, it is economics. We are the free version that installs in four minutes, in the tail where they structurally cannot go."</td></tr>
+      <tr><td>"How do you know it isn't collecting data?"</td><td>"Open the network panel. Eight fields, no session identifier, no query text, no cookie, no redirect through our domain. It is the shortest privacy claim in this competition and it is falsifiable in front of you."</td></tr>
+      <tr><td>"Why won't people just click through?"</td><td>"Most will. Ahmia's best rate was 12% and Google's is 0.7% on a general audience. Our claim is a gate rather than a banner, tested against a banner — which nobody has ever tested. We are not promising Ahmia's number on a forum."</td></tr>
+      <tr><td>"Why would a platform install this?"</td><td>"Four reasons: it is free, it bundles detection they never switched on, it gives them a monthly report they can show a funder, and it gives them a badge backed by a live status check. And honestly — the only thing that ever moved a large platform was payment networks and regulation, so we are not pretending conscience scales. We are building the artifact that has to exist before either of those reaches the tail."</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Benchmark · if it runs</h3>
+  <p>Same architecture, three differences: lead with <b>101 of 139 scored triggers having no stated resolution criterion</b> and the 266 dated statements rather than a child-protection statistic; the live demo is a dissent becoming a rewritten sentence in sixty seconds rather than a warning firing; and the honesty beat is <b>the 0.2168 ACAPS bar</b> rather than the Ahmia null. Everything else — the card, the counter, the loop — is the same machine.</p>
+</section>
+
+<!-- ===================================================== 17 -->
+<section id="s17">
+  <div class="sec-head"><div class="sec-num">17</div><h2>What could still kill this</h2></div>
+
+  <div class="verdict fail">
+    <div class="v">Unverified</div>
+    <p class="t"><b>The confidentiality text.</b> A stated <i>Should</i> in the brief, the exact thing the brief warns about, and still unverified. Ten minutes with Emma Persson or Offlimits' own statement, or the copy ships with a placeholder you cannot defend.</p>
+  </div>
+  <div class="verdict warn">
+    <div class="v">Structural</div>
+    <p class="t"><b>Voluntary adoption at the tail has never worked at scale in this field.</b> Name it in the pitch as an explicit bet rather than a hidden assumption. The channels that could change it — Tech Coalition Pathways, the Dutch Safer Internet Centre, the AI for Safer Children hub — should be on one slide.</p>
+  </div>
+  <div class="verdict warn">
+    <div class="v">Structural</div>
+    <p class="t"><b>Success breaks the last mile.</b> Offlimits takes about 2.6 contacts a day. A module at Intercept's rate would overwhelm it. Default to self-help, reserve humans for higher-need signals, and give the service a forecast. A design that routes everyone to a phone line is irresponsible and a juror from the sector will say so.</p>
+  </div>
+  <div class="verdict warn">
+    <div class="v">Never closed</div>
+    <p class="t"><b>Benchmark's central claim is empirical.</b> The baseline is now measured: ACAPS' analysts score 0.2168, a logistic regression on the same fields scores 0.2177 out of sample — the model loses — and no panel has ever been run against either. The only honest position is a pre-registered hypothesis, which is a good submission and a weaker one than "here is the number."</p>
+  </div>
+  <div class="verdict">
+    <div class="v">Manageable</div>
+    <p class="t"><b>The organiser's own demo tool bakes a 15% click rate.</b> Do not use it. Build the dashboard against 0.5–1.5% and say out loud that the number is a hypothesis — a juror who wrote the Ahmia paper will otherwise catch it.</p>
+  </div>
+
+  <div class="callout blue" style="margin-top:26px">
+    <span class="lab">The closing instruction</span>
+    <p style="margin-bottom:0">You have more evidence than anyone else in this building and less time than you need. The entire advantage reduces to one habit: <b>every number on screen can answer "where's that from, and what doesn't it prove."</b> Build the smallest thing that satisfies tests 1, 2 and 7, rehearse the three minutes until it is muscle memory, and stop at 08:00 on Sunday.</p>
+  </div>
+</section>
+
+<footer>
+  <p style="max-width:74ch"><b>Doorway &amp; Benchmark · the build blueprint · 6 November 2026.</b> The capstone of the research suite: <code>unicri-research.html</code> (evidence) → <code>market-landscape.html</code> (ACAPS market, §08 revised) → <code>PRODUCT-review.html</code> (audit, 17 findings) → <code>THREE-QUESTIONS.html</code> (dataset, ping, app) → this document.</p>
+  <p style="max-width:74ch;margin-bottom:0">Everything here traces to a source in one of those four documents. Where a number is a hypothesis rather than a finding, it is labelled. Where a decision was mine rather than forced by the evidence, it is listed in <a href="#s2">§02</a>.</p>
+</footer>
+
+</div>
+</body>
+</html>

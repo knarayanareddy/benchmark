@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HFG #8 — Project Directions &amp; Weekend Plan</title>
+<style>
+  :root{
+    --ink:#12161c; --ink2:#3b444f; --muted:#6b7480; --rule:#dcd8d0;
+    --paper:#f8f6f2; --card:#fff; --accent:#a8321c; --teal:#0d6567;
+    --gold:#8a6a1f; --good:#1e7a4a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px 120px}
+  header.hero{padding:64px 0 36px;border-bottom:3px solid var(--ink);margin-bottom:14px}
+  .kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:18px}
+  h1{font-size:42px;line-height:1.1;margin:0 0 18px;letter-spacing:-.022em;font-weight:800}
+  .sub{font-size:19px;color:var(--ink2);max-width:46em;margin:0 0 24px}
+  .metaline{display:flex;flex-wrap:wrap;gap:10px 26px;font-size:13px;color:var(--muted)}
+  .metaline b{color:var(--ink);font-weight:600}
+  h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--accent);
+     margin:66px 0 8px;padding-top:22px;border-top:1px solid var(--rule)}
+  h3{font-size:25px;line-height:1.24;margin:10px 0 14px;letter-spacing:-.012em;font-weight:750}
+  h4{font-size:17px;margin:28px 0 8px;font-weight:700}
+  p{margin:0 0 15px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:7px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.87em;background:#eceae5;padding:1.5px 5px;border-radius:3px}
+  .lede{font-size:18.5px;color:var(--ink2)}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;margin:22px 0}
+  table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.2px;background:#fff}
+  th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;
+     border-bottom:2px solid var(--ink);padding:9px 10px;vertical-align:bottom}
+  td{padding:10px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+  tr:last-child td{border-bottom:1px solid var(--ink)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .tbl-note{font-size:12.5px;color:var(--muted);margin:-12px 0 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+  .stat .n{font-size:29px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-top:5px}
+  .stat .s{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;
+       padding:3px 8px;border-radius:4px;background:#eceae5;color:var(--ink2);margin-right:6px}
+  .tag.red{background:#f6e3de;color:var(--accent)}
+  .tag.green{background:#dff0e6;color:var(--good)}
+  .tag.blue{background:#dde9ea;color:var(--teal)}
+  .tag.gold{background:#f3ead4;color:var(--gold)}
+  .verdict{border-left:4px solid var(--accent);background:#fff;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0}
+  .verdict.ok{border-left-color:var(--good)}
+  .verdict.teal{border-left-color:var(--teal)}
+  .verdict p:last-child{margin-bottom:0}
+  .callout{background:#12161c;color:#f4f2ee;border-radius:10px;padding:24px 26px;margin:26px 0}
+  .callout h4{color:#fff;margin-top:0}
+  .callout code{background:#2a323c;color:#e8e4dc}
+  .callout .small{color:#a9b0b8}
+  .small{font-size:13.5px;color:var(--muted)}
+
+  /* direction cards */
+  .dir{background:#fff;border:1px solid var(--rule);border-radius:12px;margin:20px 0;overflow:hidden}
+  .dir-head{display:flex;gap:16px;align-items:flex-start;padding:18px 22px 16px;border-bottom:1px solid var(--rule);background:#fcfbf9}
+  .dir-code{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:800;color:#fff;background:var(--ink);
+            border-radius:5px;padding:4px 9px;letter-spacing:.04em;flex:none;margin-top:3px}
+  .dir-code.b{background:var(--teal)}
+  .dir-title{flex:1;min-width:0}
+  .dir-title h4{margin:0 0 3px;font-size:19px;letter-spacing:-.01em}
+  .dir-title .oneliner{font-size:14px;color:var(--ink2);margin:0}
+  .dir-score{flex:none;text-align:right;font-family:ui-monospace,Menlo,monospace}
+  .dir-score .s{font-size:24px;font-weight:800;line-height:1;letter-spacing:-.02em}
+  .dir-score .sl{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-top:3px}
+  .dir-body{padding:16px 22px 20px}
+  .dir-body dl{display:grid;grid-template-columns:118px 1fr;gap:8px 16px;margin:0;font-size:14.4px}
+  .dir-body dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;padding-top:3px}
+  .dir-body dd{margin:0;line-height:1.5}
+  .dir-foot{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 18px}
+  @media(max-width:640px){
+    .dir-body dl{grid-template-columns:1fr;gap:2px 0}
+    .dir-body dt{margin-top:8px}
+    .dir-head{flex-wrap:wrap}
+  }
+  .rank{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--accent);text-transform:uppercase;margin-bottom:4px}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:20px 24px;margin:26px 0 8px}
+  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px;font-size:14px}
+  .toc li{margin-bottom:5px}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  .toc a:hover{border-bottom-color:var(--accent);color:var(--accent)}
+  @media(max-width:720px){.toc ol{columns:1}}
+  .matrix td{font-size:13.6px}
+  .pill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:20px;background:#eceae5;color:var(--ink2);font-weight:600;margin:1px 2px}
+  footer{margin-top:70px;padding-top:22px;border-top:3px solid var(--ink);font-size:12.5px;color:var(--muted)}
+  .gate{border-left:3px solid var(--gold);padding-left:16px;margin:18px 0}
+  .gate h4{margin:0 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">Working playbook · Hackathon for Good #8 · ACAPS + UNICRI</div>
+  <h1>Project directions<br>and the weekend plan</h1>
+  <p class="sub">Fourteen buildable directions across both briefs — each with a thesis, a surface you can actually ship, a projected rubric score, the hard part, and the demo moment. Plus how to choose, how to staff it, and what to deliberately not build.</p>
+  <div class="metaline">
+    <span><b>Briefs</b> ACAPS Ground Truth · UNICRI Stop Before It Starts</span>
+    <span><b>Time left</b> ~26 on-site hours</span>
+    <span><b>Deadline</b> Sun 11:00 CET</span>
+    <span><b>Rubric</b> Concept 40 · Prototype 20 · Tech 15 · Product 15 · Biz 5 · Wow 5</span>
+  </div>
+</header>
+
+<div class="toc">
+  <div class="small" style="margin-bottom:10px"><b>Contents</b></div>
+  <ol>
+    <li><a href="#how">How to read the direction cards</a></li>
+    <li><a href="#acaps">ACAPS — seven directions</a></li>
+    <li><a href="#acaps-pick">ACAPS — the three to actually pick</a></li>
+    <li><a href="#unicri">UNICRI — seven directions</a></li>
+    <li><a href="#unicri-pick">UNICRI — the three to actually pick</a></li>
+    <li><a href="#matrix">Cross-brief comparison</a></li>
+    <li><a href="#choose">The choice, in one table</a></li>
+    <li><a href="#staff">Staffing &amp; hour allocation</a></li>
+    <li><a href="#gates">Milestone gates</a></li>
+    <li><a href="#ask">Questions to ask on Friday</a></li>
+    <li><a href="#no">What not to build</a></li>
+  </ol>
+</div>
+
+<h2 id="how">01 — How to read the direction cards</h2>
+
+<p>Each direction is scored against the published rubric. The number in the corner is <b>projected points out of 100 if executed competently</b> — not a prediction of winning, a comparison of <i>ceiling</i>. Two warnings about that number:</p>
+<ul>
+  <li><b>Differences of 2–3 points are noise.</b> Nothing separates an 81 from an 84 in a room with three tired judges. Differences of 8+ are real and worth choosing on.</li>
+  <li><b>A high ceiling you cannot ship scores zero.</b> A 71 you finish beats an 86 you demo half-built. That is why every card carries a separate build-risk tag.</li>
+</ul>
+
+<div class="grid3">
+  <div class="stat"><div class="n">40%</div><div class="l">Concept</div><div class="s">Won in the first 60 seconds. Pure mechanism quality — independent of code.</div></div>
+  <div class="stat"><div class="n">20%</div><div class="l">Prototype</div><div class="s">"Does it work?" Narrow and running beats broad and rendered.</div></div>
+  <div class="stat"><div class="n">15%</div><div class="l">Tech feasibility</div><div class="s">Ethics, security, legal side of AI. Free points both briefs hand you.</div></div>
+</div>
+
+<p>Tags used throughout: <span class="tag green">low risk</span> ship it comfortably · <span class="tag gold">medium</span> needs discipline · <span class="tag red">high</span> only with a strong builder · <span class="tag blue">bundle</span> designed to combine.</p>
+
+<div class="verdict">
+  <p><b>The structural insight that shapes everything below.</b> Both briefs are secretly about the same three things: <b>trust you can prove</b>, <b>a loop that closes</b>, and <b>a constraint you respect rather than work around</b>. ACAPS asks it as anonymity; UNICRI asks it as privacy-preserving measurement. Every direction that scores above 80 is a variation on one of those three. Every direction that scores in the 70s is a feature.</p>
+</div>
+
+<h2 id="acaps">02 — ACAPS: seven directions</h2>
+
+<p class="lede">The brief supplies a 139-risk corpus with real outcomes and 266 distinct triggers. Almost every team will treat it as a backdrop. It is the product.</p>
+
+<div class="card" style="border-left:4px solid var(--teal)">
+  <p style="margin:0"><b>New in this pass:</b> I pulled the <code>Triggers</code> field apart. It has structure nobody mentions — <b>108 of 139 risks carry 266 trigger blocks</b>, each with an ID (<code>R1043 - T0618</code>), a title, a description, its own source URLs, and a <b><code>Completion rate</code> percentage</b> (mean 52.6%; 12 triggers at 100%). R1043 alone has three: <i>expansion of cross-border attacks</i> (40%), <i>attacks on strategic infrastructure</i> (10%), <i>renewed proxy mobilisation</i> (20%).</p>
+  <p class="small" style="margin:10px 0 0">That is a ready-made question bank with an existing expert-derived baseline to beat — and it is the foundation of the strongest direction on this page. <b>Ask ACAPS on Friday exactly what "completion rate" means</b> (confidence the trigger will fire, or progress toward it). The whole of A1 depends on the answer, and it is a 30-second question.</p>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A1</span>
+    <div class="dir-title">
+      <h4>Beat the Baseline — trigger-level elicitation</h4>
+      <p class="oneliner">Ask experts to forecast individual triggers, not whole risks. Score them against ACAPS's own completion rate.</p>
+    </div>
+    <div class="dir-score"><div class="s">86</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>Asking a field expert to rate "the risk level of R1043" is asking them to do an analyst's job. Asking them <i>"will attacks on strategic infrastructure in Chad happen in the next six months — 10% today, what do you say?"</i> is asking them something they actually know. Decompose the risk into its triggers and the cognitive load collapses.</dd>
+    <dt>Why it scores</dt><dd>Concept is near-maximum: it is a real mechanism, visibly different from a survey, and it uses the supplied data at a depth no other team will reach. Prototype is genuinely small — one card, one number. Tech feasibility is free because the scoring is defensible arithmetic.</dd>
+    <dt>Build</dt><dd>Trigger card stack (one per screen, mobile-first) → probability input (5 taps) → panel distribution → Brier vs the ACAPS baseline → "triggers you moved most" summary for the moderator.</dd>
+    <dt>Hard part</dt><dd>Honest scoring. A trigger at 40% baseline that fires is not a win for someone who said 45%. Score against the <i>baseline</i>, not against 50%, or you reward herd behaviour.</dd>
+    <dt>Demo moment</dt><dd>"ACAPS rates T0618 at 40%. Our seven Chad experts say 72% — and here are the three whose last twelve calls beat the baseline."</dd>
+    <dt>Pilot fit</dt><dd>Excellent. 76 triggers sit on live active risks — Chad alone gives a 3-trigger, 7-expert pilot that ships in December.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag green">low build risk</span><span class="tag">statistical</span><span class="tag blue">bundle with A2</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A2</span>
+    <div class="dir-title">
+      <h4>The Receipt — a loop that visibly closes</h4>
+      <p class="oneliner">Every contribution returns proof of what it changed. The retention product, not the elicitation product.</p>
+    </div>
+    <div class="dir-score"><div class="s">78</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The brief states the failure mode plainly: comparable forecasting pools lose participation after launch. The cause is never the UI — it is that contributors never learn whether they mattered. Build the evidence layer that makes contribution feel like it went somewhere.</dd>
+    <dt>Why it scores</dt><dd>Answers a <i>stated</i> problem rather than an inferred one, which judges reward. Cheap to build, high narrative value. Lower ceiling than A1 because on its own it is a layer, not a system.</dd>
+    <dt>Build</dt><dd>Contribution ledger → risk-rating diff ("the panel moved R1043 from High/40% to High/58%") → resolution card ("you said 72%; it fired; you were in the top 3 of 9") → notification surface.</dd>
+    <dt>Hard part</dt><dd>You need a plausible upstream. A receipt that says "thanks!" is worse than none. Show the actual diff on the actual rating.</dd>
+    <dt>Demo moment</dt><dd>An expert opens the app after eight weeks, sees their call resolved, sees the published analysis changed, and comes back. That is the whole brief in one screen.</dd>
+    <dt>Pilot fit</dt><dd>Essential — a two-month pilot lives or dies on week-3 retention.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag green">low build risk</span><span class="tag">retention</span><span class="tag blue">bundle with A1</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A3</span>
+    <div class="dir-title">
+      <h4>Minority Report — the dissent router</h4>
+      <p class="oneliner">Consensus is the failure state. Surface the outlier as the most valuable object in the system.</p>
+    </div>
+    <div class="dir-score"><div class="s">81</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The brief asks how to aggregate "without creating groupthink", and every team answers with an average. But a 5–10 person panel that converges in round one has stopped carrying information. The product should show <i>spread</i>, and route the dissenter to the analyst as the signal.</dd>
+    <dt>Why it scores</dt><dd>Concept scores high because it inverts the obvious answer and can be defended in one sentence. Visually distinctive — disagreement renders far better than agreement in a demo.</dd>
+    <dt>Build</dt><dd>Distribution + spread view → geographic disaggregation ("3 of 4 experts inside Chad disagree with 2 outside") → dissent queue for the moderator → escalation card with the dissenter's reasoning, still anonymous.</dd>
+    <dt>Hard part</dt><dd>Do not reward contrarianism. Dissent must be scored like everything else — a lone wrong outlier is just noise. Pair with A1's baseline so dissent is measured, not celebrated.</dd>
+    <dt>Demo moment</dt><dd>Seven experts, six say 80%. The seventh says 15% and is fully anonymous. The moderator sees only "one expert, fully anonymous, disagrees strongly — here is why." That is the trust model and the product in one frame.</dd>
+    <dt>Pilot fit</dt><dd>Strong. This is exactly the artefact ACAPS analysts want to receive.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">mechanism</span><span class="tag blue">bundle with A4</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A4</span>
+    <div class="dir-title">
+      <h4>Anonymity Budget — prove the negative</h4>
+      <p class="oneliner">Anonymity as a computed guarantee, not a settings toggle. Show exactly what the aggregate can leak.</p>
+    </div>
+    <div class="dir-score"><div class="s">81</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>"Fully anonymous" is a promise; promises are cheap. Build the engine that <i>computes</i> whether a given contribution can be re-identified from what you publish — small-cell rules, cross-round differencing, attribute combinations — and blocks publication when it can.</dd>
+    <dt>Why it scores</dt><dd>Directly targets the 15% technology-feasibility criterion, where almost nobody competes. And it lets you demonstrate the hardest part of the brief live, on stage, in ten seconds.</dd>
+    <dt>Build</dt><dd>Policy engine (k-anonymity thresholds, suppression cells) → live "what can the public infer?" panel → automatic block with reason → audit trail of every suppression.</dd>
+    <dt>Hard part</dt><dd>Real anonymity needs an adversary model. State yours explicitly ("we defend against a motivated reader with all public outputs, not against ACAPS insiders") — an honest scoped claim beats an overreaching one.</dd>
+    <dt>Demo moment</dt><dd>Add a second expert to a cell and watch the system <i>refuse</i> to publish, explaining "1 of 2 experts in this cell is identifiable by elimination." Judges remember refusals.</dd>
+    <dt>Pilot fit</dt><dd>High — ACAPS will not put real experts on an unproven promise.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag red">high</span><span class="tag">security</span><span class="tag blue">bundle with A3</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A5</span>
+    <div class="dir-title">
+      <h4>Six-Month Clock — resolution infrastructure</h4>
+      <p class="oneliner">The dataset has no dates, so no one can build a track record. Build the machine that fixes that.</p>
+    </div>
+    <div class="dir-score"><div class="s">80</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>Forecasting only becomes a track record when questions have explicit resolution criteria and dates. The export has 25 fields and not one timestamp — so make resolution a first-class product object: template, criterion, open date, resolve date, evidence, verdict.</dd>
+    <dt>Why it scores</dt><dd>Shows a depth of engagement with the supplied data that judges rarely see, and it is the enabling layer for any leaderboard claim. Concept is high; presentation is harder because the artefact is a workflow, not a graphic.</dd>
+    <dt>Build</dt><dd>Question generator from triggers → resolution-criteria editor ("the hazard occurred if ≥2 of these 3 sources report X by 30 Apr") → clock/queue → base-rate lookup pulled live from the 139 historical outcomes → resolution workflow with evidence capture.</dd>
+    <dt>Hard part</dt><dd>Resist over-engineering. Two templates ("trigger fires" and "exposure threshold crossed") cover the brief.</dd>
+    <dt>Demo moment</dt><dd>Point at a question and show the base rate: "risks like this materialised 84% of the time. Everything your panel says beyond that is the value they add."</dd>
+    <dt>Pilot fit</dt><dd>Very high. This is the piece ACAPS must own operationally after the pilot ends.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">infrastructure</span><span class="tag blue">bundle with A1</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A6</span>
+    <div class="dir-title">
+      <h4>Behind the Veil — moderator synthesis copilot</h4>
+      <p class="oneliner">AI on the analyst's side of the glass. Turn nine free-text answers into a traceable draft rationale.</p>
+    </div>
+    <div class="dir-score"><div class="s">74</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>Both briefs permit AI <i>behind the scenes</i> and forbid it in the expert's face. So put it where the workload actually is: a moderator with nine paragraphs to reconcile before a Tuesday deadline.</dd>
+    <dt>Why it scores</dt><dd>Genuinely useful and on the right side of the "should not feel like a chatbot" rule. Ceiling is capped because it is a productivity layer — hard to demo as a concept, and Concept is 40%.</dd>
+    <dt>Build</dt><dd>Ingest contributions → cluster into consensus / contention / gaps → draft rationale in ACAPS house style → every sentence clickable back to the contribution that produced it → moderator edits and approves.</dd>
+    <dt>Hard part</dt><dd>Citation discipline. One uncited generated sentence and a jury member who knows the domain will discount the whole thing. Refuse to generate when unsupported.</dd>
+    <dt>Demo moment</dt><dd>Nine messy answers become a two-paragraph draft, and clicking any sentence highlights the exact expert text behind it.</dd>
+    <dt>Pilot fit</dt><dd>High value, but it is the moderator's tool — it does not itself retain experts.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">AI</span><span class="tag red">chatbot-adjacent</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code">A7</span>
+    <div class="dir-title">
+      <h4>Field Mode — the four-minute contribution</h4>
+      <p class="oneliner">Offline-first PWA for Pierre: on a phone, on 2G, in French, between meetings.</p>
+    </div>
+    <div class="dir-score"><div class="s">71</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>Persona 03 is deployed for months with bad connectivity and doubts the effort pays off. Build for the worst device in the room, not the best screen in the demo.</dd>
+    <dt>Why it scores</dt><dd>Ticks the "could have" on mobile and low bandwidth and shows product maturity. But it is explicitly a <i>could</i>, and Concept is where the points are — a beautiful offline queue is still a queue.</dd>
+    <dt>Build</dt><dd>PWA with offline answer queue and background sync → sub-100 KB payload budget shown in the UI → French / Arabic / Spanish → SMS fallback for the lowest common denominator.</dd>
+    <dt>Hard part</dt><dd>It is deceptively hard to do <i>well</i>, and a half-working sync demos terribly. Only choose this with a real mobile engineer.</dd>
+    <dt>Demo moment</dt><dd>Airplane mode on, contribute two answers, airplane mode off, sync. Silence in the room for a second, then nodding.</dd>
+    <dt>Pilot fit</dt><dd>Decisive if ACAPS recruits field-based experts rather than desk analysts — worth asking them on Friday.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag red">high</span><span class="tag">mobile</span><span class="tag">demographic fit</span></div>
+</div>
+
+<h2 id="acaps-pick">03 — ACAPS: the three worth actually picking</h2>
+
+<div class="grid3">
+  <div class="stat">
+    <div class="rank">Safest high score</div>
+    <div class="n" style="font-size:20px">A1 + A2</div>
+    <div class="s" style="margin-top:10px">Beat the Baseline with the Receipt loop. Trigger-level forecasting, scored against ACAPS's own completion rates, closed by a visible proof-of-impact. Concept strong, build genuinely finishable, and it maps one-to-one onto a December pilot. <b>Pick this if you have one numerate person.</b></div>
+  </div>
+  <div class="stat">
+    <div class="rank">Highest concept ceiling</div>
+    <div class="n" style="font-size:20px">A3 + A4</div>
+    <div class="s" style="margin-top:10px">Dissent router plus a provable anonymity engine. The deepest answer to the brief's two hardest words — <i>groupthink</i> and <i>guarantee</i>. Riskier to build; if the anonymity engine slips, fall back to A3 alone and present A4 as a specification. <b>Pick this if you have a security-minded builder.</b></div>
+  </div>
+  <div class="stat">
+    <div class="rank">Best infrastructure story</div>
+    <div class="n" style="font-size:20px">A5 + A1</div>
+    <div class="s" style="margin-top:10px">The Six-Month Clock makes A1's scores meaningful. Together they are a complete forecasting system with base rates, resolution rules and a track record. Harder to make visually exciting; wins on rigour. <b>Pick this if your team likes boring things done properly.</b></div>
+  </div>
+</div>
+
+<div class="verdict teal">
+  <p><b>My recommendation for ACAPS is A1 + A2, with A5 thinned to one screen.</b> A1 gives you the concept, A2 gives you the story, and a single base-rate panel from A5 gives you the credibility. That is a complete arc — elicit, score, prove, retain — buildable by three people in one weekend, and it is the version most likely to survive contact with the ACAPS team on site.</p>
+</div>
+
+<h2 id="unicri">04 — UNICRI: seven directions</h2>
+
+<p class="lede">The brief hands you the message and the help directory, then says the build is the integration. Every direction below is therefore about adoption, experience or trust — never detection.</p>
+
+<div class="card" style="border-left:4px solid var(--teal)">
+  <p style="margin:0"><b>The constraint that defines this track:</b> the plugin contract already forbids the module from ever seeing the query text — it receives only <code>type</code>, <code>severity</code>, <code>country</code>, <code>language</code>, and a session-scoped ID that is never persisted. Every direction below must work inside that blindfold. Teams that break it to make a richer demo will fail the 15% ethics criterion on a single question.</p>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U1</span>
+    <div class="dir-title">
+      <h4>Live in a Day — the install path as product</h4>
+      <p class="oneliner">One tag, one page, four minutes to a warning. Ship the copy-paste, not the architecture.</p>
+    </div>
+    <div class="dir-score"><div class="s">86</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The challenge is stated as <i>"a small team can switch on in days rather than months."</i> So the product is not the warning — it is the <b>time-to-live</b>. Optimise the literal seconds between a moderator deciding and a warning being served.</dd>
+    <dt>Why it scores</dt><dd>Maximum alignment with the stated ask. The starter kit already runs, so prototype risk is low and polish is reachable. Directly convinces the 15% product-potential criterion.</dd>
+    <dt>Build</dt><dd>One-tag embed against the mock platform → Discourse + WordPress snippets → install page with a three-step wizard → a live install timer on the dashboard ("installed in 4 m 12 s") → portability proof from a <i>second</i>, unrelated page.</dd>
+    <dt>Hard part</dt><dd>Resisting scope. Every added format is a minute not spent on the install path.</dd>
+    <dt>Demo moment</dt><dd>Start the clock. Paste a snippet into a fresh page. Warning appears. Stop the clock at under five minutes.</dd>
+    <dt>Pilot fit</dt><dd>Direct — this is what a platform actually receives.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag green">low build risk</span><span class="tag">on-brief</span><span class="tag blue">bundle with U7</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U2</span>
+    <div class="dir-title">
+      <h4>The Ladder — habituation as a solved problem</h4>
+      <p class="oneliner">The brief asks what happens on the fifth sighting. Almost nobody will answer. Answer it.</p>
+    </div>
+    <div class="dir-score"><div class="s">84</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>A static interstitial trains people to dismiss it. Escalate instead: awareness → consequence → route to help → human handover, with hard caps, decay windows and rotation, so the fifth sighting is a different and more urgent intervention than the first.</dd>
+    <dt>Why it scores</dt><dd>Highest concept score available in this track, because it is a genuine mechanism that answers a question the brief explicitly poses. Very demoable — state changes are visible.</dd>
+    <dt>Build</dt><dd>Ladder state machine (session-scoped only) → repetition caps and cooling-off → variant rotation across the ladder → aggregate fatigue metrics → explicit "this person has seen 5 warnings" definition that still collects nothing identifying.</dd>
+    <dt>Hard part</dt><dd>State without identity. You cannot have persistent per-person escalation without tracking — so define the ladder over <i>sessions</i> and be transparent that this is a deliberate limit.</dd>
+    <dt>Demo moment</dt><dd>Trigger five times on the mock platform and watch the format escalate, then hard-cap and hand over to a human service.</dd>
+    <dt>Pilot fit</dt><dd>Strong — this is the part a small platform cannot build itself.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">explicitly asked</span><span class="tag blue">bundle with U5</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U3</span>
+    <div class="dir-title">
+      <h4>Honest Router — confidentiality without over-promising</h4>
+      <p class="oneliner">Fear of being reported is the conversion killer. Tell the truth per country, including where the truth is bad.</p>
+    </div>
+    <div class="dir-score"><div class="s">82</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The brief is unusual here: it insists you be honest about what is <i>confidential</i>, and notes England is moving the other way under the Crime and Policing Act 2026. A router that promises confidentiality where the law does not give it is a product that harms its user at the moment of maximum vulnerability.</dd>
+    <dt>Why it scores</dt><dd>Lands the 15% ethics/legal criterion harder than anything else on offer, and demonstrates the moral seriousness the topic demands. Concept is strong because it is counter-intuitive — the winning move is to sometimes <i>not</i> promise.</dd>
+    <dt>Build</dt><dd>Per-country legal + confidentiality config with sources → "what happens if you call" explainer written in plain language → audience routing (self / partner / family / professional) → visible <code>[VERIFY]</code> markers wherever a claim is unconfirmed.</dd>
+    <dt>Hard part</dt><dd>You must not invent law. Use the provided <code>legal-confidentiality.json</code> and cite every assertion; where the file is silent, show silence.</dd>
+    <dt>Demo moment</dt><dd>The same click, routed to NL and to England, producing honestly different promises — and the England version telling the user plainly that confidentiality is not guaranteed.</dd>
+    <dt>Pilot fit</dt><dd>Essential for any EU roll-out, which is exactly what the brief asks to scale toward.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">legal</span><span class="tag blue">bundle with U4</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U4</span>
+    <div class="dir-title">
+      <h4>Blind Measurement — impact without watching people</h4>
+      <p class="oneliner">Prove the warning works at n=900, where dashboards are structurally blind. Statistics as a feature.</p>
+    </div>
+    <div class="dir-score"><div class="s">81</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>At a 1% click-through rate you need ~4,600 impressions to detect a doubling, and counts under 10 are suppressed by contract. So the honest dashboard reports <b>exposure</b> immediately, <b>direction</b> after weeks, and <b>significance</b> almost never. Build for that reality instead of faking precision.</dd>
+    <dt>Why it scores</dt><dd>Highest technical-feasibility ceiling in the track. Almost no team will attempt it, and the ones that do usually produce a vanity chart that a statistically literate judge dismantles in one question.</dd>
+    <dt>Build</dt><dd>Aggregate counter service with suppression at 10 → Bayesian credible intervals rather than point rates → exposure/outcome separation → sequential testing so a platform can stop early → a plain-language verdict line ("no signal yet; expect one around week 6").</dd>
+    <dt>Hard part</dt><dd>Making an honest dashboard <i>feel</i> like a product. A screen that says "not enough data" is correct and boring — pair it with the exposure curve, which is always moving and always true.</dd>
+    <dt>Demo moment</dt><dd>Show a rival-style dashboard and then yours side by side: theirs reports "1.2% conversion" from 83 impressions; yours refuses, and says why.</dd>
+    <dt>Pilot fit</dt><dd>Directly answers "how does a platform know it works without tracking individuals" — a named guiding question.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag red">high</span><span class="tag">statistics</span><span class="tag blue">bundle with U3</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U5</span>
+    <div class="dir-title">
+      <h4>Message Lab — variants with evidence attached</h4>
+      <p class="oneliner">Every message block carries its citation. Build the registry, the assignment harness and the translation guardrails.</p>
+    </div>
+    <div class="dir-score"><div class="s">77</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The brief supplies NL/EN blocks with sources and asks you to "design for testing variants". Turn the message from copy into a governed asset: tone (deterrent / therapeutic / mixed), reading level, evidence link, and a guardrail that refuses to machine-translate an unverified legal claim.</dd>
+    <dt>Why it scores</dt><dd>Solid on product potential and shows evidentiary rigour. Capped because the brief gives you the messages — refining supplied content reads as polish rather than invention.</dd>
+    <dt>Build</dt><dd>Block registry with evidence → variant assignment harness → results view (respecting suppression) → translation pipeline with <code>[VERIFY]</code> enforcement on legal claims → readability scoring.</dd>
+    <dt>Hard part</dt><dd>Staying in your own words, per SAFETY.md rule 6. Copying Lucy Faithfull or Protect Children wording is an immediate credibility loss.</dd>
+    <dt>Demo moment</dt><dd>Take one block, show its evidence, show a second tone variant, show the assignment, show the guardrail refusing to ship an unverified Dutch-to-German legal translation.</dd>
+    <dt>Pilot fit</dt><dd>Good — variant governance is what makes multi-country scale-up safe.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag green">low build risk</span><span class="tag">content</span><span class="tag blue">bundle with U2</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U6</span>
+    <div class="dir-title">
+      <h4>The Jump — obsess the one-click handover</h4>
+      <p class="oneliner">1 in 100 click through. Fix the handover, not the warning.</p>
+    </div>
+    <div class="dir-score"><div class="s">74</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The brief names the drop-off explicitly: roughly 1 in 100 clicks through to help, and "this jump is where most people drop off". So build the jump as the product — no login, no form, no ambiguity, prefilled context, and a clear picture of what happens next.</dd>
+    <dt>Why it scores</dt><dd>Narrow and very demoable, with excellent accessibility and trust detail. Capped because it is one screen — it cannot carry a 40% concept score alone.</dd>
+    <dt>Build</dt><dd>One-tap to Preventielijn van Offlimits and Stoppen is mogelijk → "what to expect on the call" pre-brief → return path after the handover → screen-reader and contrast pass → plain-language Dutch and English.</dd>
+    <dt>Hard part</dt><dd>It is small. Bundle it into U1 or U2 or it under-fills the weekend.</dd>
+    <dt>Demo moment</dt><dd>From warning to a person, in one tap, with the confidentiality statement visible before the tap and not after.</dd>
+    <dt>Pilot fit</dt><dd>Every other direction depends on it, which makes it a good thing to own even as a component.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag green">low build risk</span><span class="tag">UX</span><span class="tag blue">bundle with U1 or U2</span></div>
+</div>
+
+<div class="dir">
+  <div class="dir-head">
+    <span class="dir-code b">U7</span>
+    <div class="dir-title">
+      <h4>The Yes — a decision kit for the part-time moderator</h4>
+      <p class="oneliner">The buyer fears legal risk and user trust. Build the artefact that gets a yes in one meeting.</p>
+    </div>
+    <div class="dir-score"><div class="s">80</div><div class="sl">projected</div></div>
+  </div>
+  <div class="dir-body"><dl>
+    <dt>Thesis</dt><dd>The guiding question is literally <i>"what would a trust and safety lead at a small platform need to say yes to installing this tomorrow?"</i> Answer it as a product: a data-flow statement, an obligations checklist, a sandbox mode, and a one-page sign-off.</dd>
+    <dt>Why it scores</dt><dd>On-brief, and it activates the 5% business criterion that most teams will waste. High product-potential score because adoption friction <i>is</i> the market barrier.</dd>
+    <dt>Build</dt><dd>Install wizard → data-flow diagram generated from the actual contract (not hand-drawn) → DSA / Dutch-law obligations checklist → sandbox mode with synthetic traffic → one-page decision memo a non-technical moderator can sign.</dd>
+    <dt>Hard part</dt><dd>Never overstate legal compliance. Frame as "questions to put to your lawyer", not "you are compliant".</dd>
+    <dt>Demo moment</dt><dd>Hand the judge the one-page sign-off and say: "this is what the moderator reads before they say yes."</dd>
+    <dt>Pilot fit</dt><dd>High — adoption is the bottleneck the whole challenge exists to solve.</dd>
+  </dl></div>
+  <div class="dir-foot"><span class="tag gold">medium</span><span class="tag">adoption</span><span class="tag blue">bundle with U1</span></div>
+</div>
+
+<h2 id="unicri-pick">05 — UNICRI: the three worth actually picking</h2>
+
+<div class="grid3">
+  <div class="stat">
+    <div class="rank">Safest high score</div>
+    <div class="n" style="font-size:20px">U1 + U7</div>
+    <div class="s" style="margin-top:10px">Install path plus the decision kit. Answers "days not months" with a stopwatch and answers "why would a moderator say yes" with a document. Build risk is low because the starter kit already runs. <b>Pick this if your team ships front-end well.</b></div>
+  </div>
+  <div class="stat">
+    <div class="rank">Highest concept ceiling</div>
+    <div class="n" style="font-size:20px">U2 + U5</div>
+    <div class="s" style="margin-top:10px">The habituation ladder with an evidence-governed message registry. Directly answers the fifth-sighting question and the "design for variants" instruction in one coherent experience layer. <b>Pick this if you have a strong interaction designer.</b></div>
+  </div>
+  <div class="stat">
+    <div class="rank">Most defensible</div>
+    <div class="n" style="font-size:20px">U3 + U4</div>
+    <div class="s" style="margin-top:10px">Honest confidentiality routing plus blind measurement. The two things a serious NGO will interrogate, answered with rigour rather than enthusiasm. Harder to make exciting, easiest to defend under questioning. <b>Pick this if you have a statistician or a lawyer.</b></div>
+  </div>
+</div>
+
+<h2 id="matrix">06 — Cross-brief comparison</h2>
+
+<table class="matrix">
+  <tr>
+    <th style="width:6%">#</th><th style="width:29%">Direction</th><th class="num" style="width:9%">Score</th>
+    <th style="width:11%">Build risk</th><th style="width:13%">Pilot fit</th><th>What it really tests</th>
+  </tr>
+  <tr><td class="num">A1</td><td>Beat the Baseline</td><td class="num">86</td><td><span class="tag green">low</span></td><td>Excellent</td><td>Whether you can decompose a problem into answerable units</td></tr>
+  <tr><td class="num">U1</td><td>Live in a Day</td><td class="num">86</td><td><span class="tag green">low</span></td><td>Direct</td><td>Whether you optimise for adoption or for your own demo</td></tr>
+  <tr><td class="num">U2</td><td>The Ladder</td><td class="num">84</td><td><span class="tag gold">medium</span></td><td>Strong</td><td>Whether you read the guiding questions or skimmed them</td></tr>
+  <tr><td class="num">U3</td><td>Honest Router</td><td class="num">82</td><td><span class="tag gold">medium</span></td><td>Essential</td><td>Moral seriousness under pressure</td></tr>
+  <tr><td class="num">A3</td><td>Minority Report</td><td class="num">81</td><td><span class="tag gold">medium</span></td><td>Strong</td><td>Whether you can invert the obvious answer</td></tr>
+  <tr><td class="num">A4</td><td>Anonymity Budget</td><td class="num">81</td><td><span class="tag red">high</span></td><td>High</td><td>Whether "guarantee" means anything in your build</td></tr>
+  <tr><td class="num">U4</td><td>Blind Measurement</td><td class="num">81</td><td><span class="tag red">high</span></td><td>Direct</td><td>Statistical honesty when the data is thin</td></tr>
+  <tr><td class="num">A5</td><td>Six-Month Clock</td><td class="num">80</td><td><span class="tag gold">medium</span></td><td>Very high</td><td>Whether you noticed the missing dates</td></tr>
+  <tr><td class="num">U7</td><td>The Yes</td><td class="num">80</td><td><span class="tag gold">medium</span></td><td>High</td><td>Whether you understand distribution</td></tr>
+  <tr><td class="num">A2</td><td>The Receipt</td><td class="num">78</td><td><span class="tag green">low</span></td><td>Essential</td><td>Whether you solve the stated retention failure</td></tr>
+  <tr><td class="num">U5</td><td>Message Lab</td><td class="num">77</td><td><span class="tag green">low</span></td><td>Good</td><td>Whether you can govern content, not just write it</td></tr>
+  <tr><td class="num">A6</td><td>Behind the Veil</td><td class="num">74</td><td><span class="tag gold">medium</span></td><td>High</td><td>Whether AI goes where the brief allows it</td></tr>
+  <tr><td class="num">U6</td><td>The Jump</td><td class="num">74</td><td><span class="tag green">low</span></td><td>Component</td><td>Whether you sweat the one step that matters</td></tr>
+  <tr><td class="num">A7</td><td>Field Mode</td><td class="num">71</td><td><span class="tag red">high</span></td><td>Conditional</td><td>Whether you built for Pierre or for the projector</td></tr>
+</table>
+<p class="tbl-note">Scores are relative projections for comparison, not forecasts. Anything within 3 points is a tie; anything within 8 is a coin flip decided by execution.</p>
+
+<h2 id="choose">07 — The choice, in one table</h2>
+
+<p>Pick by team shape rather than by preference. The direction you can staff is the direction that scores.</p>
+
+<table>
+  <tr><th style="width:30%">If your strongest person is…</th><th style="width:22%">Choose</th><th>Because</th></tr>
+  <tr><td><b>Numerate</b> — comfortable with Brier scores and base rates</td><td>ACAPS A1 + A2</td><td>The dataset is the entire moat. Nobody else will bring calibration math, and it converts directly into a pilot.</td></tr>
+  <tr><td><b>Front-end / design</b> — ships fast, cares about the feel</td><td>UNICRI U1 + U7</td><td>The starter kit already runs, so your hours buy polish and persuasion, not plumbing.</td></tr>
+  <tr><td><b>Interaction designer</b> — thinks in states and edge cases</td><td>UNICRI U2 + U5</td><td>Habituation ladders are a state-machine problem with a visible payoff.</td></tr>
+  <tr><td><b>Security / backend</b></td><td>ACAPS A4, fallback A3</td><td>"Prove the negative" is the only place in either brief where real systems thinking wins outright.</td></tr>
+  <tr><td><b>Lawyer, policy or NGO person</b></td><td>UNICRI U3 + U4</td><td>Confidentiality and measurement honesty are domain problems before they are code problems.</td></tr>
+  <tr><td><b>Writer or storyteller</b></td><td>ACAPS A2 on top of A1</td><td>The receipt loop is a narrative artefact; it needs someone who can write a resolution screen that makes someone come back.</td></tr>
+  <tr><td><b>Generalist 3-person team</b></td><td>ACAPS A1 + A2 (thinned A5)</td><td>One screen, one score, one loop. The least coordination overhead of any high-scoring combination.</td></tr>
+</table>
+
+<div class="callout">
+  <h4>The composition rule</h4>
+  <p><b>Take one direction that owns the concept and one that owns the proof.</b> Never two that own the concept — you will build half of each. The proven pairings are A1+A2 (elicit + retain), A3+A4 (invert + guarantee), U1+U7 (ship + persuade), U2+U5 (experience + evidence), U3+U4 (promise + measure).</p>
+  <p class="small" style="margin-bottom:0">If you can only finish one, finish the <i>proof</i> one — a working receipt loop with a modest elicitation beats an elegant elicitation with a broken loop, because judges grade what runs.</p>
+</div>
+
+<h2 id="staff">08 — Staffing &amp; hour allocation</h2>
+
+<p>You have roughly <b>26 on-site hours</b> plus one night of asynchronous work. Allocate by role, and protect the last six hours for the demo path only.</p>
+
+<table>
+  <tr><th style="width:18%">Role</th><th class="num" style="width:9%">ACAPS A1+A2</th><th class="num" style="width:9%">UNICRI U1+U7</th><th class="num" style="width:9%">UNICRI U2+U5</th><th>Non-negotiable output</th></tr>
+  <tr><td><b>Builder 1</b></td><td class="num">10 h</td><td class="num">11 h</td><td class="num">12 h</td><td>The golden path runs end to end without a single manual step.</td></tr>
+  <tr><td><b>Builder 2</b></td><td class="num">7 h</td><td class="num">8 h</td><td class="num">7 h</td><td>The differentiating mechanism (loop / install / ladder) actually works.</td></tr>
+  <tr><td><b>Data / numbers</b></td><td class="num">6 h</td><td class="num">3 h</td><td class="num">3 h</td><td>One real chart computed from real data, defensible under questioning.</td></tr>
+  <tr><td><b>Design / UX</b></td><td class="num">4 h</td><td class="num">5 h</td><td class="num">6 h</td><td>Mobile screenshot that looks like a product, not a prototype.</td></tr>
+  <tr><td><b>Pitch / story</b></td><td class="num">3 h</td><td class="num">3 h</td><td class="num">3 h</td><td>2:45 rehearsed, with the demo path memorised.</td></tr>
+  <tr><td><b>Reserve</b></td><td class="num">4 h</td><td class="num">4 h</td><td class="num">3 h</td><td>Untouched until Sunday 08:00. This is what saves you.</td></tr>
+</table>
+
+<div class="grid2">
+  <div class="card tight">
+    <h4 style="margin-top:0">3-person team</h4>
+    <p style="margin:0">Builder + designer/builder + one person who does <b>both</b> the numbers and the pitch. That last role is the constraint — protect it. Cut the moderator view before you cut the evidence chart.</p>
+  </div>
+  <div class="card tight">
+    <h4 style="margin-top:0">5-person team</h4>
+    <p style="margin:0">Your risk is coordination, not capacity. Split into <b>experience</b> and <b>evidence</b> pairs with one integrator, and enforce a single 15-minute standup at 09:00 and 18:00. Do not let anyone work on a surface that is not on the demo path.</p>
+  </div>
+</div>
+
+<h2 id="gates">09 — Milestone gates</h2>
+<p>Hard checkpoints. If a gate is missed, <b>cut scope immediately</b> rather than compressing the next phase.</p>
+
+<div class="gate">
+  <h4>Gate 1 — Fri 18:00: the skeleton walks</h4>
+  <p class="small" style="margin:0">Entry → one question → stored answer → aggregate displayed. Ugly is fine. If this is not running, stop adding features and fix it.</p>
+</div>
+<div class="gate">
+  <h4>Gate 2 — Sat 12:30: the mechanism exists</h4>
+  <p class="small" style="margin:0">The thing that makes you different — the receipt, the ladder, the anonymity block — is real, not mocked. This is the gate that decides your score.</p>
+</div>
+<div class="gate">
+  <h4>Gate 3 — Sat 16:00: the pitch has been performed</h4>
+  <p class="small" style="margin:0">Pitch practice is a free slot with organisers. Teams that skip it deliver a cold 3-minute pitch on Sunday. Do not be that team.</p>
+</div>
+<div class="gate">
+  <h4>Gate 4 — Sun 08:00: feature freeze</h4>
+  <p class="small" style="margin:0">Nothing new after this. Only the demo path, the numbers, and the words. Any new feature now is a bug you have not met yet.</p>
+</div>
+<div class="gate">
+  <h4>Gate 5 — Sun 10:30: submitted</h4>
+  <p class="small" style="margin:0">Repo, description, demo link. The real cut-off is 11:00, not the 12:00 printed on the schedule.</p>
+</div>
+
+<h2 id="ask">10 — Questions to ask on Friday</h2>
+<p>Challenge deep dives are at <b>14:00 Friday</b>. These are the questions that change architecture, not small talk. Ask two, listen hard, adjust by 15:00.</p>
+
+<h4>For ACAPS</h4>
+<ol>
+  <li><b>"What does <code>Completion rate</code> mean on a trigger — your confidence it will fire, or progress toward it?"</b> The entire A1 direction depends on the answer, and it decides whether your scoring model is valid or nonsense.</li>
+  <li><b>"When a risk materialises, who records the date, and where does it live?"</b> If the answer is "in a spreadsheet we keep internally", A5 just became the pilot-critical direction.</li>
+  <li><b>"Seven experts in Chad — are they desk-based in N'Djamena or field-deployed?"</b> Decides whether A7 (Field Mode) is a nice-to-have or the whole product.</li>
+  <li><b>"What did the last panel get wrong, and did anyone tell the experts?"</b> If the answer is "nobody told them", A2 (the Receipt) is not a feature, it is the fix.</li>
+</ol>
+
+<h4>For UNICRI</h4>
+<ol>
+  <li><b>"Has any small platform actually installed a warning, and what stopped the ones that didn't?"</b> This is the entire challenge in one answer — and it tells you whether to build U1 or U7 first.</li>
+  <li><b>"When a platform's own lawyer looks at this, what is the first thing they ask?"</b> Answer that on the install page and you beat every team that did not ask.</li>
+  <li><b>"Do you want the fifth-sighting behaviour to escalate, or to stop showing entirely?"</b> Both are defensible; guessing wrong makes your ladder a liability. Ask.</li>
+  <li><b>"Is a plausible-but-unvalidated impact model acceptable, or would you rather see 'no data yet'?"</b> If they say the latter, U4 is the direction and you should start it tonight.</li>
+</ol>
+
+<h2 id="no">11 — What not to build</h2>
+<table>
+  <tr><th style="width:32%">Do not build</th><th>Why</th></tr>
+  <tr><td><b>A general survey tool</b></td><td>Both briefs describe a <i>loop</i> with feedback and resolution. A form with a chart is the one thing every team will produce.</td></tr>
+  <tr><td><b>A superforecaster leaderboard on invented data</b></td><td>You cannot compute a real track record from the export — there are no dates. Fake numbers are a single question away from collapse.</td></tr>
+  <tr><td><b>CSAM detection (UNICRI)</b></td><td>Forbidden in a full paragraph of the brief. Detection exists; distribution is the gap.</td></tr>
+  <tr><td><b>A chatbot as the expert-facing surface (ACAPS)</b></td><td>Explicitly on the "should not" list. AI belongs behind the moderator or it costs you points.</td></tr>
+  <tr><td><b>An anonymity settings dropdown</b></td><td>Three tiers is the floor, not the feature. Without a computed guarantee you have built a preference, not a protection.</td></tr>
+  <tr><td><b>Two directions at full depth</b></td><td>The most common way good teams lose. One owns the concept, one owns the proof. Nothing else runs.</td></tr>
+  <tr><td><b>A business model slide with a market size</b></td><td>5% of the rubric, and neither customer pays. One sentence: who signs, what it costs to run.</td></tr>
+</table>
+
+<div class="verdict ok">
+  <p><b>If you read only one thing:</b> pick <b>A1 + A2</b> if you have anyone numerate, or <b>U1 + U7</b> if you ship front-end fast. Both are 86-point ceilings with low build risk, both answer a question the brief actually asks, and both produce a demo that runs. Then spend Saturday afternoon on the one mechanism that makes it yours — the receipt, or the stopwatch — and Sunday morning on the words.</p>
+</div>
+
+<footer>
+  <p><b>Basis.</b> Both challenge briefs, both starter repositories, and the ACAPS Risk Radar export (139 risks × 25 fields) reviewed in full. The trigger analysis is computed here: 108 of 139 risks carry 266 parsed trigger blocks, mean completion rate 52.6%, 76 triggers on live active risks, R1043 carrying T0618/T0619/T0620 at 40%/10%/20%. Projected scores are relative estimates against the published 100-point rubric, not forecasts.</p>
+  <p>Companion document: <code>HFG8-end-to-end-analysis.html</code> — event mechanics, judging, data forensics and the organisers' defect list.</p>
+</footer>
+
+</div>
+</body>
+</html>
