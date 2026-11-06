@@ -31,15 +31,13 @@
  *    any specification tried (see the variant tables in the two scripts).
  *
  * 2. ACAPS publishes a 5×5 in docs/risk-methodology.md where IMPACT drives the
- *    Risk Level. Applied to the export it holds on 97 of 125 rows. On the other
- *    28 the analyst departed from it — 22 of them upwards, and 16 of the 22
- *    with a resolved outcome materialised (73% vs a 59% base rate). Two
- *    consequences: (a) the 28 departures are analyst knowledge that the two
- *    axes do not capture, which is exactly what this product exists to elicit;
- *    (b) for the 97 rows that follow the matrix, Probability already determines
- *    Risk Level, so a model containing both is fitting one field twice — which
- *    the earlier "four-field" model did. The model here uses only the fields
- *    that survive that test.
+ *    Risk Level, and a rule — Risk = Probability × Impact. In this export the
+ *    Risk Level is a function of PROBABILITY ALONE on 128 of 128 rows, and
+ *    departure from the matrix is a function of the (Probability, Impact) cell
+ *    on all 19 occupied cells. There are therefore no analyst overrides in this
+ *    data, and an earlier revision of this file said there were. What remains
+ *    true and useful: Impact is collected and does not change the rating, and
+ *    does not move the realised outcome once probability is known.
  *
  * The in-sample fit scores 0.1965. It must never be quoted: its optimism
  * (0.021) is larger than the entire effect under test. That gap is the whole
@@ -129,11 +127,16 @@ export function bootstrapBrier(pairs, { reps = 10000, seed = 42, alpha = 0.05 } 
  * interval, and whether that interval excludes zero.
  */
 export function paired(aPairs, bPairs, opts = {}) {
-  const keyed = new Map(observed(bPairs).map((d, i) => [d.id ?? i, d]));
+  if (aPairs.length && bPairs.length) {
+    const missing = aPairs.concat(bPairs).filter((d) => d.id === undefined).length;
+    if (missing) throw new Error('paired() requires an id on every item — unlabelled pairing is unsafe');
+  }
+  const keyed = new Map(observed(bPairs).map((d) => [d.id, d]));
   const diffs = [];
   for (const d of observed(aPairs)) {
-    const other = keyed.get(d.id ?? diffs.length);
+    const other = keyed.get(d.id);
     if (!other) continue;
+    if (d.y !== other.y) throw new Error(`paired() matched ${d.id} across different outcomes`);
     diffs.push(brierItem(d) - brierItem(other));
   }
   if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: diffs.length, significant: null };

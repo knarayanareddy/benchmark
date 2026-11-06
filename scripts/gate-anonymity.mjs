@@ -16,11 +16,12 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   LEVELS, LEVEL_COPY, DEFAULT_LEVEL, attribute, publicable, PUBLIC,
 } from '../packages/core/src/anonymity.js';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const problems = [];
 
 // 1 + 2: three levels, each fully explained

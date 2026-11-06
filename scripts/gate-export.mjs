@@ -9,9 +9,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { gate } from '../packages/core/src/gate.js';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');
 if (!fs.existsSync(file)) {
   console.error('data/risk-radar.json missing — run: python3 scripts/ingest.py');

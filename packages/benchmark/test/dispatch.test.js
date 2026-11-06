@@ -12,14 +12,26 @@ test('the declaration gates who is told', () => {
 });
 
 test('the weekly cap is enforced and never exceeded', () => {
-  const cands = Array.from({ length: 8 }, (_, i) => ({ type: TYPES.new_statement, card, expert: `e${i}` }));
+  const cands = Array.from({ length: 8 }, () => ({ type: TYPES.new_statement, card, expert: 'e1' }));
   const out = dispatch(cands, { perWeek: 3, instantOnlyAbove: 3 }, []);
   assert.equal(out.filter((o) => o.decision === 'send').length, 3);
   assert.equal(out.filter((o) => o.decision === 'defer').length, 5);
 });
 
+test('the weekly cap is tracked per expert, not globally across the panel', () => {
+  const eightExperts = Array.from({ length: 8 }, (_, i) => ({ type: TYPES.new_statement, card, expert: `e${i}` }));
+  const allSend = dispatch(eightExperts, { perWeek: 3 }, []);
+  assert.equal(allSend.filter((o) => o.decision === 'send').length, 8);
+  assert.equal(allSend.filter((o) => o.decision === 'defer').length, 0);
+
+  const oneExpertFiveCards = Array.from({ length: 5 }, () => ({ type: TYPES.new_statement, card, expert: 'e0' }));
+  const capped = dispatch(oneExpertFiveCards, { perWeek: 3 }, []);
+  assert.equal(capped.filter((o) => o.decision === 'send').length, 3);
+  assert.equal(capped.filter((o) => o.decision === 'defer').length, 2);
+});
+
 test('dissent feedback is never suppressed by the cap', () => {
-  const history = Array.from({ length: 3 }, () => ({ type: TYPES.new_statement }));
+  const history = Array.from({ length: 3 }, () => ({ type: TYPES.new_statement, expert: 'e1' }));
   const out = dispatch([{ type: TYPES.dissent_actioned, card, expert: 'e1' }], { perWeek: 3 }, history);
   assert.equal(out[0].decision, 'send');
 });

@@ -54,6 +54,8 @@ export function validate(d = {}) {
  * card cannot break the host. Returns { el, close, outcome }.
  */
 export function mount(d, { onOutcome, doc = globalThis.document } = {}) {
+  const v = validate(d);
+  if (!v.ok) throw new Error('invalid card: ' + v.errors.join('; '));
   const host = doc.createElement('div');
   host.setAttribute('data-core-card', d.variant);
   doc.body.appendChild(host);

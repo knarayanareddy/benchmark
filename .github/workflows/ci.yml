@@ -13,7 +13,7 @@ jobs:
       - name: Shared spine integrity
         run: node scripts/check-spine.mjs
       - name: Unit tests
-        run: node --test packages/shared/core.test.js packages/benchmark/test/
+        run: npm run test
       - name: Privacy gate
         run: node scripts/gate-privacy.mjs
       - name: Anonymity Must Have
@@ -26,6 +26,8 @@ jobs:
         run: node scripts/gate-export.mjs
       - name: Measure the baselines (writes data/baseline-fit.json)
         run: npm run ladder
+      - name: the committed data must match a fresh ingest
+        run: git diff --exit-code data/
       - name: Numbers gate — no unreproducible figure survives
         run: node scripts/numbers-gate.mjs
       - name: Dissent loop journey (acceptance test #7)

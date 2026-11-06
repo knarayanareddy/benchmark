@@ -12,11 +12,11 @@ idea  →  concept  →  specification  →  prototype  →  pilot  →  product
                     you are here
 ```
 
-Complete specification, no code, one unclosed empirical question.
+Specification plus runnable core and verification scripts (no UI), one unclosed empirical question.
 
 | Requirement | Status |
 |---|---|
-| Runs, deployed, monitored | Not written. ~4,000 lines specified. |
+| Runs, deployed, monitored | Core logic, shared spine, ingest and CI gates written and tested; UI and deployment not written (~4,000 lines specified). |
 | Adopts without you | Partly — the four documents exist; the auth story does not. |
 | Has a customer | **No. ACAPS has not asked for this.** This is the largest gap. |
 | Sustains itself | No owner, no budget for expert incentives, no home for the output. |

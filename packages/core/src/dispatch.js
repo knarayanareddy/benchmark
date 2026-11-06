@@ -27,7 +27,13 @@ export function matches(card, declaration = {}) {
  * @param {object[]} history  notifications already sent this week
  */
 export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
-  const sentThisWeek = history.filter((h) => h.type !== TYPES.dissent_actioned).length;
+  const perWeek = typeof cap === 'number' ? cap : cap.perWeek;
+  const usedBy = new Map();
+  for (const h of history) {
+    if (h.type === TYPES.dissent_actioned) continue;
+    const k = h.expert ?? h.expertId ?? '__unknown__';
+    usedBy.set(k, (usedBy.get(k) || 0) + 1);
+  }
 
   const ordered = [...candidates].sort((a, b) => {
     const ta = priority(a.type);
@@ -37,18 +43,19 @@ export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
   });
 
   const out = [];
-  let used = sentThisWeek;
 
   for (const c of ordered) {
     // Dissent feedback is never suppressed — it is the retention mechanism.
     if (c.type === TYPES.dissent_actioned) { out.push({ ...c, decision: 'send' }); continue; }
     if (c.suppressed) { out.push({ ...c, decision: 'suppress', why: 'explicitly suppressed' }); continue; }
-    if (used >= cap.perWeek) {
-      out.push({ ...c, decision: 'defer', why: `weekly cap of ${cap.perWeek} reached` });
+    const k = c.expert ?? c.expertId ?? '__unknown__';
+    const used = usedBy.get(k) || 0;
+    if (used >= perWeek) {
+      out.push({ ...c, decision: 'defer', why: `weekly cap of ${perWeek} reached for ${k}` });
       continue;
     }
     out.push({ ...c, decision: 'send' });
-    used++;
+    usedBy.set(k, used + 1);
   }
   return out;
 }

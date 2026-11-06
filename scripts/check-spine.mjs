@@ -18,19 +18,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
-const dir = new URL('../packages/shared/', import.meta.url);
-const manifest = path.join(dir.pathname, '.fingerprint.json');
+const dir = fileURLToPath(new URL('../packages/shared/', import.meta.url));
+const manifest = path.join(dir, '.fingerprint.json');
 const doc = JSON.parse(fs.readFileSync(manifest, 'utf8'));
 const write = process.argv.includes('--write');
 
 const hash = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
-const files = fs.readdirSync(dir.pathname).filter((f) => f.endsWith('.js') || f === 'README.md');
+const files = fs.readdirSync(dir).filter((f) => f.endsWith('.js') || f === 'README.md');
 
 let bad = 0;
 const next = {};
 for (const f of files.sort()) {
-  const h = hash(path.join(dir.pathname, f));
+  const h = hash(path.join(dir, f));
   next[f] = h;
   const want = doc.files[f];
   if (!want) console.log(`  + ${f}  (new, not in fingerprint)`);
