@@ -30,8 +30,8 @@ export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
   const perWeek = typeof cap === 'number' ? cap : cap.perWeek;
   const usedBy = new Map();
   for (const h of history) {
-    if (h.type === TYPES.dissent_actioned) continue;
-    const k = h.expert ?? h.expertId ?? '__unknown__';
+    if (priority(h.type) === TYPES.dissent_actioned) continue;
+    const k = h.expert ?? h.expertId ?? h.to ?? '__unknown__';
     usedBy.set(k, (usedBy.get(k) || 0) + 1);
   }
 
@@ -46,9 +46,11 @@ export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
 
   for (const c of ordered) {
     // Dissent feedback is never suppressed — it is the retention mechanism.
-    if (c.type === TYPES.dissent_actioned) { out.push({ ...c, decision: 'send' }); continue; }
+    // Accept both numeric priority (TYPES.dissent_actioned = 4) and string key
+    // ('dissent_actioned', as emitted by dissent.js notify()).
+    if (priority(c.type) === TYPES.dissent_actioned) { out.push({ ...c, decision: 'send' }); continue; }
     if (c.suppressed) { out.push({ ...c, decision: 'suppress', why: 'explicitly suppressed' }); continue; }
-    const k = c.expert ?? c.expertId ?? '__unknown__';
+    const k = c.expert ?? c.expertId ?? c.to ?? '__unknown__';
     const used = usedBy.get(k) || 0;
     if (used >= perWeek) {
       out.push({ ...c, decision: 'defer', why: `weekly cap of ${perWeek} reached for ${k}` });

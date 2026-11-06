@@ -69,8 +69,6 @@
   .scalehead{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);font-weight:700;letter-spacing:.04em;margin-bottom:7px}
   .track{position:relative;height:40px;background:var(--band);border-radius:9px;overflow:hidden}
   .seg{position:absolute;top:0;bottom:0;border-right:1px solid #d6d1c7}
-  .marker{position:absolute;top:-3px;bottom:-3px;width:2.5px;background:var(--ink);border-radius:2px}
-  .marker::after{content:"ACAPS";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:800;letter-spacing:.06em;color:var(--ink2);white-space:nowrap}
   .thumb{position:absolute;top:-6px;width:20px;height:52px;background:var(--accent);border-radius:6px;box-shadow:0 2px 8px rgba(168,50,28,.35)}
   .thumb::after{content:"you";position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;letter-spacing:.05em;color:var(--accent)}
   .scalelegend{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-top:24px;font-weight:600}
@@ -167,7 +165,7 @@
 
     <!-- E3 QUESTION -->
     <div class="item">
-      <div class="cap"><b>E3</b> · The question, both baselines visible</div>
+      <div class="cap"><b>E3</b> · The question — unanchored round 1</div>
       <div class="phone"><div class="screen">
         <div class="statusbar"><span>09:43</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
         <div class="bar"></div>
@@ -177,9 +175,9 @@
           <p class="provenance">Trigger <b>T0618</b> of risk <b>R1043</b> — escalating cross-border insecurity linked to the Sudan conflict increases protection risks and humanitarian needs in eastern Chad.</p>
 
           <div class="basecard">
-            <div class="baselabel">ACAPS estimate · trigger completion</div>
-            <div class="basenumber">40%</div>
-            <div class="basenote">Risks rated <b>High</b> overall have materialised <b>84%</b> of the time historically — this trigger sits well below its parent risk.</div>
+            <div class="baselabel">Corpus base rate · trigger progress to date</div>
+            <div class="basenumber">59% <span style="font-size:12px;font-weight:600;color:var(--muted)">base rate · 40% progress</span></div>
+            <div class="basenote"><b>61 of 104</b> resolved Risk Radar items materialised overall. Trigger <b>T0618</b> has <b>40% completion</b> recorded as of 08-06-2026 (progress toward threshold, <b>not</b> a probability). ACAPS' own rating stays hidden until you submit.</div>
           </div>
 
           <div class="resolve">
@@ -189,10 +187,9 @@
 
           <div class="scale">
             <p class="ask">What do you think?</p>
-            <p class="hint">Tap once to place it. Adjust only if you want to.</p>
+            <p class="hint">No peer or ACAPS anchor is shown before your round-1 submission.</p>
             <div class="track">
               <div class="seg" style="left:20%"></div><div class="seg" style="left:40%"></div><div class="seg" style="left:60%"></div><div class="seg" style="left:80%"></div>
-              <div class="marker" style="left:40%"></div>
               <div class="thumb" style="left:69%"></div>
             </div>
             <div class="scalelegend"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
@@ -204,18 +201,18 @@
 
     <!-- E4 DIVERGENCE -->
     <div class="item">
-      <div class="cap"><b>E4</b> · The divergence moment</div>
+      <div class="cap"><b>E4</b> · Post-submission context (optional, 20s)</div>
       <div class="phone"><div class="screen">
         <div class="statusbar"><span>09:44</span><div class="sbicons"><svg width="15" height="9" viewBox="0 0 15 9"><rect x="0" y="5" width="2.6" height="4" rx=".5" fill="#79838e"/><rect x="4" y="3.4" width="2.6" height="5.6" rx=".5" fill="#79838e"/><rect x="8" y="1.8" width="2.6" height="7.2" rx=".5" fill="#79838e"/><rect x="12" y="0" width="2.6" height="9" rx=".5" fill="#c3bdb3"/></svg><svg width="20" height="9" viewBox="0 0 20 9"><rect x="0" y="0" width="16" height="9" rx="2.4" fill="none" stroke="#79838e" stroke-width="1"/><rect x="1.6" y="1.6" width="10" height="5.8" rx="1.3" fill="#79838e"/><rect x="17" y="3" width="1.6" height="3" rx=".8" fill="#79838e"/></svg></div></div>
         <div class="bar"></div>
         <div class="body" style="justify-content:center">
-          <div class="eyebrow"><span>One more thing</span></div>
-          <p class="divhead">You said</p>
+          <div class="eyebrow"><span>One more thing · after round 1</span></div>
+          <p class="divhead">You submitted</p>
           <p class="divbig">72%</p>
-          <p class="provenance" style="margin-bottom:20px">ACAPS rates this risk <b>High</b> overall — but this specific trigger sits at <b>40%</b>. That gap is unusual, and worth twenty seconds.</p>
+          <p class="provenance" style="margin-bottom:20px">Now unlocked: ACAPS rates parent risk <b>R1043 High</b> (61–80% band), while trigger <b>T0618</b> sits at <b>40% observed completion</b> (progress toward threshold, not likelihood). Worth twenty seconds?</p>
           <p class="rlabel">Which is closer to what you're seeing?</p>
-          <div class="opt">The risk as a whole is worse than the trigger suggests</div>
-          <div class="opt" style="font-weight:400">The trigger is the real story — the risk rating is stale</div>
+          <div class="opt">The risk as a whole is worse than trigger progress so far suggests</div>
+          <div class="opt" style="font-weight:400">The trigger criterion is lagging — ground conditions moved faster</div>
           <div class="opt" style="font-weight:400">Both, for different reasons</div>
           <div class="skipopt">Skip</div>
         </div>
@@ -231,19 +228,19 @@
         <div class="body">
           <div class="eyebrow"><span>Eastern Chad · round 2</span></div>
           <h2 class="q" style="font-size:19px">Here's where the panel landed.</h2>
-          <p class="distmeta">Six of seven have answered.</p>
+          <p class="distmeta">All seven panellists have answered.</p>
 
-          <div class="dist">
-            <div class="dp" style="left:15%"></div>
-            <div class="dp" style="left:55%"></div>
-            <div class="dp" style="left:60%"></div>
-            <div class="dp" style="left:62%"></div>
-            <div class="dp" style="left:68%"></div>
-            <div class="dp you" style="left:72%"></div>
-            <div class="dp" style="left:80%"></div>
+          <div class="dist" id="panel-dots">
+            <div class="dp" data-p="0.15" style="left:15%"></div>
+            <div class="dp" data-p="0.55" style="left:55%"></div>
+            <div class="dp" data-p="0.60" style="left:60%"></div>
+            <div class="dp" data-p="0.61" style="left:61%"></div>
+            <div class="dp" data-p="0.68" style="left:68%"></div>
+            <div class="dp you" data-p="0.72" style="left:72%"></div>
+            <div class="dp" data-p="0.80" style="left:80%"></div>
           </div>
           <div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>
-          <div class="statline"><span><b>3 of 7</b> above 60%</span><span><b>1</b> well below</span><span>spread <b>65 pts</b></span></div>
+          <div class="statline"><span><b>4 of 7</b> above 60%</span><span><b>1</b> well below</span><span>spread <b>65 pts</b></span></div>
 
           <p class="rlabel">Reasons the panel gave</p>
           <div class="reason">"Road access to the east has been cut twice since June — the infrastructure target is no longer theoretical."</div>
@@ -268,10 +265,10 @@
 
           <div class="scoregrid">
             <div class="scorebox me"><div class="sbl">You</div><div class="sbv">72%</div></div>
-            <div class="scorebox"><div class="sbl">Panel</div><div class="sbv">61%</div></div>
-            <div class="scorebox"><div class="sbl">ACAPS</div><div class="sbv">40%</div></div>
+            <div class="scorebox"><div class="sbl">Panel</div><div class="sbv" id="panel-est">61%</div><div style="font-size:9px;color:var(--muted)" id="panel-ci">[55, 72]</div></div>
+            <div class="scorebox"><div class="sbl">ACAPS (High)</div><div class="sbv">80%</div><div style="font-size:9px;color:var(--muted)">61–80% band</div></div>
           </div>
-          <p class="scorenote">You were 72 points off. The panel was 61. ACAPS was 40.</p>
+          <p class="scorenote">Outcome 0: You were 72 pts off · Panel 61 [55, 72] · ACAPS High (4/5 = 80%).</p>
 
           <div class="changed">
             <div class="cl">What changed because of your dissent</div>
@@ -292,8 +289,8 @@
         <h3>Cannot publish this view.</h3>
         <p class="gp">2 experts in this cell, one of them fully anonymous. A reader who knows which two people work on eastern Chad could work out which position was whose by elimination.</p>
 
-        <div class="route"><span class="rnum">1</span><span><b>Wait —</b> a third contributor makes the cell safe. Currently 2 of 3 needed.</span></div>
-        <div class="route"><span class="rnum">2</span><span><b>Publish the country-level aggregate instead</b> — safe today.</span></div>
+        <div class="route"><span class="rnum">1</span><span><b>Wait —</b> a third contributor makes the analyst/panel cell safe (<code>MIN_PANEL_SIZE = 3</code>). Currently 2 of 3 needed.</span></div>
+        <div class="route"><span class="rnum">2</span><span><b>Roll up to the regional/thematic view</b> — public outputs require <code>n &ge; 10</code> (<code>PUBLIC.minCount = 10</code>).</span></div>
         <div class="route"><span class="rnum">3</span><span><b>Widen the date range</b> so the cell is no longer distinctive.</span></div>
 
         <p class="gatefoot">Why you're seeing this: every publication is checked for small-cell, differencing and attribute-combination risk before it goes out. <span class="link">How the check works</span></p>
@@ -303,7 +300,7 @@
   </div>
 
   <footer>
-    <p><b>Note on the numbers.</b> ACAPS ratings, trigger IDs, completion rates (T0618 at 40%, T0619 at 10%, T0620 at 20%), the 84% historical materialisation rate for High-rated risks, and R1043's title and exposure are real values from <code>risk-radar-export.csv</code>. The panel results (61%, 72%, the distribution, the percentile and its bootstrap interval) are illustrative and would come from a live panel — during the hackathon they would be synthetic, per the brief's rule against using real experts' personal data.</p>
+    <p><b>Note on the numbers.</b> ACAPS ratings (R1043 Probability = High, 61–80% band, scored at 4/5 = 80% on the adopted ladder), trigger IDs, trigger completion progress (T0618 at 40%, T0619 at 10%, T0620 at 20% — progress toward threshold, never probability), the 59% corpus base rate (61/104), and R1043's title are real values from <code>risk-radar-export.csv</code>. The panel distribution and <code>61% [55, 72]</code> median come from running <code>aggregate()</code> on illustrative synthetic inputs, per the brief's rule against using real experts' personal data; the 90-second target applies to a single recurring question card (E3) and has not yet been timed in a user study.</p>
     <p><b>Companion.</b> <code>PRODUCT-blueprint.html</code> — the full screen-by-screen specification with copy rationale and ground-rule mapping.</p>
   </footer>
 
@@ -322,6 +319,17 @@
   // the model that enforces the promise cannot drift apart. If the served path
   // 404s (file opened directly, no server), the static noscript copy stands.
   import { LEVELS, LEVEL_COPY, DEFAULT_LEVEL } from '../packages/core/src/anonymity.js';
+  import { aggregate } from '../packages/core/src/aggregate.js';
+
+  // Keep E6 and E7 mathematically locked to packages/core/src/aggregate.js.
+  const dotEls = [...document.querySelectorAll('#panel-dots .dp[data-p]')];
+  if (dotEls.length) {
+    const agg = aggregate(dotEls.map((el, i) => ({ expertId: `e${i + 1}`, p: Number(el.dataset.p) })));
+    if (!agg.suppressed) {
+      document.getElementById('panel-est').textContent = `${Math.round(agg.estimate * 100)}%`;
+      document.getElementById('panel-ci').textContent = `[${Math.round(agg.lo * 100)}, ${Math.round(agg.hi * 100)}]`;
+    }
+  }
 
   const box = document.getElementById('anon-options');
   const detail = document.getElementById('anon-detail');

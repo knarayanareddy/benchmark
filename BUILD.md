@@ -4,9 +4,9 @@
 
 ```
 $ npm run verify
-✓ 83 unit tests pass
-✓ gate runs on the real export: 139 blocks, 19 rejected (13.7%)
-✓ dissent loop closes in <60s
+✓ 91 unit tests pass
+✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 47/139 pass text checks
+✓ five-state dissent loop, cap-bypass dispatch and anonymous opt-out verified
 ```
 
 ---
@@ -18,10 +18,10 @@ $ npm run verify
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
 | Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 9 tests |
 | Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + intervals, ≥10-seed Brier skill gate, small-panel suppression, ACAPS 5×5 bridge, 25 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 7 tests, **run on the real export** |
-| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, dissent priority, health, 6 tests |
-| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 expert-controlled levels, fail-closed attribution, 18 tests |
-| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | 5-state lifecycle, end-to-end journey script |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 deterministic checks, 10 tests, **run honestly on the raw export** |
+| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 6 tests |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, 20 tests |
+| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | 5-state lifecycle + anonymous opt-out, 3 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |
 
@@ -31,7 +31,7 @@ $ npm run verify
 
 Both came from running the code, not from reading.
 
-**1. The gate had a 43% false-positive rate.** It split on the word "and", which flattened real ACAPS titles like *"worsens drought and leads to agricultural losses."* Rewritten to fire only on strong conjunctions; rejection rate fell to **13.7%**. A gate that rejects half the corpus is a broken gate, not a strict one.
+**1. Raw Risk Radar headlines are not forecast-ready cards until gated.** `risk-radar-export.csv` carries no resolution deadline column on risk rows (`139/139` fail `window` when audited without synthetic inputs), and **91 of 139** headlines describe directional trends (*"increased violence"*, *"escalating insecurity"*) without a measurable threshold or discrete event (`47/139` pass the four text checks once given a date window). That confirms why the gate and the analyst-written resolution `objective` exist.
 
 **2. The harness reproduces the benchmark independently.** On the 104 resolved blocks, a constant base-rate predictor scores **0.2425** — exactly the naive floor from the earlier calibration work. That is an independent confirmation that the ingest, the outcome mapping and the Brier implementation are all correct.
 
@@ -55,18 +55,21 @@ node scripts/backtest.mjs       # the scoring harness
 
 **The panel has never been run — and the baseline it must beat is ACAPS' own 0.2168, not the regression's 0.2177.** The regression loses to the analysts; that is now measured, in this repo, by `scripts/fit-baseline.mjs`.
 
-`scripts/backtest.mjs` runs synthetic predictors to prove the plumbing. When real estimates arrive, replace `intensityP()` with panel medians and the answer falls out of the same function. That is the single most valuable thing this repo can produce, and it is worth more than the interface:
+`scripts/backtest.mjs` runs synthetic predictors on the 104 resolved blocks to prove the scoring plumbing, and `packages/core/src/aggregate.js` turns panel estimates into an interval-bearing probability. Two methodological constraints govern how the real panel test must run:
 
-> Run the panel retrospectively on the 104 already-resolved risks. You get the answer in weeks instead of a year, before anyone commits to a pilot.
+1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2168` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (**28 Active risks** and **266 dated triggers** as rolling windows close).
+2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1505** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0413** Brier at `n = 104` and requiring **n ≈ 445** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements (`266` per export cycle) are where prospective statistical power lives.
 
 ---
 
 ## Hard rules
 
 - **No leaderboard.** Panel scores public, individual scores private.
+- **Two-tier small-cell suppression.** Country panels of 5–10 experts publish internally to analysts and Round-2 panellists at `MIN_PANEL_SIZE = 3` (`aggregate.js`); public outputs enforce `PUBLIC.minCount = 10` (`anonymity.js`), meaning public views show cross-country regional/thematic rollups rather than single-country cells.
 - **Every score renders with its interval.** There is no code path that returns a naked point estimate.
 - **Unobservable ≠ miss.** `scoring.js` excludes `null` outcomes; it never counts them as failures.
 - **The Declaration decides who is told, never how much weight they carry.** Weighting is by seed-variable performance, and only where a domain has ≥10 seed items.
+- **90 seconds is the per-card target budget, not a measured user study.** Onboarding (`E2`) runs once, post-submission context (`E4`) and Round 2 (`E6`) are conditional, and receipts (`E7`) arrive at resolution; timing of the recurring question card (`E3`) requires live usability testing.
 
 ---
 

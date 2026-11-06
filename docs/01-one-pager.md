@@ -52,17 +52,20 @@ The obvious product is "get more experts to fill in more cells." The evidence sa
 
 ## What we built
 
-**Benchmark** turns each risk statement into a ninety-second card, puts it in front of the expert who can judge it, and — the part nobody builds — closes the loop back to them.
+**Benchmark** turns each risk statement into a single-question card (designed for a ninety-second target budget on a phone), puts it in front of the expert who can judge it, and — the part nobody builds — closes the loop back to them.
 
-**The Card.** One statement, its window, the historical base rate, the model baseline, a slider, one optional sentence. No peers' numbers before submission: anchoring and herding are the two best-documented failure modes in expert elicitation and both are caused by the interface.
+**The Card.** One statement, its window, the historical corpus base rate, any observed trigger progress (explicitly separated from probability), a slider, one optional sentence. Neither peers' numbers nor ACAPS' own rating appear before round-one submission: anchoring and herding are the two best-documented failure modes in expert elicitation and both are caused by the interface.
 
 This is the interface ACAPS' own cognitive-bias brief (March 2016) argues for.
 That document is organised as bias → mitigation strategy, and most of its named
 biases are properties of how a question is asked rather than of the person
-answering it. Independent round one addresses anchoring and herding. Suppressing
-counts below ten addresses availability and social proof. "Make sense, not data"
-is the same position: the judgement is the product, and the interface is what
-determines whether the judgement is any good. Ninety seconds, one thumb, phone-first.
+answering it. Independent round one addresses anchoring and herding. Two-tier
+small-cell suppression (`n ≥ 3` inside the analyst/panel surface; `n ≥ 10` for
+public regional/thematic rollups) addresses differencing and social proof. "Make
+sense, not data" is the same position: the judgement is the product, and the
+interface is what determines whether the judgement is any good. Target budget:
+ninety seconds per recurring card, one thumb, phone-first (design target, not yet
+timed in a user study).
 
 **The Dispatch.** Experts declare the regions and themes they actually know. When a statement lands in one of them, they are told — instead of having to remember to go looking. Judgement becomes a **matching problem rather than a supply problem**. Capped at three notifications a week, ever; a bounded promise is what makes a push notification acceptable rather than another app to mute.
 
