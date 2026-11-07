@@ -7,3 +7,5 @@ node_modules/
 coverage/
 dist/*.map
 .wrangler/
+packages/web/dist/
+packages/web/.vitest-count.json

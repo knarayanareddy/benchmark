@@ -36,6 +36,7 @@
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
     "typescript": "^7.0.2"
   },

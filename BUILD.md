@@ -1,10 +1,10 @@
 # BUILD.md — start here
 
-**A verified core, a service with a database, sign-in and pages a person can use, and a card-authoring pipeline. Not deployed, and no panel has been run.** The scoring, aggregation, gate, dispatch and dissent logic is tested against the real export. A service wraps it (Postgres or in-memory), with OpenID Connect staff sign-in and plain HTML pages for experts and staff. What is missing is a human decision, not code: someone with authority has to write the objectives (`npm run worklist`), run the raters (`npm run label`), and sign off the DPIA.
+**A verified core, a service on Postgres with versioned migrations, staff sign-in, a two-moderator safety override, device-held anonymous ballots, an installable offline-capable React app for experts and staff, and a card-authoring pipeline. Not deployed, and no panel has been run.** What is missing is mostly human decisions: someone with authority has to write the objectives (`npm run worklist`), run the raters (`npm run label`), review the blind-signature code, sign off the DPIA, and run the container files, which have never been executed.
 
 ```
 $ npm run verify
-✓ 217 unit tests pass
+✓ 338 unit tests pass
 ✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items, 95% interval 69.4–94.5%)
 ✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
@@ -24,12 +24,19 @@ $ npm run verify
 | Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless day-coarsened `cardLedger()`, versioned transitions, 7 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Keyed primitives | `packages/core/src/hmac.js` | **Complete** | Pure-JS HMAC-SHA-256 so aliases and ballot tokens work in a browser and on a server; checked against `node:crypto` and RFC 4231, 3 tests |
-| Service | `packages/service/src/service.js` | **Built, runs on memory and Postgres** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention. The same flow suite runs on the in-memory store, in-process Postgres and the real `pg` client over the wire, including concurrent writers. 54 tests. See `docs/05-service-and-privacy.md` |
+| Service | `packages/service/src/service.js` | **Built, runs on memory and Postgres** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention. The same flow suite runs on the in-memory store, in-process Postgres and the real `pg` client over the wire, including concurrent writers. 57 tests. See `docs/05-service-and-privacy.md` |
 | Stores | `packages/service/src/store.js`, `pg-store.js` | **Built** | Roster and answers are separate stores. `pg-store.js` is the Postgres adapter (`find` is a jsonb containment query). Exercised by the flow suite above |
 | HTTP transport | `packages/service/src/http.js` | **Built** | Body cap, per-write rate limit, security headers and CSP, https enforcement, no cookies, health and readiness probes, static pages, 8 tests |
 | Staff sign-in | `packages/service/src/oidc.js` | **Built, tested against a fake provider** | OpenID Connect code flow with PKCE, RS256 ID-token verification, allow-list of staff emails to roles, 6 tests. Not yet run against a real identity provider |
-| Pages | `packages/service/public/` | **Built, clicked through in a browser** | Expert onboarding, consent, answer, revise, object, export, erase; staff cards, rounds, objections, invites, audit. Plain HTML and JS, no inline script, no `innerHTML`, 2 tests |
-| Postgres schema | `packages/service/db/schema.sql` | **Built, verified on a real engine** | Constraints for unique ballots, clamped probabilities, the release floor, an append-only audit log; two least-privilege roles in `roles.sql` that cannot read each other's schema, checked with `SET ROLE`, 8 tests |
+| Expert app | `packages/web/src/expert/` | **Built, clicked through in a browser** | React. Onboarding with the device-key choice and recovery code, inbox, answering, revising, objecting, export and erase, an offline queue that sends when the phone reconnects, 21 tests |
+| Staff app | `packages/web/src/staff/` | **Built, clicked through in a browser** | Cards, rounds, outcomes with evidence, objections, the safety override (the UI enforces the two-person rule too), invites and re-invites, audit, 15 tests |
+| App libraries | `packages/web/src/lib/` | **Built** | The API client, the device key and its recovery code (checksummed, unambiguous), blind-ballot issuance, the offline queue, an IndexedDB store; 10 tests |
+| Built apps | `packages/service/test/ui.test.js` | **Built** | The shipped build is served with a strict CSP, no inline code, correct caching, an installable manifest and a worker that never touches the API, 4 tests. Installable on a phone; not yet tried on one |
+| Migrations | `packages/service/src/migrate.js` | **Built** | Forward-only, checksummed, one transaction each, advisory lock, adopts a pre-migration database; works over the real `pg` client. 9 tests |
+| Safety override | `packages/service/test/breakglass.test.js` | **Built** | A sealed note on each anonymous objection, opened only by two moderators with a written reason inside 24 hours; the sender is told afterwards; the database refuses a self-approved request. Anonymous estimates and device-held keys cannot be opened. 21 tests across three backends |
+| Device-held ballots | `packages/service/test/device.test.js` | **Built, needs cryptographic review** | Blind RSA signatures: an expert's answers cannot be linked to them by the operator, and one token per card is still enforced. 33 tests across three backends |
+| Blind signatures | `packages/core/src/blind.js` | **Built, unaudited** | RSA full-domain-hash blinding in BigInt for browser and server, checked against Node's native RSA, 6 tests. Read the warning at the top of the file before relying on it |
+| Postgres schema | `packages/service/db/migrations/` | **Built, verified on a real engine** | Constraints for unique ballots, clamped probabilities, the release floor, an append-only audit log; two least-privilege roles in `roles.sql` that cannot read each other's schema, checked with `SET ROLE`, 9 tests |
 | Statistics | `packages/core/src/stats.js` | **Complete** | Wilson intervals and Cohen's kappa against published values, 4 tests |
 | CSV | `packages/core/src/csv.js` | **Complete** | RFC 4180 parser and writer; round-trips the real worklist, 6 tests |
 | Authoring | `packages/core/src/authoring.js` | **Complete** | Triage of every headline and trigger, one card-validation rule shared with the service, a filled-worklist importer, and a two-rater scorer that refuses disagreeing raters, 9 tests |
@@ -56,7 +63,7 @@ node scripts/gate-export.mjs    # acceptance test #9
 node scripts/journey.mjs        # acceptance test #7
 node scripts/backtest.mjs       # the scoring harness
 npm run serve                   # the HTTP service; needs BENCHMARK_BALLOT_SECRET and BENCHMARK_ALIAS_SECRET
-npm run check:schema            # optional: runs db/schema.sql on an in-process Postgres
+node packages/service/bin/migrate.mjs --status   # which database migrations are applied
 ```
 
 **Do not hand-roll a CSV parser.** The export has quoted fields with embedded newlines; a naive line-splitter turned 139 rows into 5,970 and silently misaligned every column. Python's `csv` module is correct and free — use it.

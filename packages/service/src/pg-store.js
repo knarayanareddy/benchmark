@@ -4,13 +4,12 @@
  *
  * Each table keeps the full document in `doc` (what the service reads back) and
  * mirrors the rule-bearing fields into typed columns so Postgres enforces them
- * too (see db/schema.sql). `find(where)` is a jsonb containment query, so it
+ * too (see db/migrations). `find(where)` is a jsonb containment query, so it
  * can be served by a GIN index on `doc`.
  *
  * Statements are individually atomic. Multi-row operations (erase, retention)
  * are idempotent and ordered so a retry after a failure finishes the job.
  */
-import fs from 'node:fs';
 import { ConflictError } from './errors.js';
 
 const ts = (ms) => (ms == null ? null : new Date(ms).toISOString());
@@ -45,17 +44,19 @@ const TABLES = {
     columns: (d) => ({ card_id: d.cardId, expert_id: d.expert ?? null, level: d.level, status: d.status }),
   },
   notifications: { schema: 'answers', columns: (d) => ({ expert_id: d.to }) },
+  issuances: { schema: 'roster', columns: (d) => ({ expert_id: d.expertId, card_id: d.cardId }) },
+  notices: { schema: 'roster', columns: (d) => ({ expert_id: d.expertId }) },
+  break_glass: {
+    schema: 'answers',
+    columns: (d) => ({ dissent_id: d.dissentId, status: d.status, category: d.category, requester: d.requester, approver: d.approver ?? null }),
+  },
   audit: { schema: 'answers', columns: (d) => ({ actor_id: d.actorId, action: d.action }) },
 };
 
 const JSONB_COLUMNS = new Set(['declaration']);
 const UNIQUE_VIOLATION = '23505';
 
-export async function migrate(db) {
-  const sql = fs.readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
-  if (typeof db.exec === 'function') await db.exec(sql); // PGlite
-  else await db.query(sql); // pg runs a multi-statement string on the simple protocol
-}
+export { migrate } from './migrate.js';
 
 function pgTable(db, name, spec) {
   const fq = `${spec.schema}.${name}`;

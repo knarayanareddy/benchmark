@@ -23,6 +23,7 @@ import {
 import { validateCardInput, RESOLUTION_SOURCES as SOURCES } from '@benchmark/core/authoring';
 import { matches } from '@benchmark/core/dispatch';
 import { hmacSha256Hex } from '@benchmark/core/hmac';
+import * as blindrsa from '@benchmark/core/blind';
 import {
   newDissent, route, act, notify, close, cardLedger, ACTION, KIND,
 } from '@benchmark/domain/dissent';
@@ -32,8 +33,14 @@ import {
 import { can, ROLES, newToken, hashToken } from './auth.js';
 import { CONSENT_VERSION, consentText, consentHash, RETENTION_MONTHS } from './consent.js';
 
+export const BREAK_GLASS_CATEGORIES = Object.freeze(['safety_threat', 'safety_welfare', 'legal_obligation']);
+const BREAK_GLASS_TTL_MS = 24 * 3600 * 1000;
+const CATEGORY_LABEL = { safety_threat: 'threat to someone\'s safety', safety_welfare: 'welfare', legal_obligation: 'legal' };
+
 export const RESOLUTION_SOURCES = SOURCES;
-const SESSION_TTL_MS = 12 * 3600 * 1000;
+const STAFF_SESSION_TTL_MS = 12 * 3600 * 1000;
+// Experts open the app now and then from a phone; a day-long session would make every visit a new invite.
+const EXPERT_SESSION_TTL_MS = 30 * 24 * 3600 * 1000;
 const INVITE_TTL_MS = 7 * 24 * 3600 * 1000;
 const MIN_SECRET = 16;
 
@@ -55,9 +62,15 @@ const isoList = (v) => {
  */
 
 /**
- * @param {{ roster: any, answers: any, secrets: { ballot: string, alias: string }, now?: () => number, releasePolicy?: string }} deps
+ * @param {{
+ *   roster: any, answers: any, secrets: { ballot: string, alias: string }, now?: () => number, releasePolicy?: string,
+ *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string
+ * }} deps
+ * `breakGlassPublicKey` (RSA, PEM) turns the safety override on: an anonymous objection then carries its
+ * sender's id sealed to that key. The private key is NOT needed to run the service; it is supplied at collection.
+ * `blindKey` (RSA private key, PEM) turns on device-held ballots: blind-signed tokens an expert's device keeps.
  */
-export function createService({ roster, answers, secrets, now = Date.now, releasePolicy } = /** @type {any} */ ({})) {
+export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey } = /** @type {any} */ ({})) {
   if (!roster || !answers) throw new TypeError('createService needs { roster, answers }');
   for (const k of ['ballot', 'alias']) {
     if (typeof secrets?.[k] !== 'string' || secrets[k].length < MIN_SECRET) {
@@ -67,6 +80,36 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   if (secrets.ballot === secrets.alias) throw new Error('secrets.ballot and secrets.alias must differ');
   // Fail at start-up, not on the first anonymous answer.
   ballotToken(secrets.ballot, 'startup', 'check');
+  if (breakGlassPublicKey) {
+    const k = crypto.createPublicKey(breakGlassPublicKey);
+    if (k.asymmetricKeyType !== 'rsa' || (k.asymmetricKeyDetails?.modulusLength ?? 0) < 2048) {
+      throw new Error('breakGlassPublicKey must be an RSA key of at least 2048 bits');
+    }
+  }
+  const sealIdentity = (/** @type {string} */ expertId) => crypto.publicEncrypt(
+    { key: /** @type {string} */ (breakGlassPublicKey), padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
+    Buffer.from(expertId)
+  ).toString('base64');
+  // Device-held ballots: blind RSA signatures (see @benchmark/core/blind and its warning).
+  const blindPrivate = blindKey ? crypto.createPrivateKey(blindKey) : null;
+  const blindJwk = blindPrivate ? crypto.createPublicKey(blindPrivate).export({ format: 'jwk' }) : null;
+  if (blindPrivate && (blindPrivate.asymmetricKeyType !== 'rsa' || (blindPrivate.asymmetricKeyDetails?.modulusLength ?? 0) < 2048)) {
+    throw new Error('blindKey must be an RSA key of at least 2048 bits');
+  }
+  const BN = blindJwk ? blindrsa.bytesToBig(Buffer.from(String(blindJwk.n), 'base64url')) : 0n;
+  const BE = blindJwk ? blindrsa.bytesToBig(Buffer.from(String(blindJwk.e), 'base64url')) : 0n;
+  const requireBlind = () => { if (!blindPrivate) throw new ConflictError('device-held ballots are not configured on this deployment'); };
+  const HEX64 = /^[0-9a-f]{64}$/;
+  /** @param {string} cardId @param {unknown} token @param {unknown} signature */
+  const checkBallot = (cardId, token, signature) => {
+    requireBlind();
+    if (typeof token !== 'string' || !HEX64.test(token)) throw new ValidationError('token must be 64 hex characters');
+    if (typeof signature !== 'string' || signature.length > blindrsa.modulusBytes(BN) * 2 || !/^[0-9a-f]+$/i.test(signature)) throw new ValidationError('signature must be hex');
+    if (!blindrsa.verify(BN, BE, blindrsa.ballotMessage(cardId, token), blindrsa.bytesToBig(blindrsa.hexToBytes(signature.length % 2 ? `0${signature}` : signature)))) {
+      throw new AuthError('ballot signature invalid');
+    }
+  };
+  const consentOpts = (device = false) => ({ breakGlass: Boolean(breakGlassPublicKey), device });
 
   const t = () => now();
   const audit = (actor, action, target, reason = '') =>
@@ -104,8 +147,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   };
   const sessionFor = async (subject) => {
     const token = newToken();
+    const ttl = subject.kind === 'expert' ? EXPERT_SESSION_TTL_MS : STAFF_SESSION_TTL_MS;
     // Sessions live in the roster store, never next to the answers.
-    await roster.sessions.insert(hashToken(token), { subject, expiresAt: t() + SESSION_TTL_MS });
+    await roster.sessions.insert(hashToken(token), { subject, expiresAt: t() + ttl });
     return token;
   };
   /** A stable, non-reversible handle for logging an expert without naming them. */
@@ -156,22 +200,58 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     return { token, expertId, expiresAt: t() + ttlMs };
   }
 
+  /**
+   * A fresh single-use link for an expert who already joined (new phone, expired session).
+   * It changes nothing about their level or consent.
+   * @param {Actor} actor @param {string} expertId
+   */
+  async function createReinvite(actor, expertId) {
+    need(actor, 'invite.create');
+    const e = await roster.experts.get(String(expertId));
+    if (!e || !e.consent) throw new NotFoundError('no such expert, or they have not completed onboarding');
+    const token = newToken();
+    await roster.invites.insert(hashToken(token), { expertId: e.id, existing: true, expiresAt: t() + INVITE_TTL_MS, usedAt: null, version: 0 });
+    await audit(actor, 'invite.reinvite', hashTarget(e.id));
+    return { token, expertId: e.id, expiresAt: t() + INVITE_TTL_MS };
+  }
+
+  /** The roster as moderators need it to invite and re-invite. Level and key mode are deliberately not shown. @param {Actor} actor */
+  async function listExperts(actor) {
+    need(actor, 'invite.create');
+    return (await roster.experts.all()).map((e) => ({
+      id: e.id, name: e.name, countries: e.declaration?.countries ?? [], joined: Boolean(e.consent),
+    }));
+  }
+
   /** Single-use. The expert must pick a level and accept the exact text shown. */
   /**
    * @param {string} token
-   * @param {{ level?: string, consentVersion?: string }} [input]
+   * @param {{ level?: string, consentVersion?: string, mode?: string }} [input]
    */
-  async function redeemInvite(token, { level, consentVersion } = {}) {
+  async function redeemInvite(token, { level, consentVersion, mode } = {}) {
     if (!isStr(token)) throw new AuthError('invite required');
     const key = hashToken(token);
     const inv = await roster.invites.get(key);
     if (!inv) throw new AuthError('invite not recognised');
     if (inv.usedAt !== null) throw new AuthError('invite already used');
     if (inv.expiresAt <= t()) throw new AuthError('invite expired');
+    if (inv.existing) {
+      // A returning expert: a fresh session for the same account. Level, consent and key mode do not change.
+      try { await roster.invites.update(key, inv.version, { ...inv, usedAt: t(), version: inv.version + 1 }); } catch (e) {
+        if (e instanceof ConflictError) throw new AuthError('invite already used');
+        throw e;
+      }
+      const back = await roster.experts.get(inv.expertId);
+      if (!back || !back.consent) throw new AuthError('this account no longer exists');
+      return { sessionToken: await sessionFor({ kind: 'expert', expertId: back.id }), expertId: back.id, level: back.level, mode: back.tokenMode ?? 'server', returning: true };
+    }
     const r = resolveLevel(level);
     if (!r.honoured) throw new ValidationError('choose an anonymity level: identified, pseudonymous or anonymous');
+    const device = mode === 'device';
+    if (device && r.level !== LEVELS.ANONYMOUS) throw new ValidationError('a device-held key applies to the anonymous level only');
+    if (device) requireBlind();
     if (consentVersion !== CONSENT_VERSION) {
-      throw new ValidationError(`consent must be given to version ${CONSENT_VERSION}`, { consentText: consentText(r.level) });
+      throw new ValidationError(`consent must be given to version ${CONSENT_VERSION}`, { consentText: consentText(r.level, consentOpts(device)) });
     }
     // Compare-and-set makes redemption atomic: a second concurrent redeem loses.
     try {
@@ -184,9 +264,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     await roster.experts.put(e.id, {
       ...e,
       level: r.level,
-      consent: { version: CONSENT_VERSION, textHash: consentHash(r.level), at: coarsenToDay(t()).ms },
+      tokenMode: device ? 'device' : 'server',
+      consent: { version: CONSENT_VERSION, textHash: consentHash(r.level, consentOpts(device)), at: coarsenToDay(t()).ms },
     });
-    return { sessionToken: await sessionFor({ kind: 'expert', expertId: e.id }), expertId: e.id, level: r.level };
+    return { sessionToken: await sessionFor({ kind: 'expert', expertId: e.id }), expertId: e.id, level: r.level, mode: device ? 'device' : 'server' };
   }
 
   // ── cards ───────────────────────────────────────────────────────────────
@@ -271,6 +352,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     need(actor, 'estimate.submit');
     const expert = await expertOf(actor);
     if (!expert.level || !expert.consent) throw new ForbiddenError('choose an anonymity level and consent first');
+    if (expert.tokenMode === 'device') throw new ConflictError('your key is held on your device: submit through the anonymous endpoint with your blind-signed token');
     const card = await getCard(cardId);
     if (card.status !== 'open') throw new ConflictError(`card ${cardId} is not open for answers`);
     let clamped;
@@ -354,6 +436,12 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     const toAnswer = [];
     const openForRevision = [];
     for (const card of await answers.cards.find({ status: 'open' })) {
+      if (expert.tokenMode === 'device') {
+        // The server cannot know which cards this device has answered; the device checks that itself.
+        if (card.round === 1 && matches(card, expert.declaration)) toAnswer.push(cardView(card, { seedP: card.seedP, deviceHeld: true }));
+        else if (card.round === 2) openForRevision.push(cardView(card, { release: await cardRelease(card.id, { round: 1 }), deviceHeld: true }));
+        continue;
+      }
       const key = respondentKey(card, expert);
       const mine = (round) => answers.estimates.get(estimateKey(card.id, key, round));
       if (card.round === 1 && matches(card, expert.declaration) && !(await mine(1))) {
@@ -366,7 +454,11 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       }
     }
     const notifications = await answers.notifications.find({ to: expert.id });
-    return { toAnswer, openForRevision, notifications };
+    const notices = (await roster.notices.find({ expertId: expert.id })).map((n) => ({
+      id: n.id, kind: n.kind, day: n.day,
+      text: `On ${n.day}, two ACAPS moderators opened the sealed note on an anonymous objection you sent, because of a ${CATEGORY_LABEL[n.category] ?? 'serious'} concern.`,
+    }));
+    return { toAnswer, openForRevision, notifications, notices, deviceMode: expert.tokenMode === 'device' };
   }
 
   // ── dissent ─────────────────────────────────────────────────────────────
@@ -397,13 +489,19 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       cardId: card.id, expert: expert.id, name: expert.name ?? undefined, country: card.country,
       kind: dissentKind, text: String(text).slice(0, 2000), level: expert.level, panelAliases, now: t(),
     });
+    // The sealed note: who sent this, readable only with the break-glass private key and two moderators.
+    if (d.level === LEVELS.ANONYMOUS && breakGlassPublicKey && expert.tokenMode !== 'device') d.sealedIdentity = sealIdentity(expert.id);
     await answers.dissents.insert(d.id, d);
     // Advice for the author, never a block: see leaksBy().
     const warnings = leaksBy({ text: d.text, name: expert.name, expertId: expert.id }, []);
     return { id: d.id, version: d.version, warnings };
   }
 
-  const staffView = (actor, d) => (actor.role === ROLES.MODERATOR ? d : { ...d, expert: undefined });
+  const staffView = (actor, d) => {
+    const out = actor.role === ROLES.MODERATOR ? { ...d, canBreakGlass: Boolean(d.sealedIdentity) } : { ...d, expert: undefined };
+    delete out.sealedIdentity; // never leaves the service through a view
+    return out;
+  };
 
   /**
    * @param {Actor} actor
@@ -540,7 +638,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       estimates: (await ownedEstimates(e)).map((x) => x.row),
       dissents: await answers.dissents.find({ expert: e.id }),
       notifications: await answers.notifications.find({ to: e.id }),
-      note: e.level === LEVELS.ANONYMOUS ? 'Anonymous comments are unlinkable by design and are not included.' : undefined,
+      note: e.tokenMode === 'device'
+        ? 'Your answers are held under a key only your device has. They cannot be listed or erased from here: use your device, which still holds the key. Anonymous comments are unlinkable and not included.'
+        : e.level === LEVELS.ANONYMOUS ? 'Anonymous comments are unlinkable by design and are not included.' : undefined,
     };
   }
 
@@ -555,6 +655,8 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     await answers.dissents.removeWhere({ expert: e.id });
     await answers.notifications.removeWhere({ to: e.id });
     await roster.aliases.removeWhere({ expertId: e.id });
+    await roster.notices.removeWhere({ expertId: e.id });
+    await roster.issuances.removeWhere({ expertId: e.id });
     await roster.invites.removeWhere({ expertId: e.id });
     await roster.experts.remove(e.id);
     await roster.sessions.removeWhere({ subject: { kind: 'expert', expertId: e.id } });
@@ -574,16 +676,216 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     return { removed, cards: stale.map((c) => c.id) };
   }
 
+  // ── device-held ballots ─────────────────────────────────────────────────
+  const blindPublicKey = () => { requireBlind(); return { scheme: blindrsa.BLIND_SCHEME, n: String(blindJwk?.n), e: String(blindJwk?.e) }; };
+
+  /**
+   * An authenticated expert gets ONE blind signature per card. The same blinded value asked
+   * again returns the same signature (a lost response is recoverable); a different one is refused.
+   * @param {Actor} actor @param {{ cardId?: string, blinded?: string }} [input]
+   */
+  async function issueBlindToken(actor, { cardId, blinded } = {}) {
+    need(actor, 'estimate.submit');
+    requireBlind();
+    const expert = await expertOf(actor);
+    if (expert.tokenMode !== 'device') throw new ForbiddenError('this account did not choose a device-held key');
+    const card = await getCard(String(cardId));
+    if (typeof blinded !== 'string' || !/^[0-9a-f]+$/i.test(blinded) || blinded.length > blindrsa.modulusBytes(BN) * 2) throw new ValidationError('blinded must be hex');
+    const b = blindrsa.bytesToBig(blindrsa.hexToBytes(blinded.length % 2 ? `0${blinded}` : blinded));
+    if (b <= 0n || b >= BN) throw new ValidationError('blinded value out of range');
+    const key = `${expert.id}|${card.id}`;
+    const have = await roster.issuances.get(key);
+    if (have) {
+      if (have.blinded !== b.toString(16)) throw new ConflictError('a token was already issued to you for this card');
+    } else {
+      if (card.status !== 'open' || card.round !== 1) throw new ConflictError('tokens are issued while a card is open in round 1');
+      try { await roster.issuances.insert(key, { expertId: expert.id, cardId: card.id, blinded: b.toString(16), at: coarsenToDay(t()).ms }); } catch (e) {
+        if (e instanceof ConflictError) throw new ConflictError('a token was already issued to you for this card');
+        throw e;
+      }
+    }
+    const raw = crypto.privateEncrypt(
+      { key: /** @type {crypto.KeyObject} */ (blindPrivate), padding: crypto.constants.RSA_NO_PADDING },
+      Buffer.from(blindrsa.bigToBytes(b, blindrsa.modulusBytes(BN)))
+    );
+    return { signature: raw.toString('hex') };
+  }
+
+  /**
+   * No login. The ballot is its own credential: a token the server signed blind. Nothing here
+   * can tell which expert it belongs to.
+   * @param {{ cardId?: string, token?: string, signature?: string, p?: number }} [input]
+   */
+  async function submitAnonymousEstimate({ cardId, token, signature, p } = {}) {
+    const card = await getCard(String(cardId));
+    checkBallot(card.id, token, signature);
+    if (card.status !== 'open') throw new ConflictError(`card ${card.id} is not open for answers`);
+    let clamped;
+    try { clamped = clampForecast(/** @type {number} */ (p)); } catch (e) { throw new ValidationError(e instanceof Error ? e.message : String(e)); }
+    const key = `bt:${token}`;
+    if (card.round === 2 && !(await answers.estimates.get(estimateKey(card.id, key, 1)))) {
+      throw new ConflictError('round 2 is a revision: this ballot did not answer round 1');
+    }
+    try {
+      await answers.estimates.insert(estimateKey(card.id, key, card.round), {
+        cardId: card.id, respondentKey: key, round: card.round, level: LEVELS.ANONYMOUS, p: clamped, expertId: null,
+        at: coarsenToDay(t()).ms,
+      });
+    } catch (e) {
+      if (e instanceof ConflictError) throw new ConflictError('this ballot has already answered this round');
+      throw e;
+    }
+    return { cardId: card.id, round: card.round, p: clamped, clamped: clamped !== p };
+  }
+
+  /** What this ballot has answered, for the device that holds it. @param {{ cardId?: string, token?: string, signature?: string }} [input] */
+  async function anonymousStatus({ cardId, token, signature } = {}) {
+    const card = await getCard(String(cardId));
+    checkBallot(card.id, token, signature);
+    const get = async (/** @type {number} */ round) => (await answers.estimates.get(estimateKey(card.id, `bt:${token}`, round)))?.p ?? null;
+    return { cardId: card.id, round: card.round, status: card.status, round1: await get(1), round2: await get(2) };
+  }
+
+  /** The device erases its own answers to a card. Nothing else can find them. @param {{ cardId?: string, token?: string, signature?: string }} [input] */
+  async function eraseAnonymousEstimate({ cardId, token, signature } = {}) {
+    const card = await getCard(String(cardId));
+    checkBallot(card.id, token, signature);
+    let removed = 0;
+    for (const round of [1, 2]) if (await answers.estimates.remove(estimateKey(card.id, `bt:${token}`, round))) removed++;
+    return { removed };
+  }
+
+  // ── break-glass: two moderators, a written reason, 24 hours, told afterwards ──
+  /** @param {Record<string, any>} r */
+  async function liveRequest(r) {
+    if ((r.status === 'requested' || r.status === 'approved') && r.expiresAt <= t()) {
+      await answers.break_glass.update(r.id, r.version, { ...r, status: 'expired', version: r.version + 1 });
+      throw new ConflictError('this break-glass request has expired');
+    }
+    return r;
+  }
+  const getRequest = async (/** @type {string} */ id) => {
+    const r = await answers.break_glass.get(id);
+    if (!r) throw new NotFoundError(`break-glass request ${id} not found`);
+    return r;
+  };
+
+  /**
+   * @param {Actor} actor
+   * @param {{ dissentId?: string, category?: string, reason?: string }} [input]
+   */
+  async function requestBreakGlass(actor, { dissentId, category, reason } = {}) {
+    need(actor, 'breakglass.request');
+    if (!breakGlassPublicKey) throw new ConflictError('break-glass is not configured on this deployment');
+    if (!BREAK_GLASS_CATEGORIES.includes(String(category))) throw new ValidationError(`category must be one of ${BREAK_GLASS_CATEGORIES.join(', ')}`);
+    if (!isStr(reason) || reason.trim().length < 20) throw new ValidationError('a written reason of at least 20 characters is required');
+    const d = await answers.dissents.get(String(dissentId));
+    if (!d) throw new NotFoundError('objection not found');
+    if (d.level !== LEVELS.ANONYMOUS || !d.sealedIdentity) {
+      throw new ConflictError('this objection has no sealed identity: it is not anonymous, or its sender chose a device-held key, which cannot be opened by design');
+    }
+    const live = await answers.break_glass.find({ dissentId: d.id }, (r) => r.status === 'requested' || r.status === 'approved');
+    if (live.length) throw new ConflictError('a request for this objection is already open');
+    const id = `bg_${crypto.randomUUID()}`;
+    const r = { id, version: 0, dissentId: d.id, cardId: d.cardId, status: 'requested', category, reason: reason.trim(), requester: actor.id, approver: null, requestedAt: t(), expiresAt: t() + BREAK_GLASS_TTL_MS };
+    try { await answers.break_glass.insert(id, r); } catch (e) {
+      if (e instanceof ConflictError) throw new ConflictError('a request for this objection is already open');
+      throw e;
+    }
+    await audit(actor, 'breakglass.request', id, `${category}: ${r.reason}`);
+    return r;
+  }
+
+  /**
+   * A DIFFERENT moderator approves or denies. The database also refuses approver = requester.
+   * @param {Actor} actor @param {string} id @param {{ approve?: boolean, note?: string }} [opts]
+   */
+  async function decideBreakGlass(actor, id, { approve, note = '' } = {}) {
+    need(actor, 'breakglass.decide');
+    const r = await liveRequest(await getRequest(id));
+    if (r.requester === actor.id) throw new ForbiddenError('a different moderator must decide: the requester cannot approve their own request');
+    if (r.status !== 'requested') throw new ConflictError(`request is ${r.status}`);
+    const next = await answers.break_glass.update(r.id, r.version, {
+      ...r, version: r.version + 1, approver: actor.id, decidedAt: t(), decisionNote: String(note).slice(0, 500),
+      status: approve === true ? 'approved' : 'denied', expiresAt: t() + BREAK_GLASS_TTL_MS,
+    });
+    await audit(actor, approve === true ? 'breakglass.approve' : 'breakglass.deny', r.id, String(note).slice(0, 500));
+    return next;
+  }
+
+  /**
+   * The requester opens ONE record, once. The identity is returned to them and stored nowhere;
+   * the expert gets a notice in their inbox; the audit log records that it happened, not whom.
+   * @param {Actor} actor @param {string} id @param {{ key?: string }} [opts]
+   */
+  async function collectBreakGlass(actor, id, { key } = {}) {
+    need(actor, 'breakglass.collect');
+    const r = await liveRequest(await getRequest(id));
+    if (r.requester !== actor.id) throw new ForbiddenError('only the moderator who asked can collect');
+    if (r.status !== 'approved') throw new ConflictError(`request is ${r.status}, not approved`);
+    const d = await answers.dissents.get(r.dissentId);
+    const pem = key || breakGlassPrivateKey;
+    if (!pem) throw new ValidationError('the break-glass private key is required (it is not held by the running service)');
+    let expertId;
+    try {
+      expertId = crypto.privateDecrypt(
+        { key: pem, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
+        Buffer.from(d.sealedIdentity, 'base64')
+      ).toString();
+    } catch { throw new ValidationError('could not open the sealed note: wrong key'); }
+    // Mark collected BEFORE returning, so a replay or a second collector loses.
+    try {
+      await answers.break_glass.update(r.id, r.version, { ...r, version: r.version + 1, status: 'collected', collectedAt: t() });
+    } catch (e) {
+      if (e instanceof ConflictError) throw new ConflictError('this request was already collected');
+      throw e;
+    }
+    const expert = await roster.experts.get(expertId);
+    if (expert) {
+      await roster.notices.append({ id: `n_${crypto.randomUUID()}`, expertId, kind: 'break_glass', day: coarsenToDay(t()).day, category: r.category, at: t() });
+    }
+    await audit(actor, 'breakglass.collect', r.id, 'opened once');
+    return expert
+      ? { expertId, name: expert.name ?? null, countries: expert.declaration?.countries ?? [], notified: true }
+      : { erased: true };
+  }
+
+  /** @param {Actor} actor */
+  async function listBreakGlass(actor) {
+    need(actor, 'breakglass.read');
+    return answers.break_glass.all();
+  }
+
+  /** The expert dismisses a notice once read. */
+  async function ackNotice(/** @type {Actor} */ actor, /** @type {string} */ noticeId) {
+    need(actor, 'me.manage');
+    const e = await expertOf(actor);
+    const mine = (await roster.notices.find({ expertId: e.id })).find((n) => n.id === noticeId);
+    if (!mine) throw new NotFoundError('notice not found');
+    await roster.notices.removeWhere({ expertId: e.id, id: noticeId });
+    return { ok: true };
+  }
+
+  /** The exact consent text this deployment will record, so pages never carry their own copy. */
+  function consentFor(/** @type {string} */ level, { device = false } = {}) {
+    const r = resolveLevel(level);
+    if (!r.honoured) throw new NotFoundError('unknown anonymity level');
+    if (device && r.level !== LEVELS.ANONYMOUS) throw new ValidationError('a device-held key applies to the anonymous level only');
+    return { version: CONSENT_VERSION, level: r.level, device, text: consentText(r.level, consentOpts(device)) };
+  }
+
   async function readAudit(actor) {
     need(actor, 'audit.read');
     return answers.audit.all();
   }
 
   return Object.freeze({
-    authenticate, createStaffSession, createInvite, redeemInvite,
+    authenticate, createStaffSession, createInvite, createReinvite, listExperts, redeemInvite,
     createCard, listCards, closeRound, openRound2, resolveCard,
     submitEstimate, cardRelease, inbox,
     submitDissent, listDissents, routeDissent, actDissent, notifyDissent, closeDissent, publicLedger,
     setDeclaration, exportMe, eraseMe, applyRetention, readAudit,
+    requestBreakGlass, decideBreakGlass, collectBreakGlass, listBreakGlass, ackNotice, consentFor,
+    blindPublicKey, issueBlindToken, submitAnonymousEstimate, anonymousStatus, eraseAnonymousEstimate,
   });
 }

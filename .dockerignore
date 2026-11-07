@@ -9,3 +9,5 @@ scripts
 **/test
 .env
 .env.*
+packages/web/dist
+packages/web/node_modules

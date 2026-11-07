@@ -16,6 +16,7 @@ export const PERMISSIONS = Object.freeze({
   // resolve outcomes, read the audit log or run retention.
   [ROLES.MODERATOR]: Object.freeze([
     ...ANALYST, 'invite.create', 'round.manage', 'card.resolve', 'audit.read', 'retention.run',
+    'breakglass.request', 'breakglass.decide', 'breakglass.collect', 'breakglass.read',
   ]),
 });
 
