@@ -14,9 +14,9 @@ import {
   cardLedger,
   loopLatencyMs,
 } from '../src/dissent.js';
-import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
-import { LEVELS } from '../../core/src/anonymity.js';
-import { compose, LOOP_KIND } from '../../shared/loop.js';
+import { dispatch, DEFAULT_CAP, TYPES } from '@benchmark/core/dispatch';
+import { LEVELS } from '@benchmark/core/anonymity';
+import { compose, LOOP_KIND } from '@benchmark/shared/loop';
 
 const TEST_SALT = 'test-deployment-salt-not-for-prod';
 

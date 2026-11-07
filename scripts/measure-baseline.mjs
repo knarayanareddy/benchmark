@@ -24,8 +24,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { brier, bootstrapBrier, paired, calibration } from '../packages/core/src/scoring.js';
-import { BAND_MIDPOINT, BAND_PERCENT } from '../packages/core/src/aggregate.js';
+import { brier, bootstrapBrier, paired, calibration } from '@benchmark/core/scoring';
+import { BAND_MIDPOINT, BAND_PERCENT } from '@benchmark/core/aggregate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');

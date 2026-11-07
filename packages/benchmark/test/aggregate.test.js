@@ -20,10 +20,10 @@ import {
   probabilityBand,
   acapsRiskLevel,
   dispatchSignals,
-} from '../../core/src/aggregate.js';
-import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
-import { LEVELS, PUBLIC } from '../../core/src/anonymity.js';
-import { mulberry32, bootstrapBrier, paired } from '../../core/src/scoring.js';
+} from '@benchmark/core/aggregate';
+import { dispatch, DEFAULT_CAP, TYPES } from '@benchmark/core/dispatch';
+import { LEVELS, PUBLIC } from '@benchmark/core/anonymity';
+import { mulberry32, bootstrapBrier, paired } from '@benchmark/core/scoring';
 
 const mkPanel = (ps, prefix = 'e') =>
   ps.map((p, i) => ({ expertId: `${prefix}${i + 1}`, p }));

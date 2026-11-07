@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bootstrapBrier, paired, calibration, LADDER } from '../packages/core/src/scoring.js';
+import { bootstrapBrier, paired, calibration, LADDER } from '@benchmark/core/scoring';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');

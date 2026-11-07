@@ -31,7 +31,7 @@ The **canonical specifications** in this repository are [`BUILD.md`](../BUILD.md
 
 **Also current:** [`docs/01-one-pager.md`](01-one-pager.md) (two-minute pitch), [`docs/04-adoption-review.md`](04-adoption-review.md) (review of ACAPS' risk methodology), [`docs/05-service-and-privacy.md`](05-service-and-privacy.md) (the service layer, guarantees and residual risk), [`docs/06-protocol.md`](06-protocol.md) (draft pre-registration). Historical design and research documents are in [`archive/`](../archive/README.md).
 
-**The service layer:** [`packages/service/`](../packages/service/src/) — `store.js` (roster and answers kept apart), `service.js` (every guarantee's choke point), `http.js` (transport), `auth.js`, `consent.js`, and [`db/schema.sql`](../packages/service/db/schema.sql).
+**The service layer:** [`packages/service/`](../packages/service/src/) — `store.js` and `pg-store.js` (roster and answers kept apart, in memory or Postgres), `service.js` (every guarantee's choke point), `http.js`, `oidc.js` (staff sign-in), `auth.js`, `consent.js`, the [`public/`](../packages/service/public/) pages, and [`db/schema.sql`](../packages/service/db/schema.sql) with [`roles.sql`](../packages/service/db/roles.sql). **Authoring:** [`packages/core/src/authoring.js`](../packages/core/src/authoring.js) and `npm run worklist` / `npm run label` triage the cards and re-measure the `observable` check without inventing labels. Deployment notes are in [`07-deploy.md`](07-deploy.md).
 
 ---
 
@@ -42,7 +42,7 @@ The **canonical specifications** in this repository are [`BUILD.md`](../BUILD.md
 3. **101 of the 139 triggers that carry a completion rate carry no written resolution criterion** — 73% of ACAPS's own progress tracking is measured against something unstated.
 4. **31 of 139 risks have no triggers at all**, **11 have no probability rating** and **7 have no status**.
 5. The performance ladder: naive floor **0.2425** → **ACAPS' own judgement 0.2171** → a logistic regression **0.2177** out of sample. **Lower is better, so the regression is nominally behind the experts, by 0.0007 — indistinguishable at n=104** (paired interval spans zero). The ordinal reading of ACAPS' rating (rating ÷ 5) gives 0.2168, the sensitivity check. All three rungs are measured by scripts in this repo (`npm run ladder`).
-6. At `n = 104` the paired Brier difference SD is **0.1605** (80%-power MDE **0.0441**, requiring **n ≈ 506** resolved items to detect a **0.02** Brier gain), so neither gap in that ladder is distinguishable from zero — and prospective evaluation must run on rolling **266** trigger statements anchored to external resolution criteria rather than hindsight-contaminated or post-hoc editorial labels.
+6. At `n = 104` the paired Brier difference SD is **0.1605** (80%-power MDE **0.0441**, requiring **n ≈ 506** resolved items to detect a **0.02** Brier gain), so neither gap in that ladder is distinguishable from zero — and prospective evaluation must run on statements anchored to external resolution criteria rather than hindsight-contaminated or post-hoc editorial labels. Only **104** statements are open to that today: the **28** Active risks and the **76** triggers under them. The other **190** of the 266 triggers sit under risks whose outcome is already known.
 
 ---
 

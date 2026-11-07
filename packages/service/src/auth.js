@@ -4,7 +4,7 @@
  * identity provider (SSO) that the transport layer verifies.
  */
 import crypto from 'node:crypto';
-import { sha256, toHex } from '../../core/src/hmac.js';
+import { sha256, toHex } from '@benchmark/core/hmac';
 
 export const ROLES = Object.freeze({ EXPERT: 'expert', ANALYST: 'analyst', MODERATOR: 'moderator' });
 

@@ -24,12 +24,12 @@ import {
   resolveLevel,
   attribute,
   coarsenToDay,
-} from '../../core/src/anonymity.js';
+} from '@benchmark/core/anonymity';
 import {
   LOOP_KIND,
   compose,
   latency,
-} from '../../shared/loop.js';
+} from '@benchmark/shared/loop';
 
 export const STATE = Object.freeze({
   OPEN: 'open',
@@ -53,6 +53,13 @@ export const KIND = Object.freeze({
   INTENT_NOT_CONDITION: 'intent_not_condition',
 });
 
+/**
+ * @param {{
+ *   id?: string, cardId: string, expert?: string | null, name?: string, country?: string, kind: string,
+ *   text?: string, level?: string, salt?: string, panelAliases?: Map<string, string> | Record<string, string>, now?: number
+ * }} input
+ * @returns {Record<string, any>}
+ */
 export function newDissent({
   id,
   cardId,
@@ -66,7 +73,7 @@ export function newDissent({
   panelAliases,
   now,
 }) {
-  if (!Object.values(KIND).includes(kind)) {
+  if (!(/** @type {string[]} */ (Object.values(KIND))).includes(kind)) {
     throw new Error(`unknown dissent kind: ${kind}`);
   }
   if (id !== undefined && (typeof id !== 'string' || !id.trim())) {
@@ -104,6 +111,10 @@ export function newDissent({
 }
 
 /** Route an open dissent into an analyst review queue. */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ queue?: string, now?: number }} [opts]
+ */
 export function route(dissent, { queue = 'analyst', now } = {}) {
   if (!dissent || dissent.status !== STATE.OPEN) {
     throw new Error(`cannot route dissent in state ${dissent?.status}`);
@@ -121,8 +132,13 @@ export function route(dissent, { queue = 'analyst', now } = {}) {
  * Analyst acts on a routed dissent (`STATE.ROUTED -> STATE.ACTIONED`).
  * Rejects unrouted (`STATE.OPEN`) dissents so queue triage cannot be bypassed.
  */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {string} action
+ * @param {{ newCardIds?: string[], title?: string, note?: string, now?: number }} [opts]
+ */
 export function act(dissent, action, { newCardIds = [], title = '', note = '', now } = {}) {
-  if (!Object.values(ACTION).includes(action)) {
+  if (!(/** @type {string[]} */ (Object.values(ACTION))).includes(action)) {
     throw new Error(`unknown action: ${action}`);
   }
   if (!dissent || dissent.status !== STATE.ROUTED) {
@@ -150,6 +166,11 @@ export function act(dissent, action, { newCardIds = [], title = '', note = '', n
  * opted into `ANONYMOUS` (`contactable: false`), preventing accidental
  * re-identification. Emits both `expert` and `to` so `dispatch()` recognises
  * the recipient and never suppresses `dissent_actioned` at the weekly cap.
+ */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ now?: number }} [opts]
+ * @returns {Record<string, any> | null}
  */
 export function notify(dissent, { now } = {}) {
   if (!dissent || dissent.status !== STATE.ACTIONED) return null;
@@ -186,9 +207,13 @@ export function notify(dissent, { now } = {}) {
  *     directly since outbound notifications are suppressed for safety.
  *   - `STATE.NOTIFIED` closes cleanly.
  */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ reason?: string, now?: number }} [opts]
+ */
 export function close(dissent, { reason = '', now } = {}) {
   if (!dissent || typeof dissent !== 'object') {
-    throw new Error(`cannot close dissent in state ${dissent?.status}`);
+    throw new Error('cannot close a missing dissent');
   }
   const trimmedReason = typeof reason === 'string' ? reason.trim() : '';
 

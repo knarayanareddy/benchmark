@@ -1,5 +1,16 @@
 /** Errors carry the HTTP status the transport should use; the service never imports http. */
 export class HttpError extends Error {
+  /** @type {string[] | undefined} */
+  problems = undefined;
+
+  /** @type {string | undefined} */
+  consentText = undefined;
+
+  /**
+   * @param {number} status
+   * @param {string} message
+   * @param {{ problems?: string[], consentText?: string }} [extra]
+   */
   constructor(status, message, extra = {}) {
     super(message);
     this.name = this.constructor.name;

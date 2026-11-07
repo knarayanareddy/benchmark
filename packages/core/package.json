@@ -1,0 +1,10 @@
+{
+  "name": "@benchmark/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure domain logic: scoring, aggregation and release rules, the gate, dispatch, anonymity. No storage, no network, no clock; runs in a browser and on a server.",
+  "license": "MIT",
+  "exports": { "./*": "./src/*.js" },
+  "sideEffects": false
+}

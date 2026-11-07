@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
   resolveLevel, aliasFor, DEFAULT_DEV_SALT, panelAliases, attribute, leaksBy, publicable, PUBLIC,
-} from '../../core/src/anonymity.js';
+} from '@benchmark/core/anonymity';
 import {
   aggregate,
   releaseAggregate,
   RELEASE_POLICIES,
-} from '../../core/src/aggregate.js';
+} from '@benchmark/core/aggregate';
 
 const SALT = 'test-deployment-salt-not-for-prod';
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
@@ -275,7 +275,7 @@ test('intervals and small-panel releases resist order-statistic & quartile inver
 import crypto from 'node:crypto';
 import {
   assignAliases, ballotToken, coarsenToDay, identifyingHints, removeIdentifyingDetail,
-} from '../../core/src/anonymity.js';
+} from '@benchmark/core/anonymity';
 
 test('aliases are keyed: the same roster under a different secret gives different aliases (B-02)', () => {
   const ids = Array.from({ length: 30 }, (_, i) => `e${i}`);

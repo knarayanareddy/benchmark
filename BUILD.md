@@ -1,11 +1,11 @@
 # BUILD.md — start here
 
-**Verified core and service layer, not finished.** The scoring, aggregation, gate, dispatch and dissent logic is written and tested against the real export, and a service layer with an HTTP API wraps it. The interface, a Postgres adapter and staff SSO are not written.
+**A verified core, a service with a database, sign-in and pages a person can use, and a card-authoring pipeline. Not deployed, and no panel has been run.** The scoring, aggregation, gate, dispatch and dissent logic is tested against the real export. A service wraps it (Postgres or in-memory), with OpenID Connect staff sign-in and plain HTML pages for experts and staff. What is missing is a human decision, not code: someone with authority has to write the objectives (`npm run worklist`), run the raters (`npm run label`), and sign off the DPIA.
 
 ```
 $ npm run verify
-✓ 142 unit tests pass
-✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items)
+✓ 217 unit tests pass
+✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items, 95% interval 69.4–94.5%)
 ✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
 
@@ -24,10 +24,16 @@ $ npm run verify
 | Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless day-coarsened `cardLedger()`, versioned transitions, 7 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Keyed primitives | `packages/core/src/hmac.js` | **Complete** | Pure-JS HMAC-SHA-256 so aliases and ballot tokens work in a browser and on a server; checked against `node:crypto` and RFC 4231, 3 tests |
-| Service | `packages/service/src/service.js` | **Built — in-memory store with optional JSON snapshot** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention, 17 tests. See `docs/05-service-and-privacy.md` |
-| HTTP transport | `packages/service/src/http.js` | **Built** | Body cap, per-write rate limit, security headers, https enforcement, no cookies, 5 tests |
-| Postgres schema | `packages/service/db/schema.sql` | **Written and run on a real engine; no adapter** | `npm run check:schema` (optional, needs `@electric-sql/pglite`) proves each constraint |
-| Interface | — | **Not written** | React + Vite PWA, per `archive/design/BENCHMARK-blueprint.html` §11 |
+| Service | `packages/service/src/service.js` | **Built, runs on memory and Postgres** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention. The same flow suite runs on the in-memory store, in-process Postgres and the real `pg` client over the wire, including concurrent writers. 54 tests. See `docs/05-service-and-privacy.md` |
+| Stores | `packages/service/src/store.js`, `pg-store.js` | **Built** | Roster and answers are separate stores. `pg-store.js` is the Postgres adapter (`find` is a jsonb containment query). Exercised by the flow suite above |
+| HTTP transport | `packages/service/src/http.js` | **Built** | Body cap, per-write rate limit, security headers and CSP, https enforcement, no cookies, health and readiness probes, static pages, 8 tests |
+| Staff sign-in | `packages/service/src/oidc.js` | **Built, tested against a fake provider** | OpenID Connect code flow with PKCE, RS256 ID-token verification, allow-list of staff emails to roles, 6 tests. Not yet run against a real identity provider |
+| Pages | `packages/service/public/` | **Built, clicked through in a browser** | Expert onboarding, consent, answer, revise, object, export, erase; staff cards, rounds, objections, invites, audit. Plain HTML and JS, no inline script, no `innerHTML`, 2 tests |
+| Postgres schema | `packages/service/db/schema.sql` | **Built, verified on a real engine** | Constraints for unique ballots, clamped probabilities, the release floor, an append-only audit log; two least-privilege roles in `roles.sql` that cannot read each other's schema, checked with `SET ROLE`, 8 tests |
+| Statistics | `packages/core/src/stats.js` | **Complete** | Wilson intervals and Cohen's kappa against published values, 4 tests |
+| CSV | `packages/core/src/csv.js` | **Complete** | RFC 4180 parser and writer; round-trips the real worklist, 6 tests |
+| Authoring | `packages/core/src/authoring.js` | **Complete** | Triage of every headline and trigger, one card-validation rule shared with the service, a filled-worklist importer, and a two-rater scorer that refuses disagreeing raters, 9 tests |
+| Deployment | `Dockerfile`, `deploy/` | **Written, not built or run** | Compose file for Postgres + service + Caddy (automatic HTTPS). Docker is not available where this was developed, so none of it has been executed. See `docs/07-deploy.md` |
 
 ---
 
@@ -63,8 +69,8 @@ npm run check:schema            # optional: runs db/schema.sql on an in-process 
 
 `scripts/backtest.mjs` runs synthetic predictors on the 104 resolved blocks to prove the scoring plumbing, and `packages/core/src/aggregate.js` turns panel estimates into an interval-bearing probability. Two methodological constraints govern how the real panel test must run:
 
-1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2171` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (**28 Active risks** and **266 dated triggers** as rolling windows close).
-2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1605** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0441** Brier at `n = 104` and requiring **n ≈ 506** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements (`266` per export cycle) are where prospective statistical power lives.
+1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2171` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (the **28 Active risks** and the **76** triggers under them as rolling windows close; the other 190 of the 266 triggers sit under risks whose outcome is already known).
+2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1605** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0441** Brier at `n = 104` and requiring **n ≈ 506** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements add volume, but only **76** of the 266 sit under Active risks, so about **104** statements (28 + 76) are open to prospective scoring today — roughly five cycles to reach 506, if none are dropped.
 3. **External resolution criteria, not endogenous post-hoc labels.** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is recorded later by ACAPS' own analysts on a selected set of published risks (`61/104 = 58.7%` materialised), measuring analyst self-consistency alongside forecast skill. Prospective trigger evaluation must pre-specify external indicators (ACLED, IPC, UNHCR, IMF) in `objective` before cards open.
 
 ---

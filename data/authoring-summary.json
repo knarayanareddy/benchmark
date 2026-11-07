@@ -1,0 +1,39 @@
+{
+  "risks": {
+    "total": 139,
+    "needs_rewrite": 3,
+    "needs_threshold": 87,
+    "needs_objective": 49,
+    "with_source_suggestion": 115
+  },
+  "triggers": {
+    "total": 266,
+    "needs_rewrite": 2,
+    "needs_threshold": 202,
+    "needs_objective": 62,
+    "with_source_suggestion": 98
+  },
+  "prospectiveRisks": {
+    "total": 28,
+    "needs_rewrite": 0,
+    "needs_threshold": 20,
+    "needs_objective": 8,
+    "with_source_suggestion": 23
+  },
+  "prospectiveTriggers": {
+    "total": 76,
+    "needs_rewrite": 0,
+    "needs_threshold": 55,
+    "needs_objective": 21,
+    "with_source_suggestion": 32
+  },
+  "triggerObjectiveKinds": {
+    "candidate": 10,
+    "no_threshold": 3,
+    "none": 222,
+    "retrospective": 3,
+    "yes_no_note": 28
+  },
+  "openable": 0,
+  "note": "openable is 0 until a human fills the author_* columns and the importer accepts the row. No script writes an objective."
+}

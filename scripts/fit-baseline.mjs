@@ -28,8 +28,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bootstrapBrier, paired, observed } from '../packages/core/src/scoring.js';
-import { BAND_MIDPOINT } from '../packages/core/src/aggregate.js';
+import { bootstrapBrier, paired } from '@benchmark/core/scoring';
+import { BAND_MIDPOINT } from '@benchmark/core/aggregate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const blocks = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/risk-radar.json'), 'utf8'));
@@ -38,7 +38,6 @@ const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
 // Missing means missing, not zero. `Number(v) || 0` silently codes an absent
 // intensity as "very low hazard", which is a substantive claim about the risk
 // that the analyst never made. Use add-one imputation on the observed mean.
-const num = (v) => (Number(v) || 0) / 5;
 const SCALE = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 
 // The four fields a model can see without reading the sentence.
@@ -47,13 +46,10 @@ const SCALE = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 // indicator column so the model can tell imputed from real.
 const meanOr = (vals) => { const k = vals.filter((v) => v !== null); return k.length ? k.reduce((a, v) => a + v, 0) / k.length : 0; };
 const PROB = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
-const LEVEL = { Low: 1, Medium: 3, High: 5 };
 const rawIntensity = (b) => (Number(b.intensity) ? Number(b.intensity) / 5 : null);
 const rawProb = (b) => (PROB[b.probability] ? PROB[b.probability] / 5 : null);
-const rawLevel = (b) => (LEVEL[b.riskLevel] ? LEVEL[b.riskLevel] / 5 : null);
 const M_INT = meanOr(resolved.map(rawIntensity));
 const M_PROB = meanOr(resolved.map(rawProb));
-const M_LEV = meanOr(resolved.map(rawLevel));
 
 // COLLINEARITY, established from the data and recorded so nobody re-adds it:
 // Risk Level matches a pure function of Probability on 128/128 rows where both

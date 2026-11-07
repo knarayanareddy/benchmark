@@ -25,7 +25,7 @@ import { hmacSha256, hmacSha256Hex } from './hmac.js';
 export const LEVELS = Object.freeze({
   IDENTIFIED: 'identified',      // known to ACAPS, named to peers
   PSEUDONYMOUS: 'pseudonymous',  // known to ACAPS, stable alias to peers
-  ANONYMOUS: 'anonymous',        // ACAPS holds a sealed record, peers see nothing
+  ANONYMOUS: 'anonymous',        // answers are keyed by a secret-derived token, not your id; peers see nothing
 });
 
 export const DEFAULT_LEVEL = LEVELS.PSEUDONYMOUS;
@@ -49,7 +49,7 @@ export const LEVEL_COPY = Object.freeze({
   }),
   [LEVELS.ANONYMOUS]: Object.freeze({
     label: 'Anonymous',
-    toAcaps: 'A sealed record that only the moderator can open, and only to act on a safety concern. Not visible in analysis.',
+    toAcaps: 'Your answers are stored under a key that is not your name or id. ACAPS staff cannot read it back to a person in normal use, and nothing opens it for analysis.',
     toPeers: 'Nothing. Your contribution appears as "anonymous".',
     warn: 'You cannot be contacted to clarify or to credit. Some follow-ups will not reach you.',
   }),
@@ -119,6 +119,11 @@ export function aliasFor(expertId, country, salt) {
  * deployment-specific secret salt so an attacker with the roster cannot
  * precompute aliases from a public repository constant.
  */
+/**
+ * @param {string[]} [expertIds]
+ * @param {string} [country]
+ * @param {{ salt?: string }} [opts]
+ */
 export function panelAliases(expertIds = [], country = '', { salt } = {}) {
   assertDeploymentSalt(salt, 'panelAliases()');
   const unique = [...new Set(expertIds.filter((id) => id !== undefined && id !== null && String(id).trim() !== '').map(String))].sort();
@@ -148,6 +153,12 @@ export function panelAliases(expertIds = [], country = '', { salt } = {}) {
  * hash) cannot silently re-label a person mid-panel. New experts get a fresh
  * alias that avoids every alias already taken. The caller persists `added`
  * (one row per expert x country).
+ */
+/**
+ * @param {Record<string, string>} [existing]
+ * @param {string[]} [expertIds]
+ * @param {string} [country]
+ * @param {{ salt?: string }} [opts]
  */
 export function assignAliases(existing = {}, expertIds = [], country = '', { salt } = {}) {
   assertDeploymentSalt(salt, 'assignAliases()');
@@ -240,6 +251,11 @@ function pickAllowed(source, keys) {
  * Unlisted attributes (email, ip, role, organisation, etc.) are dropped at
  * every level; omitted attributes stay absent rather than blanked.
  */
+/**
+ * @param {Record<string, any>} contribution
+ * @param {string} [level]
+ * @param {{ salt?: string, panelAliases?: Map<string, string> | Record<string, string> }} [opts]
+ */
 export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
   if (!contribution || typeof contribution !== 'object') {
     throw new TypeError('contribution must be an object');
@@ -248,7 +264,7 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
 
   // Fail closed. An unrecognised level must never resolve to a level that
   // keeps context metadata — that is how a privacy setting becomes a leak.
-  const known = Object.values(LEVELS).includes(level);
+  const known = (/** @type {string[]} */ (Object.values(LEVELS))).includes(level);
   if (!known) {
     const kept = pickAllowed(contribution, CONTENT_FIELDS);
     kept.by = 'anonymous';

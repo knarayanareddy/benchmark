@@ -3,8 +3,8 @@
  * so the promise on screen and the promise on record cannot drift, and what is
  * stored is a hash of the exact text shown at that version.
  */
-import { LEVELS, LEVEL_COPY } from '../../core/src/anonymity.js';
-import { sha256, toHex } from '../../core/src/hmac.js';
+import { LEVELS, LEVEL_COPY } from '@benchmark/core/anonymity';
+import { sha256, toHex } from '@benchmark/core/hmac';
 
 export const CONSENT_VERSION = '2026-11-v1';
 export const RETENTION_MONTHS = 12;

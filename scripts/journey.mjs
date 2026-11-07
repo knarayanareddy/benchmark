@@ -16,10 +16,10 @@ import {
   STATE,
   ACTION,
   KIND,
-} from '../packages/benchmark/src/dissent.js';
-import { dispatch, DEFAULT_CAP, TYPES } from '../packages/core/src/dispatch.js';
-import { LEVELS } from '../packages/core/src/anonymity.js';
-import { compose, LOOP_KIND } from '../packages/shared/loop.js';
+} from '@benchmark/domain/dissent';
+import { dispatch, DEFAULT_CAP, TYPES } from '@benchmark/core/dispatch';
+import { LEVELS } from '@benchmark/core/anonymity';
+import { compose, LOOP_KIND } from '@benchmark/shared/loop';
 
 const TEST_SALT = 'test-deployment-salt-not-for-prod';
 

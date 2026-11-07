@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { brier, bootstrapBrier, paired, calibration, observed, LADDER, REGRESSION_BEATS_ACAPS } from '../../core/src/scoring.js';
+import { brier, bootstrapBrier, paired, calibration, observed, LADDER, REGRESSION_BEATS_ACAPS } from '@benchmark/core/scoring';
 
 const mk = (p, y, id) => ({ p, y, id });
 const det = Array.from({ length: 104 }, (_, i) => mk(0.7, i % 3 === 0 ? 1 : 0, i));
@@ -131,7 +131,7 @@ test('a non-finite probability is reported as NaN, not null (B-20)', () => {
 });
 
 test('both ACAPS readings reproduce from the data; the headline is the band midpoint (B-09)', async () => {
-  const { BAND_MIDPOINT, clampForecast } = await import('../../core/src/aggregate.js');
+  const { BAND_MIDPOINT, clampForecast } = await import('@benchmark/core/aggregate');
   const blocks = JSON.parse(fs.readFileSync(new URL('../../../data/risk-radar.json', import.meta.url), 'utf8'));
   const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
   const base = resolved.reduce((a, b) => a + b.outcome, 0) / resolved.length;

@@ -7,7 +7,14 @@
  * credential for a cross-site request to ride on.
  */
 import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
 import { HttpError, ValidationError, AuthError, NotFoundError } from './errors.js';
+import { CONSENT_VERSION, consentText } from './consent.js';
+import { resolveLevel } from '@benchmark/core/anonymity';
+
+/** Return one of these from a route to redirect instead of sending JSON. */
+export class Redirect { constructor(url) { this.url = url; } }
 
 export const DEFAULT_LIMITS = Object.freeze({
   maxBodyBytes: 16 * 1024,
@@ -67,8 +74,21 @@ async function readJson(req, maxBytes) {
   }
 }
 
+/**
+ * @typedef {{ login: () => Promise<string>, callback: (q: { code: string | null, state: string | null }) => Promise<{ id: string, role: string }> }} Oidc
+ * @typedef {{
+ *   service: any, oidc?: Oidc | null, staticDir?: string | null, ready?: () => Promise<void>,
+ *   verifyStaff?: (req: any, body: any) => Promise<{ id: string, role: string } | null>,
+ *   limits?: Record<string, number>, requireHttps?: boolean, trustProxy?: boolean, now?: () => number
+ * }} HandlerOptions
+ */
+
+/** @param {HandlerOptions} opts */
 export function createHandler({
   service,
+  oidc = null,
+  staticDir = null,
+  ready = async () => {},
   verifyStaff = async () => null,
   limits = {},
   requireHttps = false,
@@ -77,45 +97,65 @@ export function createHandler({
 }) {
   const L = { ...DEFAULT_LIMITS, ...limits };
   const takeWrite = createRateLimiter({ perMinute: L.writesPerMinute, burst: L.burstWrites, now });
-  const takeRead = createRateLimiter({ perMinute: L.readsPerMinute, now });
+  const takeRead = createRateLimiter({ perMinute: L.readsPerMinute, burst: L.readsPerMinute, now });
 
   const bearer = (req) => {
     const h = String(req.headers.authorization || '');
     return h.startsWith('Bearer ') ? h.slice(7).trim() : null;
   };
-  const actorOf = (req) => service.authenticate(bearer(req));
+  const actorOf = async (req) => service.authenticate(bearer(req));
 
+  /** @type {Array<[string, RegExp, (req: any, m: string[], b: any) => Promise<any>]>} */
   const routes = [
     // experts
-    ['POST', /^\/api\/invite\/redeem$/, (req, m, b) => service.redeemInvite(b.token, { level: b.level, consentVersion: b.consentVersion })],
-    ['GET', /^\/api\/inbox$/, (req) => service.inbox(actorOf(req))],
-    ['POST', /^\/api\/estimates$/, (req, m, b) => service.submitEstimate(actorOf(req), { cardId: b.cardId, p: b.p })],
-    ['POST', /^\/api\/dissents$/, (req, m, b) => service.submitDissent(actorOf(req), { cardId: b.cardId, kind: b.kind, text: b.text })],
-    ['PUT', /^\/api\/me\/declaration$/, (req, m, b) => service.setDeclaration(actorOf(req), b)],
-    ['GET', /^\/api\/me\/export$/, (req) => service.exportMe(actorOf(req))],
-    ['DELETE', /^\/api\/me$/, (req) => service.eraseMe(actorOf(req))],
-    ['GET', /^\/api\/cards\/([^/]+)\/release$/, (req, m) => { actorOf(req); return service.cardRelease(m[1]); }],
+    ['POST', /^\/api\/invite\/redeem$/, async (req, m, b) => service.redeemInvite(b.token, { level: b.level, consentVersion: b.consentVersion })],
+    ['GET', /^\/api\/inbox$/, async (req) => service.inbox(await actorOf(req))],
+    ['POST', /^\/api\/estimates$/, async (req, m, b) => service.submitEstimate(await actorOf(req), { cardId: b.cardId, p: b.p })],
+    ['POST', /^\/api\/dissents$/, async (req, m, b) => service.submitDissent(await actorOf(req), { cardId: b.cardId, kind: b.kind, text: b.text })],
+    ['PUT', /^\/api\/me\/declaration$/, async (req, m, b) => service.setDeclaration(await actorOf(req), b)],
+    ['GET', /^\/api\/me\/export$/, async (req) => service.exportMe(await actorOf(req))],
+    ['DELETE', /^\/api\/me$/, async (req) => service.eraseMe(await actorOf(req))],
+    ['GET', /^\/api\/cards\/([^/]+)\/release$/, async (req, m) => { await actorOf(req); return service.cardRelease(m[1]); }],
+    // The exact text an expert accepts, so the screen and the record cannot drift.
+    ['GET', /^\/api\/consent\/([^/]+)$/, async (req, m) => {
+      const r = resolveLevel(m[1]);
+      if (!r.honoured) throw new NotFoundError('unknown anonymity level');
+      return { version: CONSENT_VERSION, level: r.level, text: consentText(r.level) };
+    }],
     // public: the only unauthenticated reads, all of them aggregate or addressless
-    ['GET', /^\/api\/public\/cards\/([^/]+)$/, (req, m) => service.cardRelease(m[1], { visibility: 'public' })],
-    ['GET', /^\/api\/public\/cards\/([^/]+)\/ledger$/, (req, m) => service.publicLedger(m[1])],
+    ['GET', /^\/api\/public\/cards\/([^/]+)$/, async (req, m) => service.cardRelease(m[1], { visibility: 'public' })],
+    ['GET', /^\/api\/public\/cards\/([^/]+)\/ledger$/, async (req, m) => service.publicLedger(m[1])],
+    // staff sign-in through the identity provider (only when configured)
+    ['GET', /^\/api\/staff\/oidc\/login$/, async () => {
+      if (!oidc) throw new NotFoundError('staff SSO is not configured');
+      return new Redirect(await oidc.login());
+    }],
+    ['GET', /^\/api\/staff\/oidc\/callback$/, async (req) => {
+      if (!oidc) throw new NotFoundError('staff SSO is not configured');
+      const q = new URL(req.url, 'http://x').searchParams;
+      const staff = await oidc.callback({ code: q.get('code'), state: q.get('state') });
+      // The token goes in the URL fragment so it never reaches a server log or a Referer header.
+      return new Redirect(`/staff.html#token=${await service.createStaffSession(staff)}`);
+    }],
     // staff
     ['POST', /^\/api\/staff\/session$/, async (req, m, b) => {
       const staff = await verifyStaff(req, b);
       if (!staff) throw new AuthError('staff identity not verified');
-      return { sessionToken: service.createStaffSession(staff) };
+      return { sessionToken: await service.createStaffSession(staff) };
     }],
-    ['POST', /^\/api\/staff\/invites$/, (req, m, b) => service.createInvite(actorOf(req), b)],
-    ['POST', /^\/api\/staff\/cards$/, (req, m, b) => service.createCard(actorOf(req), b)],
-    ['POST', /^\/api\/staff\/cards\/([^/]+)\/close$/, (req, m) => service.closeRound(actorOf(req), m[1])],
-    ['POST', /^\/api\/staff\/cards\/([^/]+)\/round2$/, (req, m) => service.openRound2(actorOf(req), m[1])],
-    ['POST', /^\/api\/staff\/cards\/([^/]+)\/resolve$/, (req, m, b) => service.resolveCard(actorOf(req), { ...b, cardId: m[1] })],
-    ['GET', /^\/api\/staff\/dissents$/, (req) => service.listDissents(actorOf(req))],
-    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/route$/, (req, m, b) => service.routeDissent(actorOf(req), m[1], b)],
-    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/act$/, (req, m, b) => service.actDissent(actorOf(req), m[1], b)],
-    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/notify$/, (req, m, b) => service.notifyDissent(actorOf(req), m[1], b)],
-    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/close$/, (req, m, b) => service.closeDissent(actorOf(req), m[1], b)],
-    ['POST', /^\/api\/staff\/retention$/, (req, m, b) => service.applyRetention(actorOf(req), b)],
-    ['GET', /^\/api\/staff\/audit$/, (req) => service.readAudit(actorOf(req))],
+    ['POST', /^\/api\/staff\/invites$/, async (req, m, b) => service.createInvite(await actorOf(req), b)],
+    ['GET', /^\/api\/staff\/cards$/, async (req) => service.listCards(await actorOf(req))],
+    ['POST', /^\/api\/staff\/cards$/, async (req, m, b) => service.createCard(await actorOf(req), b)],
+    ['POST', /^\/api\/staff\/cards\/([^/]+)\/close$/, async (req, m) => service.closeRound(await actorOf(req), m[1])],
+    ['POST', /^\/api\/staff\/cards\/([^/]+)\/round2$/, async (req, m) => service.openRound2(await actorOf(req), m[1])],
+    ['POST', /^\/api\/staff\/cards\/([^/]+)\/resolve$/, async (req, m, b) => service.resolveCard(await actorOf(req), { ...b, cardId: m[1] })],
+    ['GET', /^\/api\/staff\/dissents$/, async (req) => service.listDissents(await actorOf(req))],
+    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/route$/, async (req, m, b) => service.routeDissent(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/act$/, async (req, m, b) => service.actDissent(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/notify$/, async (req, m, b) => service.notifyDissent(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/staff\/dissents\/([^/]+)\/close$/, async (req, m, b) => service.closeDissent(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/staff\/retention$/, async (req, m, b) => service.applyRetention(await actorOf(req), b)],
+    ['GET', /^\/api\/staff\/audit$/, async (req) => service.readAudit(await actorOf(req))],
   ];
 
   const send = (res, status, body, extra = {}) => {
@@ -137,8 +177,33 @@ export function createHandler({
     return req.socket.remoteAddress || 'unknown';
   };
 
+  const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
+  // The pages are static and use only same-origin script and style: no inline code, no third parties.
+  const PAGE_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+
+  function serveStatic(req, res, pathname) {
+    if (!staticDir || (req.method !== 'GET' && req.method !== 'HEAD')) return false;
+    const rel = pathname === '/' ? '/index.html' : pathname;
+    const file = path.normalize(path.join(staticDir, rel));
+    if (!file.startsWith(path.normalize(staticDir)) || !MIME[path.extname(file)]) return false;
+    let body;
+    try { body = fs.readFileSync(file); } catch { return false; }
+    res.writeHead(200, {
+      ...SECURITY_HEADERS, 'Content-Security-Policy': PAGE_CSP, 'Content-Type': MIME[path.extname(file)],
+      'Content-Length': body.length, 'Cache-Control': 'no-cache',
+    });
+    res.end(req.method === 'HEAD' ? undefined : body);
+    return true;
+  }
+
   return async function handler(req, res) {
     try {
+      // Orchestrator probes: before the https and rate-limit checks, because they arrive over plain http from inside.
+      if (req.method === 'GET' && req.url === '/healthz') return send(res, 200, { ok: true });
+      if (req.method === 'GET' && req.url === '/readyz') {
+        try { await ready(); } catch { throw new HttpError(503, 'not ready'); }
+        return send(res, 200, { ok: true });
+      }
       if (requireHttps && String(req.headers['x-forwarded-proto'] || '') !== 'https') {
         throw new HttpError(400, 'https required');
       }
@@ -148,14 +213,19 @@ export function createHandler({
       if (!gate.ok) {
         return send(res, 429, { error: 'rate limit exceeded' }, { 'Retry-After': String(gate.retryAfter) });
       }
+      if (serveStatic(req, res, url.pathname)) return undefined;
       const route = routes.find(([method, re]) => method === req.method && re.test(url.pathname));
       if (!route) {
         const known = routes.some(([, re]) => re.test(url.pathname));
         throw known ? new HttpError(405, 'method not allowed') : new NotFoundError('no such route');
       }
       const body = isWrite ? await readJson(req, L.maxBodyBytes) : {};
-      const m = route[1].exec(url.pathname).map((s, i) => (i === 0 ? s : decodeURIComponent(s)));
+      const m = (/** @type {RegExpExecArray} */ (route[1].exec(url.pathname))).map((s, i) => (i === 0 ? s : decodeURIComponent(s)));
       const out = await route[2](req, m, body);
+      if (out instanceof Redirect) {
+        res.writeHead(302, { ...SECURITY_HEADERS, Location: out.url });
+        return res.end();
+      }
       return send(res, 200, out);
     } catch (e) {
       if (e instanceof HttpError) {
@@ -169,6 +239,7 @@ export function createHandler({
   };
 }
 
+/** @param {HandlerOptions} opts */
 export function createServer(opts) {
   const server = http.createServer(createHandler(opts));
   server.requestTimeout = 10000;

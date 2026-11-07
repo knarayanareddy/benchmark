@@ -10,7 +10,7 @@
 | No ballot stuffing | `submitEstimate()` | Unique `(card, respondent, round)` in the store; unkeyed estimates are rejected by default (`requireBallotKey`). Round 2 needs a Round-1 answer. |
 | Pseudonyms cannot be recomputed from public constants | `ensureAlias()` | HMAC-SHA-256 keyed by `alias` secret; aliases are **stored** per expert x country, so a secret rotation never renames anyone. |
 | Anonymous answers are not stored with an identity | `submitEstimate()` | The row holds an HMAC ballot token and no expert id; the time is coarsened to the day. |
-| Roster and answers cannot be joined by a reader of one | two stores | `roster` and `answers` are separate stores (separate schemas and roles in Postgres, `db/schema.sql`). |
+| Roster and answers cannot be joined by a reader of one | two stores | `roster` and `answers` are separate stores: separate schemas and roles in Postgres (`db/schema.sql`, `db/roles.sql`; `bm_answers` cannot read the roster and `bm_roster` cannot read the answers, checked with `SET ROLE`). |
 | One person, one invite, no password | `createInvite()` / `redeemInvite()` | 256-bit token, stored only as a hash, single use (compare-and-set), expiring, bound to a Declaration, level and consent chosen explicitly. |
 | Roles are split | `auth.js` | Analyst handles cards and dissent. Only a moderator invites, closes rounds, resolves, reads the audit log and runs retention. |
 | Concurrent edits cannot both win | `routeDissent()` etc. | Every transition is a compare-and-set on `version`; the caller must pass the version it saw. |
@@ -34,10 +34,15 @@ Concretely:
 - Anonymous dissents carry no key, so they are unlinkable by design, which is also why they cannot be exported or erased.
 - Day-coarse times and a floor of 5 (10 public) reduce what a small panel reveals. They do not make a panel of 5 safe against someone who knows the five people. `leaksBy()` and `identifyingHints()` warn about organisations, job titles, first-person identifiers and uniqueness claims. They are advice, not proof.
 
+## Staff sign-in
+
+Staff arrive through any OpenID Connect provider (`src/oidc.js`): code flow with PKCE, RS256 ID-token verification (signature, issuer, audience, expiry, nonce), single-use state. A valid sign-in is **not** enough: the email must be on the `STAFF_ROLES` allow-list as analyst or moderator, so a new employee at the identity provider gets no access. The session token is handed to the page in the URL fragment, so it never reaches a server log or a Referer header. This is tested against a fake provider (forged signatures, `alg: none`, wrong audience, expired, replayed, unlisted email). It has not been run against a real provider.
+
 ## Not built
 
-- **A Postgres store adapter.** `db/schema.sql` is written and was run on a real Postgres engine (`npm run check:schema`, optional, needs `@electric-sql/pglite`), but the service uses the in-memory store with an optional JSON snapshot. That is enough for a pilot on one machine, not for production.
-- **The interface** (React PWA) and anything the expert sees in a browser.
-- **Staff SSO.** `verifyStaff` is a hook; `bin/serve.mjs` ships a static-credential stand-in.
 - **Break-glass** for safety concerns on anonymous records (two-person approval, written reason), **client-held ballot secrets**, **push tokens** for anonymous Round-2 nudges, **time-to-submit instrumentation**.
-- **A DPIA and a data-sharing agreement.** These are calendar-time work, not code. See `docs/06-protocol.md`.
+- **A React app.** The pages are plain HTML and JS served by the service; they work, and were clicked through in a browser, but there is no offline PWA behaviour.
+- **Versioned database migrations.** `bin/migrate.mjs` creates the schema if it is absent. A later schema change needs a real migration step.
+- **Multi-statement transactions.** Each statement is atomic; erase and retention are ordered and idempotent so a retry finishes the job, but they are not one transaction.
+- **A DPIA and a data-sharing agreement.** Calendar-time work, not code. See `docs/06-protocol.md`.
+- **A real deployment.** `Dockerfile` and `deploy/` are written but have never been built or run (see `docs/07-deploy.md`).
