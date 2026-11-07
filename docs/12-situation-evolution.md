@@ -4,7 +4,7 @@
 
 ## Principles
 1. **Blind Round 1 covers the timeline.** A risk's timeline is ACAPS analysis. It follows the radar rule exactly: an expert gets it only when the risk has at least one resolved card and no live one; staff always. It lives INSIDE the full risk view and is never part of the neutral view.
-2. **Real data only, labelled as recorded.** Dates are "as recorded by ACAPS". No durations or lags are computed from them. Completion rate is shown as "analyst-recorded, meaning not standardised", never as a probability.
+2. **Real data only, labelled as recorded.** Dates are "as recorded by ACAPS". No durations or lags are computed from them. Completion rate is shown as "analyst-recorded, meaning not standardised", never as a probability. Triggers have no probability of their own: none is derived from the parent risk's band or from a completion rate. The timeline shows only what the export holds; no ACAPS history beyond it is assumed, and no ACAPS data is needed to build or to register anything here.
 3. **No automatic cross-risk inference.** A link between two questions is created only by a moderator, with a stated mechanism and a rival explanation, and is labelled "analyst judgement".
 4. **Panel series respect the release floor.** A round with fewer than 5 respondents is never shown; intervals accompany every point; no per-person trajectories; times are day-coarse. Staff only for now.
 5. **Small cells are marked, not hidden, in the staff grid** (counts of radar risks and cards; no expert data), and the grid says cells under 10 are descriptive only.
@@ -36,4 +36,4 @@ Every link is displayed with "Analyst judgement, not a finding", its mechanism a
 - `StepChart` is an accessible SVG component (title, desc, a data table alternative, no colour-only meaning).
 
 ## 6. Not built, by design
-Automatic cascade detection; correlation statistics between questions (not detectable at pilot scale, see `docs/11` and the power argument in the research report); expert-facing panel series; anything that treats completion rate as a probability.
+Automatic cascade detection; correlation statistics between questions (not detectable at pilot scale. This is an estimate from the planner's prototype, not measured by a script in this repository; the power specification is in progress as `docs/14` and is not yet written); expert-facing panel series; anything that treats completion rate as a probability.
