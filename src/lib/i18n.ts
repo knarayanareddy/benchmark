@@ -1,0 +1,24 @@
+export type Lang = "en" | "fr";
+const D: Record<string, { en: string; fr: string }> = {
+  pulse: { en: "Pulse", fr: "Pouls" },
+  risks: { en: "Risks", fr: "Risques" },
+  stage: { en: "Honour roll", fr: "Tableau d'honneur" },
+  me: { en: "My space", fr: "Mon espace" },
+  moderator: { en: "Moderator", fr: "Modérateur" },
+  review: { en: "Review", fr: "Analyse" },
+  yourEstimate: { en: "Your estimate", fr: "Votre estimation" },
+  howSure: { en: "How sure are you?", fr: "Quel est votre degré de certitude ?" },
+  why: { en: "Why? (optional, a sentence is plenty)", fr: "Pourquoi ? (facultatif, une phrase suffit)" },
+  evidence: { en: "What is this based on?", fr: "Sur quoi cela repose-t-il ?" },
+  coi: { en: "This outcome affects my organisation's funding or position", fr: "Ce résultat touche le financement ou la position de mon organisation" },
+  submit: { en: "Lock in my estimate", fr: "Valider mon estimation" },
+  blind: { en: "Blind round: ACAPS's rating and the circle's views are hidden until you answer.", fr: "Tour à l'aveugle : la cotation d'ACAPS et les avis du cercle sont masqués jusqu'à votre réponse." },
+  unlikely: { en: "Very unlikely", fr: "Très improbable" },
+  toss: { en: "Toss-up", fr: "Incertain" },
+  likely: { en: "Very likely", fr: "Très probable" },
+  sure1: { en: "Hunch", fr: "Intuition" },
+  sure2: { en: "Fairly sure", fr: "Assez sûr" },
+  sure3: { en: "Very sure", fr: "Très sûr" },
+  shownAs: { en: "This will be shown as", fr: "Ceci sera affiché comme" },
+};
+export const t = (lang: Lang, k: string) => D[k]?.[lang] ?? D[k]?.en ?? k;
