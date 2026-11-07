@@ -27,7 +27,9 @@
     "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate",
     "worklist": "node scripts/authoring-worklist.mjs",
-    "label": "node scripts/label-observable.mjs"
+    "label": "node scripts/label-observable.mjs",
+    "simulate": "node packages/simulate/bin/run.mjs",
+    "simulate:quick": "node packages/simulate/bin/run.mjs --quick"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
