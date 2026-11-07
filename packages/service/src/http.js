@@ -157,6 +157,12 @@ export function createHandler({
     ['POST', /^\/api\/anon\/estimates$/, async (req, m, b) => service.submitAnonymousEstimate(b)],
     ['POST', /^\/api\/anon\/status$/, async (req, m, b) => service.anonymousStatus(b)],
     ['POST', /^\/api\/anon\/erase$/, async (req, m, b) => service.eraseAnonymousEstimate(b)],
+    // The optional second look (Round 2). Its arm is never in any response, only its background.
+    ['POST', /^\/api\/second-look$/, async (req, m, b) => service.openSecondLook(await actorOf(req), { cardId: b.cardId })],
+    ['POST', /^\/api\/anon\/second-look$/, async (req, m, b) => service.openAnonymousSecondLook(b)],
+    ['GET', /^\/api\/staff\/cards\/([^/]+)\/second-look$/, async (req, m) => service.getSecondLook(await actorOf(req), m[1])],
+    ['PUT', /^\/api\/staff\/cards\/([^/]+)\/second-look$/, async (req, m, b) => service.setSecondLook(await actorOf(req), { cardId: m[1], content: b })],
+    ['GET', /^\/api\/staff\/second-look\/summary$/, async (req) => service.secondLookSummary(await actorOf(req))],
     ['GET', /^\/api\/staff\/breakglass$/, async (req) => service.listBreakGlass(await actorOf(req))],
     ['POST', /^\/api\/staff\/breakglass$/, async (req, m, b) => service.requestBreakGlass(await actorOf(req), b)],
     ['POST', /^\/api\/staff\/breakglass\/([^/]+)\/decide$/, async (req, m, b) => service.decideBreakGlass(await actorOf(req), m[1], b)],

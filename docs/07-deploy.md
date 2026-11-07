@@ -37,6 +37,10 @@ Decide both before inviting anyone: the consent text an expert accepts describes
 
 `packages/web` is built by Vite (`npm run build -w @benchmark/web`; the Dockerfile does it) and served by the service at `/` (experts) and `/staff`. They are installable (a web app manifest and PNG icons) and the shell works offline through a service worker that never touches `/api/*`: no answer, token or ballot is cached by it. Answers given offline wait in the phone's IndexedDB and are sent on reconnect. Because the pages and the worker are served `no-cache`, a deploy reaches installed apps on their next visit. Installing needs HTTPS (Caddy provides it) and has not been tried on a physical phone.
 
+## Do not rotate the ballot secret in the middle of a round
+
+`BENCHMARK_BALLOT_SECRET` keys the anonymous ballot tokens **and** the random assignment of second-look arms (`docs/08-second-look.md`). Changing it moves every expert to a new arm and breaks the comparison, and for service-held anonymous experts it also stops their earlier answers being found for revision, export or erase. Rotate only between experiments, with all rounds closed.
+
 ## Secrets
 
 | Variable | What it protects | If you lose it |

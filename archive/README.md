@@ -4,6 +4,8 @@ Historical design and research documents, kept for reasoning and provenance. **T
 
 Rule **R9 has since been reversed**: the archived blueprints say to compute ACAPS's baseline first and have the expert adjust it. That anchors the answer, and round 1 is now blind (see `docs/02-scoring-rules.md`, R9, and the amendment log in `docs/06-protocol.md`).
 
+Files carrying the superseded-rule notice: `design/BENCHMARK-blueprint.html`, `planning/product-audit.html`.
+
 Current sources of truth: `BUILD.md`, `docs/02-scoring-rules.md`, `docs/03-the-gap-to-real.md`, `docs/05-service-and-privacy.md`, `docs/06-protocol.md`.
 
 | Document | Role | Status |

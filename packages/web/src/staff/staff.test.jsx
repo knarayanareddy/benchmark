@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { StaffApp } from './StaffApp.jsx';
 import { Cards } from './Cards.jsx';
@@ -110,6 +110,147 @@ describe('cards', () => {
     await userEvent.type(within(rowB).getByLabelText(/Evidence link/), 'https://acleddata.com/x');
     await userEvent.click(within(rowB).getByRole('button', { name: 'Record outcome' }));
     await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/staff/cards/B/resolve', { outcome: 0, evidenceUrl: 'https://acleddata.com/x' }));
+  });
+});
+
+describe('background for the second look', () => {
+  const open1 = { id: 'A', statement: 'open one', status: 'open', round: 1, responses: 3, hasSecondLook: false };
+  const editorBtn = { name: 'Background for the second look' };
+
+  it('is offered only while round 1 is open, and the tag shows once it is set', async () => {
+    const list = [
+      { ...open1, hasSecondLook: true },
+      { id: 'B', statement: 'closed one', status: 'closed', round: 1, responses: 6, hasSecondLook: true },
+      { id: 'D', statement: 'round two open', status: 'open', round: 2, responses: 2, hasSecondLook: false },
+    ];
+    render(<Cards api={routes({ 'GET /api/staff/cards': list })} />);
+    const rowA = (await screen.findByText('open one')).closest('tr');
+    expect(within(rowA).getByText('background set')).toBeInTheDocument();
+    expect(within(rowA).getByRole('button', editorBtn)).toBeInTheDocument();
+    const rowB = screen.getByText('closed one').closest('tr');
+    expect(within(rowB).getByText('background set')).toBeInTheDocument();
+    expect(within(rowB).queryByRole('button', editorBtn)).toBeNull();
+    expect(within(screen.getByText('round two open').closest('tr')).queryByRole('button', editorBtn)).toBeNull();
+  });
+
+  it('sends the background with sources trimmed, blank sources dropped and the lines split, then reloads', async () => {
+    let cards = [open1];
+    let sent = null;
+    const a = routes({
+      'GET /api/staff/cards': () => cards,
+      'PUT /api/staff/cards/A/second-look': (b) => { sent = b; cards = [{ ...open1, hasSecondLook: true }]; return { cardId: 'A', version: 1 }; },
+    });
+    render(<Cards api={a} />);
+    const row = (await screen.findByText('open one')).closest('tr');
+    await userEvent.click(within(row).getByRole('button', editorBtn));
+    fireEvent.change(within(row).getByLabelText(/reasoning/), { target: { value: 'Cases rose.\nSecond line.' } });
+    await userEvent.click(within(row).getByRole('button', { name: 'Add source' }));
+    fireEvent.change(within(row).getByLabelText('Source label 1'), { target: { value: '  WHO  ' } });
+    fireEvent.change(within(row).getByLabelText('Source link 1 (https)'), { target: { value: ' https://who.int/a ' } });
+    await userEvent.click(within(row).getByRole('button', { name: 'Add source' }));
+    await userEvent.click(within(row).getByRole('button', { name: 'Add source' }));
+    fireEvent.change(within(row).getByLabelText('Source label 3'), { target: { value: 'Ignored' } });
+    fireEvent.change(within(row).getByLabelText('Source link 3 (https)'), { target: { value: 'https://x.example' } });
+    await userEvent.click(within(row).getByRole('button', { name: 'Remove source 3' }));
+    fireEvent.change(within(row).getByLabelText(/more likely/), { target: { value: '  Rising cases \n\n Rainy season  ' } });
+    fireEvent.change(within(row).getByLabelText(/less likely/), { target: { value: 'Vaccines arrived' } });
+    await userEvent.click(within(row).getByRole('button', { name: 'Save background' }));
+    await waitFor(() => expect(a).toHaveBeenCalledWith('PUT', '/api/staff/cards/A/second-look', expect.anything()));
+    expect(sent).toEqual({
+      acapsReasoning: 'Cases rose.\nSecond line.',
+      sources: [{ label: 'WHO', url: 'https://who.int/a' }],
+      higher: ['Rising cases', 'Rainy season'],
+      lower: ['Vaccines arrived'],
+    });
+    expect(await within(row).findByText('Saved')).toBeInTheDocument();
+    expect(await within(screen.getByText('open one').closest('tr')).findByText('background set')).toBeInTheDocument();
+  });
+
+  it('shows every problem the service gives, and allows at most 8 sources', async () => {
+    const a = routes({
+      'GET /api/staff/cards': [open1],
+      'PUT /api/staff/cards/A/second-look': fail(400, 'background not saved', { problems: ['the higher list has 6 lines; use 1 to 5', 'a probability or percentage is not allowed'] }),
+    });
+    render(<Cards api={a} />);
+    const row = (await screen.findByText('open one')).closest('tr');
+    await userEvent.click(within(row).getByRole('button', editorBtn));
+    expect(within(row).getByText(/Do not include any probability or percentage: it is rejected./)).toBeInTheDocument();
+    for (let i = 0; i < 8; i++) await userEvent.click(within(row).getByRole('button', { name: 'Add source' }));
+    expect(within(row).getByRole('button', { name: 'Add source' })).toBeDisabled();
+    await userEvent.click(within(row).getByRole('button', { name: 'Save background' }));
+    expect(await within(row).findByRole('alert')).toHaveTextContent('background not saved — the higher list has 6 lines; use 1 to 5 — a probability or percentage is not allowed');
+  });
+});
+
+describe('background editor reads back what is saved', () => {
+  const saved = { cardId: 'A', locked: false, content: { acapsReasoning: 'The reading rests on three months of reports.', sources: [{ label: 'WHO bulletin', url: 'https://who.int/b' }], higher: ['Flooding raises the chance of an outbreak.', 'Displacement is rising.'], lower: ['Vaccination reached most of the district.'] } };
+
+  it('starts from the saved text when the card already has background, and sends the edited version', async () => {
+    const a = routes({
+      'GET /api/staff/cards': [{ id: 'A', statement: 'open one', status: 'open', round: 1, responses: 0, hasSecondLook: true }],
+      'GET /api/staff/cards/A/second-look': saved,
+      'PUT /api/staff/cards/A/second-look': (b) => { expect(b.higher).toEqual(['Flooding raises the chance of an outbreak.', 'Displacement is rising.', 'A third reason that was added.']); expect(b.sources).toEqual([{ label: 'WHO bulletin', url: 'https://who.int/b' }]); return { cardId: 'A', version: 3 }; },
+    });
+    render(<Cards api={a} />);
+    const row = (await screen.findByText('open one')).closest('tr');
+    await userEvent.click(within(row).getByRole('button', { name: 'Background for the second look' }));
+    expect(await within(row).findByDisplayValue('The reading rests on three months of reports.')).toBeInTheDocument();
+    expect(within(row).getByDisplayValue('WHO bulletin')).toBeInTheDocument();
+    await userEvent.type(within(row).getByLabelText(/more likely/), '{enter}A third reason that was added.');
+    await userEvent.click(within(row).getByRole('button', { name: 'Save background' }));
+    expect(await within(row).findByText('Saved')).toBeInTheDocument();
+  });
+
+  it('a card with no background opens an empty editor and makes no read request', async () => {
+    const a = routes({ 'GET /api/staff/cards': [{ id: 'A', statement: 'open one', status: 'open', round: 1, responses: 0, hasSecondLook: false }] });
+    render(<Cards api={a} />);
+    const row = (await screen.findByText('open one')).closest('tr');
+    await userEvent.click(within(row).getByRole('button', { name: 'Background for the second look' }));
+    expect(within(row).getByLabelText(/ACAPS’s reasoning/)).toHaveValue('');
+    expect(a).not.toHaveBeenCalledWith('GET', '/api/staff/cards/A/second-look');
+  });
+
+  it('warns that saving would replace the text if the saved background cannot be loaded', async () => {
+    const a = routes({ 'GET /api/staff/cards': [{ id: 'A', statement: 'open one', status: 'open', round: 1, responses: 0, hasSecondLook: true }], 'GET /api/staff/cards/A/second-look': fail(500, 'database down') });
+    render(<Cards api={a} />);
+    const row = (await screen.findByText('open one')).closest('tr');
+    await userEvent.click(within(row).getByRole('button', { name: 'Background for the second look' }));
+    expect(await within(row).findByRole('alert')).toHaveTextContent(/Saving now would replace it/);
+  });
+});
+
+describe('second look summary', () => {
+  const summary = {
+    cards: 4,
+    arms: {
+      control: { n: 12, suppressed: false, meanShift: -0.012, meanTowardAcaps: 0, nWithAcaps: 12, sawCount: 0 },
+      balanced: { n: 3, suppressed: true, meanShift: null, meanTowardAcaps: null, nWithAcaps: 3, sawCount: 3 },
+      acaps_view: { n: 10, suppressed: false, meanShift: 0.025, meanTowardAcaps: -0.04, nWithAcaps: 10, sawCount: 9 },
+    },
+  };
+
+  it('is a moderator tab: moderators see the table, analysts are refused without any request', async () => {
+    const a = routes({ 'GET /api/staff/me': MOD, 'GET /api/staff/cards': [], 'GET /api/staff/second-look/summary': summary });
+    const { unmount } = render(<StaffApp api={a} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Second look' }));
+    const rows = (await screen.findByText('No extra background')).closest('tr');
+    expect(within(rows).getByText('12')).toBeInTheDocument();
+    expect(within(rows).getByText('-1.2 pts')).toBeInTheDocument();
+    expect(within(rows).getByText('0.0 pts')).toBeInTheDocument();
+    const suppressed = within(screen.getByText('Reasons for higher and lower').closest('tr'));
+    expect(suppressed.getAllByText('too few answers (n=3)')).toHaveLength(2);
+    expect(suppressed.queryByText(/pts/)).toBeNull();
+    const acaps = within(screen.getByText("ACAPS's analysis").closest('tr'));
+    expect(acaps.getByText('+2.5 pts')).toBeInTheDocument();
+    expect(acaps.getByText('-4.0 pts')).toBeInTheDocument();
+    expect(screen.getByText(/cannot show that the background improves accuracy, which needs resolved outcomes/)).toBeInTheDocument();
+    unmount();
+
+    const analyst = routes({ 'GET /api/staff/me': { id: 'an1', role: 'analyst' }, 'GET /api/staff/cards': [], 'GET /api/staff/second-look/summary': summary });
+    render(<StaffApp api={analyst} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Second look' }));
+    expect(await screen.findByText('Only moderators can use this.')).toBeInTheDocument();
+    expect(analyst.mock.calls.map((c) => c[1])).not.toContain('/api/staff/second-look/summary');
   });
 });
 

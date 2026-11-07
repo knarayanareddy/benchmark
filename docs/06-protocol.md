@@ -3,6 +3,7 @@
 **Status: draft.** This is the protocol to timestamp (for example on OSF) **before the first card opens**. Nothing below is a result. No panel has run. Items marked **[DECISION]** need a human owner.
 
 **Amendment log** (the draft is not yet registered; once it is, changes are dated and appended here, never edited in place).
+- *7 Nov 2026, draft (second entry).* Added the randomised second look as a secondary measurement in Round 2 only. It never touches the primary endpoint, never shows an ACAPS probability, and its content is locked when Round 1 closes.
 - *7 Nov 2026, draft.* Primary endpoint changed from the pooled **Round-2** estimate to the pooled blind **Round-1** estimate, and rule R9 changed so no expert sees ACAPS's rating or a pre-filled number in Round 1. Reason: under the old design every expert started from ACAPS's own number, so the panel-versus-ACAPS comparison measured anchoring, not forecasting.
 
 ## Question
@@ -21,6 +22,7 @@ Paired Brier difference, **panel minus ACAPS**, over the same resolved statement
 
 - **Round-2 pooled estimate versus ACAPS** (same paired method). Round 2 shows each expert the panel distribution and their own first answer, so it measures what social information does, not independent forecasting.
 - **Revision effect:** Round-2 minus Round-1 Brier, and the direction of each revision relative to ACAPS's reading (toward or away).
+- **Second-look arms** (`docs/08-second-look.md`): per arm, mean Round-2 minus Round-1 change and the change toward ACAPS's reading, among those who opened the background and among all. Descriptive; a cell with fewer than 5 pairs is not reported. Arms are assigned at random per expert per card and the background text is fixed before Round 1 opens.
 - **Time per answer and completion in Round 1**, because blind answers are slower than adjusting a number. This is a cost of R9 and is measured, not assumed.
 
 ## Scope and exclusions

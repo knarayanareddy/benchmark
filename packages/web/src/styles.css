@@ -27,6 +27,7 @@ table { width:100%; border-collapse:collapse; font-size:.9rem; } th,td { text-al
 .tag { display:inline-block; font-size:.75rem; padding:.05rem .45rem; border-radius:99px; background:#e6eaee; margin-right:.3rem; }
 [hidden] { display:none !important; }
 label.plain { font-weight:400; }
+.pre-wrap { white-space: pre-wrap; }
 .recovery { font: 600 1.05rem/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; word-break: break-word; background:#f1f3f5; padding:.8rem; border-radius:8px; user-select:all; }
 .banner { background:#fff6e0; border-bottom:1px solid #e8d49a; padding:.5rem 1rem; text-align:center; font-size:.9rem; }
 .tabs { display:flex; gap:.4rem; flex-wrap:wrap; margin:0 0 1rem; }

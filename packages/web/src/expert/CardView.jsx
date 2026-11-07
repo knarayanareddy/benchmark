@@ -4,6 +4,7 @@ import { sendEstimate } from '../lib/send.js';
 import { enqueue } from '../lib/queue.js';
 import { obtainBallot } from '../lib/device.js';
 import { anonymous } from '../lib/send.js';
+import { SecondLook } from './SecondLook.jsx';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 const KINDS = [
@@ -56,6 +57,9 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
   const [value, setValue] = useState(/** @type {number | null} */ (first == null ? null : Math.round(first * 100)));
   const valid = Number.isInteger(value) && /** @type {number} */ (value) >= 1 && /** @type {number} */ (value) <= 99;
   const [state, setState] = useState({ phase: 'idle', text: '' });
+  const [look, setLook] = useState(/** @type {any} */ (null)); // the optional background, Round 2 only
+  const [lookPhase, setLookPhase] = useState(/** @type {'idle' | 'loading'} */ ('idle'));
+  const [lookError, setLookError] = useState('');
 
   // A device-held key means the server cannot say what this device already answered; the device asks.
   useEffect(() => {
@@ -73,10 +77,9 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
     return () => { live = false; };
   }, [api, card.id, card.deviceHeld, revise]);
 
-  async function submit() {
-    if (!valid) return;
+  /** Save one answer, the same way whether it is a new revision or the first answer kept. */
+  async function save(p) {
     setState({ phase: 'saving', text: '' });
-    const p = /** @type {number} */ (value) / 100;
     try {
       const r = await sendEstimate(api, mode, card.id, p);
       setState({ phase: 'saved', text: `Saved: ${pct(r.p)}${r.clamped ? ' (kept within 1–99%)' : ''}. Thank you.` });
@@ -89,8 +92,29 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
       } else setState({ phase: 'error', text: err.message });
     }
   }
+  async function submit() {
+    if (!valid) return;
+    await save(/** @type {number} */ (value) / 100);
+  }
+
+  /** The optional background. A device-held key proves its ballot first, exactly as an answer does. */
+  async function openLook() {
+    setLookPhase('loading'); setLookError('');
+    try {
+      const r = mode === 'device'
+        ? await anonymous('POST', '/api/anon/second-look', await obtainBallot(api, card.id))
+        : await api('POST', '/api/second-look', { cardId: card.id });
+      setLook(r);
+    } catch (e) { setLookError(asErr(e).message); } finally { setLookPhase('idle'); }
+  }
 
   const done = state.phase === 'saved' || state.phase === 'queued';
+  const busy = state.phase === 'saving';
+  const lookBlock = revise && card.secondLook?.available && (look
+    ? <SecondLook look={look} />
+    : lookPhase === 'loading'
+      ? <p className="muted">Loading…</p>
+      : <div className="row"><button type="button" className="secondary" onClick={openLook}>Look at the background first (optional)</button></div>);
   return (
     <div className="card">
       <h3>{card.statement}</h3>
@@ -100,21 +124,30 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
         : <p className="muted">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
       {blocked ? <div className="msg warn">{blocked}</div> : (
         <>
-          <output className="big" htmlFor={`s-${card.id}`}>{value == null ? '—' : `${value}%`}</output>
+          {lookBlock}
+          {lookError && <div className="msg err" role="alert">{lookError}</div>}
+          <output className="big" htmlFor={`s-${card.id}`}>{valid ? `${value}%` : '—'}</output>
           <input type="range" id={`s-${card.id}`} min={1} max={99} step={1} value={value ?? 50} disabled={done}
             className={value == null ? 'untouched' : undefined}
             aria-label="Your probability that this happens"
             onChange={(e) => setValue(Number(e.target.value))}
-            // A tap exactly on the resting thumb fires no change event, so a release or key press also counts.
-            onPointerUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }}
-            onKeyUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }} />
+            // A tap exactly on the resting thumb fires no change event, so a pointer release counts as choosing it.
+            // Keys do not need this: every arrow, Home, End and Page key moves the thumb and fires a change.
+            // (A key-up handler would record 50 as an answer just from tabbing into the slider.)
+            onPointerUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }} />
           <label htmlFor={`n-${card.id}`} className="plain">Or type it (1–99)</label>
           <input type="number" id={`n-${card.id}`} min={1} max={99} step={1} inputMode="numeric" disabled={done}
             value={value ?? ''} onChange={(e) => setValue(e.target.value === '' ? null : Number(e.target.value))} />
           {value != null && !valid && <div className="msg warn" role="alert">Use a whole number from 1 to 99.</div>}
           <div className="row">
             {done ? <button type="button" className="secondary" onClick={onNext}>Next question</button>
-              : <button type="button" disabled={state.phase === 'saving' || !valid} onClick={submit}>{revise ? 'Save my revision' : 'Submit'}</button>}
+              : revise
+                ? <>
+                  {/* Equal weight on purpose: both are the same plain button, and both need the first answer to be known. */}
+                  <button type="button" disabled={busy || first == null} onClick={() => save(first)}>Keep my first answer</button>
+                  <button type="button" disabled={busy || first == null || !valid} onClick={submit}>Save my revision</button>
+                </>
+                : <button type="button" disabled={busy || !valid} onClick={submit}>Submit</button>}
           </div>
         </>
       )}

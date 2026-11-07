@@ -35,6 +35,10 @@ const TABLES = {
       card_id: d.cardId, respondent_key: d.respondentKey, round: d.round, expert_id: d.expertId ?? null, level: d.level, p: d.p,
     }),
   },
+  second_look: {
+    schema: 'answers',
+    columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey, arm: d.arm }),
+  },
   releases: {
     schema: 'answers',
     columns: (d) => ({ card_id: d.cardId, round: d.round, visibility: d.visibility, n: d.n, closed: d.closed }),

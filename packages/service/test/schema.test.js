@@ -42,6 +42,14 @@ test('ballot stuffing: one answer per (card, respondent, round); anonymous rows 
   await rejects(db, est('f', 'tok4', 1, 'null', 'anonymous', 0.0), /p_check|violates check/);
 });
 
+test('second look: the database refuses an unknown arm and a second row for one (card, respondent)', async () => {
+  const db = await fresh();
+  const sl = (k, resp, arm) => `insert into answers.second_look(k,doc,card_id,respondent_key,arm) values ('${k}','{}','C1','${resp}','${arm}')`;
+  await rejects(db, sl('s1', 'tok1', 'acaps_number'), /violates check/);
+  await db.exec(sl('s2', 'tok1', 'balanced'));
+  await rejects(db, sl('s3', 'tok1', 'control'), /unique|duplicate/);
+});
+
 test('a release below the floor of 5, or a duplicate release, is refused', async () => {
   const db = await fresh();
   const rel = (k, n) => `insert into answers.releases(k,doc,card_id,round,visibility,n,closed) values ('${k}','{}','C1',1,'panel',${n},true)`;

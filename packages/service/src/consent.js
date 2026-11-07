@@ -7,7 +7,7 @@
 import { LEVELS, LEVEL_COPY } from '@benchmark/core/anonymity';
 import { sha256, toHex } from '@benchmark/core/hmac';
 
-export const CONSENT_VERSION = '2026-11-v2';
+export const CONSENT_VERSION = '2026-11-v3';
 export const RETENTION_MONTHS = 12;
 
 /**
@@ -41,6 +41,7 @@ export function consentText(level, o = {}) {
     `To other experts: ${c.toPeers}`,
     `Caution: ${c.warn}`,
     `Residual risk: ${residualRisk(level, o)}`,
+    'Extra background: after the first round, some questions show extra background that is chosen at random, so we can learn whether it helps people forecast better or just pulls them toward one view. You can ignore it.',
     `Retention: individual answers are deleted ${RETENTION_MONTHS} months after the question resolves; only released aggregates are kept.`,
     'You can export or erase your data at any time.',
   ].join('\n');

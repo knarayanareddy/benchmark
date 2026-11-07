@@ -5,11 +5,12 @@ import { Cards } from './Cards.jsx';
 import { Dissents } from './Dissents.jsx';
 import { BreakGlass } from './BreakGlass.jsx';
 import { Invites } from './Invites.jsx';
+import { SecondLook } from './SecondLook.jsx';
 import { Audit } from './Audit.jsx';
 
 const TOKEN = 'session.staff';
 /** @type {Array<[string, string, (p: { api: import('../lib/api.js').Api, me: { id: string, role: string } }) => any]>} */
-const TABS = [['cards', 'Cards', Cards], ['dissents', 'Objections', Dissents], ['breakglass', 'Safety override', BreakGlass], ['invites', 'Invites', Invites], ['audit', 'Audit', Audit]];
+const TABS = [['cards', 'Cards', Cards], ['dissents', 'Objections', Dissents], ['breakglass', 'Safety override', BreakGlass], ['invites', 'Invites', Invites], ['secondlook', 'Second look', SecondLook], ['audit', 'Audit', Audit]];
 
 function SignIn({ api, onDone }) {
   const [cred, setCred] = useState('');

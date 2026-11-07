@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from './App.jsx';
 import { Onboard } from './Onboard.jsx';
@@ -128,6 +128,18 @@ describe('answering', () => {
     await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.07 }));
   });
 
+  it('tabbing into the slider does not record an answer, and an impossible typed number is not echoed back', async () => {
+    const a = routes({});
+    const { container } = render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
+    await userEvent.tab();
+    await userEvent.tab();
+    fireEvent.keyUp(slider(), { key: 'Tab' });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(container.querySelector('output')).toHaveTextContent('—');
+    await userEvent.type(screen.getByLabelText('Or type it (1–99)'), '150');
+    expect(container.querySelector('output')).toHaveTextContent('—');
+  });
+
   it('answering exactly where the thumb rests still counts once the expert releases it', async () => {
     const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p }) });
     render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
@@ -246,6 +258,162 @@ describe('device-held key', () => {
     render(<MyData api={a} mode="server" onErased={() => {}} />);
     await userEvent.click(screen.getByRole('button', { name: /Erase my data/ }));
     expect(a).not.toHaveBeenCalled();
+  });
+});
+
+describe('second look (round 2)', () => {
+  const SL = { available: true };
+  const rev = (over = {}) => card({ round: 2, yourEstimate: 0.2, release: null, secondLook: SL, ...over });
+  const balanced = { kind: 'balanced', higher: ['Recent cases rose.', 'Rainy season starts.'], lower: ['Vaccines arrived.'] };
+  const analysis = { kind: 'acaps_view', acapsReasoning: 'Line one.\nLine two.', sources: [{ label: 'WHO bulletin', url: 'https://who.int/x' }, { label: 'Local report', url: 'http://insecure.example/y' }] };
+  const offer = () => screen.getByRole('button', { name: 'Look at the background first (optional)' });
+  const keep = () => screen.getByRole('button', { name: 'Keep my first answer' });
+  const save = () => screen.getByRole('button', { name: 'Save my revision' });
+  const slider = () => screen.getByRole('slider', { name: /probability/i });
+
+  it('offers the optional background only in round 2, and only when the service says it is available', () => {
+    const { rerender } = render(<CardView api={routes({})} card={rev()} mode="server" revise onNext={() => {}} />);
+    expect(offer()).toBeInTheDocument();
+    rerender(<CardView api={routes({})} card={rev({ secondLook: { available: false } })} mode="server" revise onNext={() => {}} />);
+    expect(screen.queryByRole('button', { name: /Look at the background/ })).toBeNull();
+    rerender(<CardView api={routes({})} card={rev({ secondLook: undefined })} mode="server" revise onNext={() => {}} />);
+    expect(screen.queryByRole('button', { name: /Look at the background/ })).toBeNull();
+    rerender(<CardView api={routes({})} card={card({ secondLook: SL })} mode="server" onNext={() => {}} />);
+    expect(screen.queryByRole('button', { name: /Look at the background/ })).toBeNull();
+  });
+
+  it('a logged-in expert fetches by the login, and sees balanced reasons under the same headings and markup', async () => {
+    const a = routes({ 'POST /api/second-look': (b) => { expect(b).toEqual({ cardId: 'C1' }); return balanced; } });
+    render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
+    expect(screen.getByText(/Your first answer was 20%/)).toBeInTheDocument();
+    await userEvent.click(offer());
+    const higher = await screen.findByRole('heading', { name: 'Reasons it could be more likely' });
+    const lower = screen.getByRole('heading', { name: 'Reasons it could be less likely' });
+    expect(screen.getByRole('heading', { name: 'Background' })).toBeInTheDocument();
+    // Same wrapper, same child tags and classes on both sides.
+    const shape = (el) => [el.parentElement.tagName, el.parentElement.className, [...el.parentElement.children].map((c) => c.tagName)];
+    expect(shape(higher)).toEqual(shape(lower));
+    expect(within(higher.parentElement).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Recent cases rose.', 'Rainy season starts.']);
+    expect(within(lower.parentElement).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Vaccines arrived.']);
+    expect(screen.getByText(/Shown to help you check your thinking. You do not have to change your answer./)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Look at the background/ })).toBeNull();
+  });
+
+  it('a device-held expert proves the blind ballot first and sends it with no login header', async () => {
+    const srv = blindServer();
+    await createSecret();
+    const a = routes({ 'GET /api/blind/key': srv.key, 'POST /api/blind/issue': (b) => srv.issue(b) });
+    const seen = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+      const body = JSON.parse(init.body);
+      seen.push({ url, headers: init.headers, body });
+      if (url === '/api/anon/status') return json({ round1: 0.2, round2: null });
+      if (url === '/api/anon/second-look') return json(balanced);
+      throw new Error(`unexpected ${url}`);
+    }));
+    render(<CardView api={a} card={rev({ deviceHeld: true })} mode="device" revise onNext={() => {}} />);
+    await waitFor(() => expect(keep()).toBeEnabled());
+    await userEvent.click(offer());
+    expect(await screen.findByRole('heading', { name: 'Reasons it could be more likely' })).toBeInTheDocument();
+    const look = seen.filter((s) => s.url === '/api/anon/second-look');
+    expect(look).toHaveLength(1);
+    expect(look[0].headers).toEqual({ 'content-type': 'application/json' });
+    expect(Object.keys(look[0].headers).map((h) => h.toLowerCase())).not.toContain('authorization');
+    expect(look[0].body).toMatchObject({ cardId: 'C1' });
+    expect(srv.verify('C1', look[0].body.token, look[0].body.signature)).toBe(true);
+    expect(look[0].body.token).toBe(seen.find((s) => s.url === '/api/anon/status').body.token);
+  });
+
+  it.each([['balanced', balanced], ['acaps_view', analysis]])('the %s background names no arm and no probability', async (_kind, look) => {
+    const a = routes({ 'POST /api/second-look': () => look });
+    const { container } = render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
+    await userEvent.click(offer());
+    const section = (await screen.findByRole('heading', { name: 'Background' })).closest('section');
+    expect(section.textContent).not.toMatch(/control|acaps_view|balanced|probab|\d\s*%/i);
+    expect(container.textContent).not.toMatch(/control|acaps_view|balanced/i);
+  });
+
+  it('an analysis shows its reasoning with line breaks kept, and links only https sources', async () => {
+    const a = routes({ 'POST /api/second-look': () => analysis });
+    render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
+    await userEvent.click(offer());
+    expect(await screen.findByRole('heading', { name: "ACAPS's analysis" })).toBeInTheDocument();
+    expect(screen.getByText(/Line one\. Line two\./)).toHaveClass('pre-wrap');
+    const link = screen.getByRole('link', { name: 'WHO bulletin' });
+    expect(link).toHaveAttribute('href', 'https://who.int/x');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.queryByRole('link', { name: 'Local report' })).toBeNull();
+    expect(screen.getByText('Local report').closest('li').querySelector('a')).toBeNull();
+    expect(screen.getByText('Local report').closest('li')).toHaveTextContent(/^Local report$/);
+  });
+
+  it('shows Loading… while the background is fetched', async () => {
+    const a = routes({ 'POST /api/second-look': () => new Promise(() => {}) });
+    render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
+    await userEvent.click(offer());
+    expect(await screen.findByText('Loading…')).toBeInTheDocument();
+  });
+
+  it('a refused background says why, and the revision form stays usable', async () => {
+    const a = routes({ 'POST /api/second-look': fail(409, 'there is no extra background for this question'), 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 2, p: b.p }) });
+    render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
+    await userEvent.click(offer());
+    expect(await screen.findByRole('alert')).toHaveTextContent('there is no extra background for this question');
+    expect(offer()).toBeInTheDocument();
+    fireEvent.change(slider(), { target: { value: '45' } });
+    await userEvent.click(save());
+    await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.45 }));
+  });
+
+  it('"Keep my first answer" submits exactly the first answer, and "Save my revision" submits the slider', async () => {
+    const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 2, p: b.p }) });
+    const { unmount } = render(<CardView api={a} card={rev({ yourEstimate: 0.37 })} mode="server" revise onNext={() => {}} />);
+    fireEvent.change(slider(), { target: { value: '80' } }); // the slider is elsewhere: Keep must still send 37%
+    await userEvent.click(keep());
+    expect(await screen.findByText(/Saved: 37%/)).toBeInTheDocument();
+    expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.37 });
+    unmount();
+    const b = routes({ 'POST /api/estimates': (x) => ({ cardId: x.cardId, round: 2, p: x.p }) });
+    render(<CardView api={b} card={rev()} mode="server" revise onNext={() => {}} />);
+    fireEvent.change(slider(), { target: { value: '60' } });
+    await userEvent.click(save());
+    expect(await screen.findByText(/Saved: 60%/)).toBeInTheDocument();
+    expect(b).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.6 });
+  });
+
+  it('a device-held expert keeps the first answer through the device, and the answer is the one it recovered', async () => {
+    const srv = blindServer();
+    await createSecret();
+    const a = routes({ 'GET /api/blind/key': srv.key, 'POST /api/blind/issue': (b) => srv.issue(b) });
+    const seen = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+      const body = JSON.parse(init.body);
+      seen.push({ url, body });
+      if (url === '/api/anon/status') return json({ round1: 0.37, round2: null });
+      return json({ cardId: 'C1', round: 2, p: body.p });
+    }));
+    render(<CardView api={a} card={rev({ yourEstimate: undefined, deviceHeld: true })} mode="device" revise onNext={() => {}} />);
+    await waitFor(() => expect(keep()).toBeEnabled());
+    fireEvent.change(slider(), { target: { value: '80' } });
+    await userEvent.click(keep());
+    expect(await screen.findByText(/Saved: 37%/)).toBeInTheDocument();
+    const sent = seen.find((s) => s.url === '/api/anon/estimates');
+    expect(sent.body.p).toBe(0.37);
+    expect(srv.verify('C1', sent.body.token, sent.body.signature)).toBe(true);
+  });
+
+  it('both revision buttons are the same plain style and size, in order, and wait for the first answer', async () => {
+    const { unmount } = render(<CardView api={routes({})} card={rev()} mode="server" revise onNext={() => {}} />);
+    const [k, s] = [keep(), save()];
+    expect(k.className).toBe(s.className);
+    expect(k.getAttribute('style')).toBe(s.getAttribute('style'));
+    expect(k).not.toHaveClass('secondary');
+    expect(k.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    unmount();
+    render(<CardView api={routes({})} card={rev({ yourEstimate: null })} mode="server" revise onNext={() => {}} />);
+    expect(keep()).toBeDisabled();
+    expect(save()).toBeDisabled();
   });
 });
 

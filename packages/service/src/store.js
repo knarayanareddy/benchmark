@@ -152,6 +152,7 @@ export const createAnswerStore = (opts) => {
     {
       cards: {},
       estimates: { unique: [['cardId', 'respondentKey', 'round']] },
+      second_look: { unique: [['cardId', 'respondentKey']] },
       releases: { unique: [['cardId', 'round', 'visibility', 'n', 'closed']] },
       dissents: {},
       notifications: {},

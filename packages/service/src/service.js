@@ -25,6 +25,9 @@ import { matches } from '@benchmark/core/dispatch';
 import { hmacSha256Hex } from '@benchmark/core/hmac';
 import * as blindrsa from '@benchmark/core/blind';
 import {
+  assignArm, validateSecondLook, contentForArm, summariseArms,
+} from '@benchmark/core/secondlook';
+import {
   newDissent, route, act, notify, close, cardLedger, ACTION, KIND,
 } from '@benchmark/domain/dissent';
 import {
@@ -129,6 +132,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       ? ballotToken(secrets.ballot, card.id, expert.id)
       : `id:${expert.id}`;
   const estimateKey = (cardId, key, round) => `${cardId}|${key}|${round}`;
+  // Recomputable from the respondent key and the ballot secret, so no identity is stored to know the arm.
+  const armFor = (/** @type {string} */ cardId, /** @type {string} */ key) =>
+    assignArm(hmacSha256Hex(secrets.ballot, `arm:v1:${cardId}:${key}`));
+  const secondLookKey = (/** @type {string} */ cardId, /** @type {string} */ key) => `${cardId}|${key}`;
   const getCard = async (id) => {
     const c = await answers.cards.get(id);
     if (!c) throw new NotFoundError(`card ${id} not found`);
@@ -302,7 +309,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       out.push({
         id: c.id, statement: c.statement, country: c.country, status: c.status, round: c.round,
         parentId: c.parentId, window: c.window, resolver: c.resolver, resolutionSource: c.resolutionSource,
-        version: c.version, responses: rows.length,
+        version: c.version, responses: rows.length, hasSecondLook: Boolean(c.secondLook),
       });
     }
     return out;
@@ -368,6 +375,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         cardId: card.id, respondentKey: key, round: card.round, level: expert.level, p: clamped,
         expertId: anonymous ? null : expert.id,
         at: anonymous ? coarsenToDay(t()).ms : t(),
+        ...(await secondLookFields(card, key)),
       });
     } catch (e) {
       if (e instanceof ConflictError) throw new ConflictError('you have already answered this round');
@@ -440,7 +448,11 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       if (expert.tokenMode === 'device') {
         // The server cannot know which cards this device has answered; the device checks that itself.
         if (card.round === 1 && matches(card, expert.declaration)) toAnswer.push(cardView(card, { deviceHeld: true }));
-        else if (card.round === 2) openForRevision.push(cardView(card, { release: await cardRelease(card.id, { round: 1 }), deviceHeld: true }));
+        else if (card.round === 2) {
+          openForRevision.push(cardView(card, {
+            release: await cardRelease(card.id, { round: 1 }), deviceHeld: true, secondLook: { available: Boolean(card.secondLook) },
+          }));
+        }
         continue;
       }
       const key = respondentKey(card, expert);
@@ -450,7 +462,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       } else if (card.round === 2) {
         const first = await mine(1);
         if (first && !(await mine(2))) {
-          openForRevision.push(cardView(card, { yourEstimate: first.p, release: await cardRelease(card.id, { round: 1 }) }));
+          openForRevision.push(cardView(card, {
+            yourEstimate: first.p, release: await cardRelease(card.id, { round: 1 }),
+            secondLook: { available: Boolean(card.secondLook) && armFor(card.id, key) !== 'control' },
+          }));
         }
       }
     }
@@ -636,7 +651,8 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     return {
       expert: e,
       aliases: await roster.aliases.find({ expertId: e.id }),
-      estimates: (await ownedEstimates(e)).map((x) => x.row),
+      // The arm and whether the second look was opened are experiment metadata, not the expert's own answer.
+      estimates: (await ownedEstimates(e)).map(({ row: { arm: _arm, sawSecondLook: _saw, ...own } }) => own),
       dissents: await answers.dissents.find({ expert: e.id }),
       notifications: await answers.notifications.find({ to: e.id }),
       note: e.tokenMode === 'device'
@@ -652,7 +668,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   async function eraseMe(actor) {
     need(actor, 'me.manage');
     const e = await expertOf(actor);
-    for (const x of await ownedEstimates(e)) await answers.estimates.remove(x.key);
+    for (const x of await ownedEstimates(e)) {
+      await answers.estimates.remove(x.key);
+      await answers.second_look.remove(secondLookKey(x.row.cardId, x.row.respondentKey));
+    }
     await answers.dissents.removeWhere({ expert: e.id });
     await answers.notifications.removeWhere({ to: e.id });
     await roster.aliases.removeWhere({ expertId: e.id });
@@ -672,7 +691,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     const cutoff = t() - months * 30 * 24 * 3600 * 1000;
     const stale = await answers.cards.find({ status: 'resolved' }, (c) => c.resolvedAt <= cutoff);
     let removed = 0;
-    for (const c of stale) removed += await answers.estimates.removeWhere({ cardId: c.id });
+    for (const c of stale) {
+      removed += await answers.estimates.removeWhere({ cardId: c.id });
+      await answers.second_look.removeWhere({ cardId: c.id });
+    }
     await audit(actor, 'retention.run', '', `${removed} rows, ${months} months`);
     return { removed, cards: stale.map((c) => c.id) };
   }
@@ -731,6 +753,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       await answers.estimates.insert(estimateKey(card.id, key, card.round), {
         cardId: card.id, respondentKey: key, round: card.round, level: LEVELS.ANONYMOUS, p: clamped, expertId: null,
         at: coarsenToDay(t()).ms,
+        ...(await secondLookFields(card, key)),
       });
     } catch (e) {
       if (e instanceof ConflictError) throw new ConflictError('this ballot has already answered this round');
@@ -753,7 +776,101 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     checkBallot(card.id, token, signature);
     let removed = 0;
     for (const round of [1, 2]) if (await answers.estimates.remove(estimateKey(card.id, `bt:${token}`, round))) removed++;
+    await answers.second_look.remove(secondLookKey(card.id, `bt:${token}`));
     return { removed };
+  }
+
+  // ── the optional second look: Round 2 background, assigned by arm ─────
+  /** The arm fields a Round-2 row carries. Decided here, never taken from a client. */
+  async function secondLookFields(card, key) {
+    if (card.round !== 2 || !card.secondLook) return {};
+    return {
+      arm: armFor(card.id, key),
+      sawSecondLook: Boolean(await answers.second_look.get(secondLookKey(card.id, key))),
+    };
+  }
+
+  /**
+   * Staff write the background while Round 1 is open. It cannot change after that,
+   * so every Round-2 answer was made against the text its arm was shown.
+   * @param {Actor} actor @param {{ cardId?: string, content?: unknown }} [input]
+   */
+  async function setSecondLook(actor, { cardId, content } = {}) {
+    need(actor, 'card.author');
+    const r = validateSecondLook(content);
+    if (!r.ok) throw new ValidationError(`second look content cannot be saved: ${r.problems.join('; ')}`, { problems: r.problems });
+    const card = await getCard(String(cardId));
+    if (card.status !== 'open' || card.round !== 1) throw new ConflictError('the second-look background is fixed once Round 1 closes');
+    const next = await updateCard(card, { secondLook: r.content });
+    await audit(actor, 'card.secondlook', card.id);
+    return { cardId: card.id, version: next.version };
+  }
+
+  /** Staff read back what is saved, so an edit starts from the current text. @param {Actor} actor @param {string} cardId */
+  async function getSecondLook(actor, cardId) {
+    need(actor, 'card.author');
+    const card = await getCard(String(cardId));
+    return { cardId: card.id, locked: !(card.status === 'open' && card.round === 1), content: card.secondLook ?? null };
+  }
+
+  /**
+   * Shared by the keyed and the device-held paths. The control arm and "no background" give
+   * the same message, so a caller cannot tell them apart.
+   */
+  async function revealSecondLook(card, key) {
+    if (card.status !== 'open' || card.round !== 2) throw new ConflictError('the extra background is offered only in Round 2');
+    if (!(await answers.estimates.get(estimateKey(card.id, key, 1)))) throw new ConflictError('you did not answer round 1');
+    // Opened after answering would make "saw it" mean nothing, so it is refused.
+    if (await answers.estimates.get(estimateKey(card.id, key, 2))) throw new ConflictError('you have already answered round 2');
+    const arm = armFor(card.id, key);
+    const content = card.secondLook ? contentForArm(card.secondLook, arm) : null;
+    if (!content) throw new ConflictError('there is no extra background for this question');
+    try {
+      await answers.second_look.insert(secondLookKey(card.id, key), {
+        cardId: card.id, respondentKey: key, arm, at: coarsenToDay(t()).ms,
+      });
+    } catch (e) {
+      // Opened before: the same background again, with no second row.
+      if (!(e instanceof ConflictError)) throw e;
+    }
+    return content;
+  }
+
+  /** Keyed experts. @param {Actor} actor @param {{ cardId?: string }} [input] */
+  async function openSecondLook(actor, { cardId } = {}) {
+    need(actor, 'estimate.submit');
+    const expert = await expertOf(actor);
+    if (expert.tokenMode === 'device') throw new ConflictError('your key is held on your device: open the extra background through the anonymous endpoint with your blind-signed token');
+    const card = await getCard(String(cardId));
+    return revealSecondLook(card, respondentKey(card, expert));
+  }
+
+  /** Device-held ballots: no login, the blind-signed token is the credential. @param {{ cardId?: string, token?: string, signature?: string }} [input] */
+  async function openAnonymousSecondLook({ cardId, token, signature } = {}) {
+    const card = await getCard(String(cardId));
+    checkBallot(card.id, token, signature);
+    return revealSecondLook(card, `bt:${token}`);
+  }
+
+  /**
+   * Moderators only. Pooled across cards, aggregates only: no keys, no per-card cells.
+   * A pair is one respondent's Round 1 and Round 2 answers to a card that had background.
+   */
+  async function secondLookSummary(actor) {
+    need(actor, 'audit.read');
+    const pairs = [];
+    let cards = 0;
+    for (const card of await answers.cards.all()) {
+      if (!card.secondLook) continue;
+      cards++;
+      const first = new Map((await answers.estimates.find({ cardId: card.id, round: 1 })).map((r) => [r.respondentKey, r]));
+      for (const r2 of await answers.estimates.find({ cardId: card.id, round: 2 })) {
+        const r1 = first.get(r2.respondentKey);
+        if (!r2.arm || !r1) continue;
+        pairs.push({ arm: r2.arm, p1: r1.p, p2: r2.p, acapsP: card.acapsP ?? null, saw: Boolean(r2.sawSecondLook) });
+      }
+    }
+    return { arms: summariseArms(pairs), cards };
   }
 
   // ── break-glass: two moderators, a written reason, 24 hours, told afterwards ──
@@ -888,5 +1005,6 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     setDeclaration, exportMe, eraseMe, applyRetention, readAudit,
     requestBreakGlass, decideBreakGlass, collectBreakGlass, listBreakGlass, ackNotice, consentFor,
     blindPublicKey, issueBlindToken, submitAnonymousEstimate, anonymousStatus, eraseAnonymousEstimate,
+    setSecondLook, getSecondLook, openSecondLook, openAnonymousSecondLook, secondLookSummary,
   });
 }
