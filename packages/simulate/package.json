@@ -1,0 +1,8 @@
+{
+  "name": "@benchmark/simulate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic-data power analysis for the pilot design. Everything it produces is a simulation under stated assumptions, never a result. See docs/14 and docs/15.",
+  "license": "MIT"
+}
