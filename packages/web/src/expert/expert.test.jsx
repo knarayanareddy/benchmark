@@ -97,17 +97,44 @@ describe('onboarding', () => {
 describe('answering', () => {
   const slider = () => screen.getByRole('slider', { name: /probability/i });
 
-  it('starts at ACAPS’ own reading, and sends what the expert moved it to', async () => {
+  it('Round 1 is blind: nothing is filled in, Submit is off until the expert puts a number down, and no ACAPS text appears', async () => {
     const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p, clamped: false }) });
-    render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
-    expect(slider()).toHaveValue('71');
+    const { container } = render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByLabelText('Or type it (1–99)')).toHaveValue(null);
+    expect(container.querySelector('output')).toHaveTextContent('—');
+    expect(container.textContent).not.toMatch(/ACAPS|71%|starts at/i);
     fireEvent.change(slider(), { target: { value: '40' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByText(/Saved: 40%/)).toBeInTheDocument();
     expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.4 });
     expect(slider()).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next question' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Something is wrong/ })).toBeInTheDocument();
+  });
+
+  it('a number can be typed instead, only whole numbers 1 to 99 are accepted, and the value is never pre-set', async () => {
+    const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p }) });
+    render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
+    const box = screen.getByLabelText('Or type it (1–99)');
+    await userEvent.type(box, '150');
+    expect(await screen.findByRole('alert')).toHaveTextContent('whole number from 1 to 99');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await userEvent.clear(box);
+    await userEvent.type(box, '7');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.07 }));
+  });
+
+  it('answering exactly where the thumb rests still counts once the expert releases it', async () => {
+    const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p }) });
+    render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
+    fireEvent.pointerUp(slider());
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.5 }));
   });
 
   it('keeps the answer on the phone when offline, and says so', async () => {
@@ -123,6 +150,7 @@ describe('answering', () => {
   it('shows a refusal instead of pretending it was saved', async () => {
     const a = routes({ 'POST /api/estimates': fail(409, 'you have already answered this round') });
     render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
+    fireEvent.change(slider(), { target: { value: '60' } });
     await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('already answered');
     expect(await pending()).toEqual([]);

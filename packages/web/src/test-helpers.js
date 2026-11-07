@@ -34,6 +34,6 @@ export function blindServer() {
   };
 }
 
-export const card = (over = {}) => ({ id: 'C1', statement: 'Cholera cases in Chad will exceed 10,000 by 30 April 2027.', country: 'TCD', round: 1, window: { from: '2026-11-01', to: '2027-04-30' }, version: 0, seedP: 0.705, ...over });
+export const card = (over = {}) => ({ id: 'C1', statement: 'Cholera cases in Chad will exceed 10,000 by 30 April 2027.', country: 'TCD', round: 1, window: { from: '2026-11-01', to: '2027-04-30' }, version: 0, ...over });
 export const emptyInbox = (over = {}) => ({ toAnswer: [], openForRevision: [], notifications: [], notices: [], deviceMode: false, ...over });
 export const json = (body, status = 200) => new Response(JSON.stringify(body), { status });

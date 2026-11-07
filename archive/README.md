@@ -2,6 +2,8 @@
 
 Historical design and research documents, kept for reasoning and provenance. **They are not the current specification and their numbers are as of when they were written.** In particular, several quote ACAPS' rating at **0.2168**, the ordinal reading; the headline is now **0.2171** (band midpoints), and the power figures moved with it (see `docs/00-overview.md`).
 
+Rule **R9 has since been reversed**: the archived blueprints say to compute ACAPS's baseline first and have the expert adjust it. That anchors the answer, and round 1 is now blind (see `docs/02-scoring-rules.md`, R9, and the amendment log in `docs/06-protocol.md`).
+
 Current sources of truth: `BUILD.md`, `docs/02-scoring-rules.md`, `docs/03-the-gap-to-real.md`, `docs/05-service-and-privacy.md`, `docs/06-protocol.md`.
 
 | Document | Role | Status |

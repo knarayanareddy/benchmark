@@ -32,3 +32,7 @@ label.plain { font-weight:400; }
 .tabs { display:flex; gap:.4rem; flex-wrap:wrap; margin:0 0 1rem; }
 .tabs button[aria-current="page"] { background:var(--accent); color:#fff; }
 details summary { cursor:pointer; }
+/* Round 1 is blind: until the expert has put a number down, the slider shows no thumb and no position. */
+input[type=range].untouched::-webkit-slider-thumb { opacity: .25; }
+input[type=range].untouched::-moz-range-thumb { opacity: .25; }
+input[type=number] { width: 8rem; }

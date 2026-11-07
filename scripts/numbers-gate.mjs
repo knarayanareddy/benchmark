@@ -161,6 +161,7 @@ const TEST_MAP = [
   ['packages/service/src/migrate.js', 'packages/service/test/migrate.test.js'],
   ['packages/service/test/breakglass.test.js', 'packages/service/test/breakglass.test.js'],
   ['packages/service/test/device.test.js', 'packages/service/test/device.test.js'],
+  ['packages/service/test/blind-round1.test.js', 'packages/service/test/blind-round1.test.js'],
   ['packages/core/src/blind.js', 'packages/benchmark/test/blind.test.js'],
   ['packages/core/src/stats.js', 'packages/benchmark/test/stats.test.js'],
   ['packages/core/src/csv.js', 'packages/benchmark/test/csv.test.js'],

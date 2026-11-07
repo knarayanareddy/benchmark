@@ -64,7 +64,9 @@ test('cards need a gate pass, a written objective, a source and a named resolver
   await assert.rejects(() => w.svc.createCard(w.analyst, { ...CARD, window: undefined }), /gate/);
   await assert.rejects(() => w.svc.createCard(w.analyst, { ...CARD, statement: 'Displacement is poised to deteriorate, exceeding 500,000 by June.' }), /gate/);
   const { card } = await w.svc.createCard(w.analyst, CARD);
-  assert.equal(card.seedP, 0.705, 'seeded on the High band midpoint, not 0.80');
+  assert.equal(card.acapsP, 0.705, 'ACAPS\'s reading is the High band midpoint, not 0.80');
+  assert.equal(card.acapsBand, 'High');
+  assert.equal('seedP' in card, false, 'there is no seed any more: Round 1 is blind');
   const e = await w.enroll('identified');
   await assert.rejects(() => w.svc.createCard(e.actor, CARD), /may not card\.author/);
   await assert.rejects(() => w.svc.closeRound(w.analyst, card.id), /may not round\.manage/);

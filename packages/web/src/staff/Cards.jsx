@@ -76,7 +76,7 @@ export function Cards({ api }) {
         <label htmlFor="objective">Objective: what exactly counts as “yes”?</label><textarea id="objective" value={f.objective} onChange={set('objective')} />
         <label htmlFor="source">Resolution source</label><select id="source" value={f.source} onChange={set('source')}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</select>
         <label htmlFor="resolver">Named resolver</label><input id="resolver" type="text" value={f.resolver} onChange={set('resolver')} />
-        <label htmlFor="prob">ACAPS probability rating (seeds the card)</label><select id="prob" value={f.probability} onChange={set('probability')}>{BANDS.map((s) => <option key={s}>{s}</option>)}</select>
+        <label htmlFor="prob">ACAPS’s own rating of this risk (kept for scoring; never shown to experts before they answer)</label><select id="prob" value={f.probability} onChange={set('probability')}>{BANDS.map((s) => <option key={s}>{s}</option>)}</select>
         <div className="row"><button type="button" onClick={create}>Create card</button></div>
         {msg && <div className={`msg ${msg.kind}`} role={msg.kind === 'err' ? 'alert' : 'status'}>{msg.text}</div>}
       </section>

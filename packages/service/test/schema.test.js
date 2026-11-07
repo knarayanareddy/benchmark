@@ -8,7 +8,7 @@ import { migrate } from '../src/pg-store.js';
 async function fresh() {
   const db = new PGlite();
   await migrate(db);
-  await db.exec(`insert into answers.cards(k,doc,status,round,country,win_from,win_to,objective,resolution_source,resolver,seed_p)
+  await db.exec(`insert into answers.cards(k,doc,status,round,country,win_from,win_to,objective,resolution_source,resolver,acaps_p)
     values ('C1','{}','open',1,'TCD','2026-11-01','2027-04-30','o','IPC','r',0.7)`);
   return db;
 }
@@ -24,7 +24,7 @@ test('an empty Declaration is refused (it would match every card)', async () => 
 
 test('cards need a real source, a written objective, a resolver and a sane window', async () => {
   const db = await fresh();
-  const card = (k, o) => `insert into answers.cards(k,doc,status,round,country,win_from,win_to,objective,resolution_source,resolver,seed_p)
+  const card = (k, o) => `insert into answers.cards(k,doc,status,round,country,win_from,win_to,objective,resolution_source,resolver,acaps_p)
     values ('${k}','{}','open',1,'TCD',${o.from ?? "'2026-11-01'"},'2027-04-30','${o.obj ?? 'o'}','${o.src ?? 'IPC'}','${o.res ?? 'r'}',0.7)`;
   await rejects(db, card('X1', { src: 'a blog' }), /resolution_source/);
   await rejects(db, card('X2', { obj: '   ' }), /objective/);

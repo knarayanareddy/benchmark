@@ -84,8 +84,9 @@ export const ACAPS_BANDS = Object.freeze([
 ]);
 
 /**
- * Midpoint of ACAPS' published percentage band for each rating (rule R9: cards
- * are seeded here, so the expert adjusts a defensible number):
+ * Midpoint of ACAPS' published percentage band for each rating. This is how ACAPS's own
+ * reading is SCORED and analysed. It is not a starting point for experts: Round 1 is blind
+ * (rule R9), so no expert sees it before locking an answer:
  *   Very Low 0-20 -> 0.10 · Low 21-40 -> 0.305 · Medium 41-60 -> 0.505
  *   High 61-80 -> 0.705 · Very High 81-100 -> 0.905
  * "Very High" is NOT 1.00: no analyst means a certain event, and a certain

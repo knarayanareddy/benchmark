@@ -36,13 +36,22 @@ Panel scores are public. Individual scores are private to the expert and the ana
 
 The Declaration screen (regions × themes) decides **who gets told**. It does not decide **how much weight their estimate carries**. Weighting comes from realised calibration on statements they were previously notified about. People are reliably overconfident about what they know, and the confidence errors correlate — which makes a self-weighted panel look tight and be wrong.
 
-## R9 · The model baseline is computed before elicitation
+## R9 · Round 1 is blind
 
-The expert adjusts a number rather than inventing one. This is a design rule with a scoring consequence: it makes the expert's contribution measurable as a *deviation* from a known baseline, which is the quantity the whole product is trying to estimate.
+**Amended 7 Nov 2026.** The earlier text of this rule said the baseline is computed *before* elicitation so that "the expert adjusts a number rather than inventing one", and cards opened on ACAPS's band midpoint. That was a mistake. A pre-filled number anchors the answer (Tversky & Kahneman 1974), and it anchored it on the very thing the study compares the panel against. A panel that starts from ACAPS's rating can only be shown to resemble ACAPS.
 
-Two rules make that baseline defensible:
+The rule now:
 
-- **Seed on the band midpoint, not the ordinal.** ACAPS publishes the percentage bands behind its scale (Very Low 0–20 · Low 21–40 · Medium 41–60 · High 61–80 · Very High 81–100). A card opens at the band midpoint (0.10 / 0.305 / 0.505 / 0.705 / 0.905). Reading the ordinal as rating ÷ 5 would open "Very High" at 1.00, a certain forecast, which no analyst means and which is infinitely overconfident under a log score. `BAND_MIDPOINT` in `packages/core/src/aggregate.js` is the single source.
+- **In Round 1 an expert sees no ACAPS rating, no panel result and no pre-filled number.** The slider has no thumb position and Submit stays off until they have put a number down (slider or typed, whole numbers 1–99). This is enforced on the server as well as in the page: no inbox, card, status or list payload an expert can reach carries ACAPS's reading, and tests fail if one does (`packages/service/test/blind-round1.test.js`).
+- **ACAPS's own reading is still stored on the card** (`acaps_p`, `acaps_band`) because it is the thing the panel is scored against. It is for scoring and analysis. A risk ACAPS never rated has no reading and is not given an invented one (11 of the 139 have none).
+- **The first answer is the primary one.** The Round-1 result is ledgered when the round closes and cannot change afterwards, however much Round 2 revises. Round 2 shows an expert the panel distribution and their own first answer, never ACAPS's rating, and is a secondary, separately scored measurement.
+- **Showing ACAPS's reasoning after lock-in is a separate, later decision** (a randomised "second look"), not part of this rule. If it is built, it is an experimental arm and its effect is measured, never assumed neutral.
+
+What this costs, stated honestly: the original argument was that an adjustable number is faster than inventing one, and task length drives dropout. Blind answers will take longer than a nudge of a slider. Time per answer and completion are therefore measured in the pilot rather than assumed.
+
+Two rules remain from the old R9, with the same reasons:
+
+- **Score ACAPS on the band midpoint, not the ordinal.** ACAPS publishes the percentage bands behind its scale (Very Low 0–20 · Low 21–40 · Medium 41–60 · High 61–80 · Very High 81–100); its reading is the midpoint (0.10 / 0.305 / 0.505 / 0.705 / 0.905). Reading the ordinal as rating ÷ 5 would make "Very High" a certain forecast, which no analyst means and which is infinitely overconfident under a log score. `BAND_MIDPOINT` in `packages/core/src/aggregate.js` is the single source.
 - **Clamp every forecast to [0.01, 0.99] before scoring.** `clampForecast()` is applied when an estimate is submitted, so no stored probability is ever 0 or 1.
 
 ## R10 · Publish the protocol, not just the score

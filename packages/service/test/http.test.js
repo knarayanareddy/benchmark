@@ -53,7 +53,7 @@ test('end to end over HTTP: invite -> consent -> estimate -> close -> release; s
     }
     assert.equal((await w.call('GET', '/api/inbox')).status, 401);
     const inbox = (await w.call('GET', '/api/inbox', { token: experts[0] })).json;
-    assert.equal(inbox.toAnswer[0].seedP, 0.705);
+    assert.ok(!JSON.stringify(inbox).match(/acaps|seed|0\.705/i), 'a Round-1 card carries no ACAPS reading');
     for (const [i, tok] of experts.entries()) {
       assert.equal((await w.call('POST', '/api/estimates', { token: tok, body: { cardId: card.id, p: 0.3 + i * 0.1 } })).status, 200);
     }

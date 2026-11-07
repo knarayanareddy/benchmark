@@ -285,7 +285,8 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       id, version: 0, parentId: null, status: 'open', round: 1,
       statement: c.statement.trim(), country: c.country, region: c.region ?? null, theme: c.theme ?? null,
       window: c.window, objective: c.objective.trim(), resolutionSource: c.resolutionSource, resolver: c.resolver,
-      seedP: BAND_MIDPOINT[c.probability] ?? 0.5,
+      // ACAPS's own reading, for scoring and analysis. It is never sent to an expert before they lock Round 1.
+      acapsBand: c.probability ?? null, acapsP: BAND_MIDPOINT[c.probability] ?? null,
       createdAt: coarsenToDay(t()).ms,
     });
     await audit(actor, 'card.create', id);
@@ -438,14 +439,14 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     for (const card of await answers.cards.find({ status: 'open' })) {
       if (expert.tokenMode === 'device') {
         // The server cannot know which cards this device has answered; the device checks that itself.
-        if (card.round === 1 && matches(card, expert.declaration)) toAnswer.push(cardView(card, { seedP: card.seedP, deviceHeld: true }));
+        if (card.round === 1 && matches(card, expert.declaration)) toAnswer.push(cardView(card, { deviceHeld: true }));
         else if (card.round === 2) openForRevision.push(cardView(card, { release: await cardRelease(card.id, { round: 1 }), deviceHeld: true }));
         continue;
       }
       const key = respondentKey(card, expert);
       const mine = (round) => answers.estimates.get(estimateKey(card.id, key, round));
       if (card.round === 1 && matches(card, expert.declaration) && !(await mine(1))) {
-        toAnswer.push(cardView(card, { seedP: card.seedP }));
+        toAnswer.push(cardView(card));
       } else if (card.round === 2) {
         const first = await mine(1);
         if (first && !(await mine(2))) {
@@ -565,7 +566,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         id: k.id, version: 0, parentId: parent.id, status: 'open', round: 1, statement: k.statement,
         country: parent.country, region: parent.region, theme: parent.theme, window: parent.window,
         objective: parent.objective, resolutionSource: parent.resolutionSource, resolver: parent.resolver,
-        seedP: parent.seedP, createdAt: coarsenToDay(t()).ms,
+        acapsBand: parent.acapsBand ?? null, acapsP: parent.acapsP ?? null, createdAt: coarsenToDay(t()).ms,
       });
     }
     await audit(actor, `dissent.${verb}`, id, note);

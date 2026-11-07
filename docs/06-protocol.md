@@ -2,6 +2,9 @@
 
 **Status: draft.** This is the protocol to timestamp (for example on OSF) **before the first card opens**. Nothing below is a result. No panel has run. Items marked **[DECISION]** need a human owner.
 
+**Amendment log** (the draft is not yet registered; once it is, changes are dated and appended here, never edited in place).
+- *7 Nov 2026, draft.* Primary endpoint changed from the pooled **Round-2** estimate to the pooled blind **Round-1** estimate, and rule R9 changed so no expert sees ACAPS's rating or a pre-filled number in Round 1. Reason: under the old design every expert started from ACAPS's own number, so the panel-versus-ACAPS comparison measured anchoring, not forecasting.
+
 ## Question
 
 Does a moderated expert panel, answering ACAPS' own dated trigger statements, forecast better than ACAPS' own probability rating on the same items?
@@ -11,8 +14,14 @@ Does a moderated expert panel, answering ACAPS' own dated trigger statements, fo
 Paired Brier difference, **panel minus ACAPS**, over the same resolved statements. Negative favours the panel.
 
 - ACAPS reading: **band midpoints** (0.10 / 0.305 / 0.505 / 0.705 / 0.905). The ordinal reading (rating ÷ 5) is reported as a sensitivity check.
-- Panel reading: the pooled Round-2 estimate (`aggregate()`, rules in `docs/02-scoring-rules.md`), released at round close.
+- Panel reading: the pooled **blind Round-1** estimate (`aggregate()` over Round-1 answers only, rules in `docs/02-scoring-rules.md`, R9). It is ledgered when Round 1 closes and cannot change afterwards. Nobody has seen ACAPS's rating, the panel result, or a pre-filled number when they give it.
 - Interval: paired bootstrap, 10,000 resamples, seed 7 (`paired()` in `packages/core/src/scoring.js`). The interval is reported with every estimate. Significance means the interval excludes zero.
+
+## Secondary endpoints
+
+- **Round-2 pooled estimate versus ACAPS** (same paired method). Round 2 shows each expert the panel distribution and their own first answer, so it measures what social information does, not independent forecasting.
+- **Revision effect:** Round-2 minus Round-1 Brier, and the direction of each revision relative to ACAPS's reading (toward or away).
+- **Time per answer and completion in Round 1**, because blind answers are slower than adjusting a number. This is a cost of R9 and is measured, not assumed.
 
 ## Scope and exclusions
 
@@ -20,6 +29,7 @@ Paired Brier difference, **panel minus ACAPS**, over the same resolved statement
 - A statement the resolver marks `unobservable` is excluded, never scored as a miss. The count of exclusions is reported.
 - A card that is rewritten or split after opening is retired; its estimates stay scored on the parent and the children start clean (rule R5).
 - Forecasts are clamped to [0.01, 0.99] at submission.
+- A risk ACAPS never rated has no ACAPS reading and cannot enter the paired comparison; it can still be asked and scored on its own.
 
 ## Fixed before a card opens (enforced by the service, not by promise)
 

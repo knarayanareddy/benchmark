@@ -50,8 +50,11 @@ function Objection({ api, card }) {
 export function CardView({ api, card, mode, revise = false, onNext, onQueued }) {
   const [first, setFirst] = useState(card.yourEstimate ?? null); // round-1 answer, for revisions
   const [blocked, setBlocked] = useState('');
-  const start = first ?? card.seedP ?? 0.5;
-  const [value, setValue] = useState(Math.round(start * 100));
+  // Round 1 is blind (rule R9): no ACAPS rating, no panel result, and no pre-filled number. The answer is
+  // `null` until the expert has put one down, and Submit stays off until they have. A revision starts
+  // from their OWN first answer.
+  const [value, setValue] = useState(/** @type {number | null} */ (first == null ? null : Math.round(first * 100)));
+  const valid = Number.isInteger(value) && /** @type {number} */ (value) >= 1 && /** @type {number} */ (value) <= 99;
   const [state, setState] = useState({ phase: 'idle', text: '' });
 
   // A device-held key means the server cannot say what this device already answered; the device asks.
@@ -71,8 +74,9 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
   }, [api, card.id, card.deviceHeld, revise]);
 
   async function submit() {
+    if (!valid) return;
     setState({ phase: 'saving', text: '' });
-    const p = value / 100;
+    const p = /** @type {number} */ (value) / 100;
     try {
       const r = await sendEstimate(api, mode, card.id, p);
       setState({ phase: 'saved', text: `Saved: ${pct(r.p)}${r.clamped ? ' (kept within 1–99%)' : ''}. Thank you.` });
@@ -93,15 +97,24 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
       <p className="muted">{card.country}{card.window ? ` · resolves by ${card.window.to}` : ''}{revise ? ' · round 2' : ''}</p>
       {revise
         ? <>{describeRelease(card.release)}{first != null && <p className="muted">Your first answer was {pct(first)}. You may revise it.</p>}</>
-        : <p className="muted">Starts at ACAPS’ own reading ({pct(start)}). Move it to what you think.</p>}
+        : <p className="muted">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
       {blocked ? <div className="msg warn">{blocked}</div> : (
         <>
-          <output className="big" htmlFor={`s-${card.id}`}>{value}%</output>
-          <input type="range" id={`s-${card.id}`} min={1} max={99} step={1} value={value} disabled={done}
-            aria-label="Your probability that this happens" onChange={(e) => setValue(Number(e.target.value))} />
+          <output className="big" htmlFor={`s-${card.id}`}>{value == null ? '—' : `${value}%`}</output>
+          <input type="range" id={`s-${card.id}`} min={1} max={99} step={1} value={value ?? 50} disabled={done}
+            className={value == null ? 'untouched' : undefined}
+            aria-label="Your probability that this happens"
+            onChange={(e) => setValue(Number(e.target.value))}
+            // A tap exactly on the resting thumb fires no change event, so a release or key press also counts.
+            onPointerUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }}
+            onKeyUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }} />
+          <label htmlFor={`n-${card.id}`} className="plain">Or type it (1–99)</label>
+          <input type="number" id={`n-${card.id}`} min={1} max={99} step={1} inputMode="numeric" disabled={done}
+            value={value ?? ''} onChange={(e) => setValue(e.target.value === '' ? null : Number(e.target.value))} />
+          {value != null && !valid && <div className="msg warn" role="alert">Use a whole number from 1 to 99.</div>}
           <div className="row">
             {done ? <button type="button" className="secondary" onClick={onNext}>Next question</button>
-              : <button type="button" disabled={state.phase === 'saving'} onClick={submit}>{revise ? 'Save my revision' : 'Submit'}</button>}
+              : <button type="button" disabled={state.phase === 'saving' || !valid} onClick={submit}>{revise ? 'Save my revision' : 'Submit'}</button>}
           </div>
         </>
       )}

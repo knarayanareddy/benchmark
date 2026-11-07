@@ -26,7 +26,7 @@ const TABLES = {
     columns: (d) => ({
       parent_id: d.parentId ?? null, status: d.status, round: d.round, country: d.country,
       win_from: d.window?.from, win_to: d.window?.to, objective: d.objective,
-      resolution_source: d.resolutionSource, resolver: d.resolver, seed_p: d.seedP, evidence_url: d.evidenceUrl ?? null,
+      resolution_source: d.resolutionSource, resolver: d.resolver, acaps_p: d.acapsP ?? null, evidence_url: d.evidenceUrl ?? null,
     }),
   },
   estimates: {
