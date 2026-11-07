@@ -137,7 +137,9 @@ test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit o
 
     const closed = close(actioned, { reason: 'anonymous_actioned_on_card', now: 5500 });
     assert.equal(closed.status, STATE.CLOSED);
-    assert.equal(loopLatencyMs(closed), 500);
+    // Anonymous createdAt is day-coarsened (midnight UTC), so loop latency is only
+    // meaningful at day resolution for these rows.
+    assert.equal(anon.createdAt % 86400000, 0, 'anonymous createdAt must be midnight UTC');
   }
 });
 
@@ -222,3 +224,20 @@ test('cardLedger() provides an addressless "you said, we did" loop for ANONYMOUS
   assert.equal(ledger[0].action, ACTION.RESOLVE_EARLY);
 });
 
+
+test('every transition bumps version, and anonymous rows and public ledger entries are day-coarsened (B-04, B-12)', () => {
+  const t = Date.UTC(2026, 10, 6, 14, 33, 7, 123);
+  const anon = newDissent({ cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.WINDOW, level: LEVELS.ANONYMOUS, now: t });
+  assert.equal(anon.version, 0);
+  assert.equal(anon.createdAt, Date.UTC(2026, 10, 6));
+  const named = newDissent({ salt: TEST_SALT, cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.WINDOW, now: t });
+  assert.equal(named.createdAt, t, 'a contactable dissent keeps its exact time');
+  const routed = route(named, { now: t + 1 });
+  const actioned = act(routed, ACTION.REWRITE, { now: t + 2 });
+  assert.deepEqual([named.version, routed.version, actioned.version], [0, 1, 2]);
+  const notified = notify(actioned, { now: t + 3 })._next;
+  assert.equal(notified.version, 3);
+  assert.equal(close(notified, { reason: 'x', now: t + 4 }).version, 4);
+  const [entry] = cardLedger([actioned], 'R1');
+  assert.equal(entry.actionedAt, Date.UTC(2026, 10, 6), 'public ledger must not carry the time of day');
+});

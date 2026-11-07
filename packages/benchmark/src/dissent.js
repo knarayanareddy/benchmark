@@ -23,6 +23,7 @@ import {
   DEFAULT_LEVEL,
   resolveLevel,
   attribute,
+  coarsenToDay,
 } from '../../core/src/anonymity.js';
 import {
   LOOP_KIND,
@@ -95,7 +96,10 @@ export function newDissent({
     text,
     status: STATE.OPEN,
     action: null,
-    createdAt,
+    // Optimistic-concurrency counter: every transition bumps it, and a store
+    // must write only `where id = ? and version = ?`.
+    version: 0,
+    createdAt: isAnonymous ? coarsenToDay(createdAt).ms : createdAt,
   };
 }
 
@@ -107,6 +111,7 @@ export function route(dissent, { queue = 'analyst', now } = {}) {
   return {
     ...dissent,
     status: STATE.ROUTED,
+    version: (dissent.version ?? 0) + 1,
     queue,
     routedAt: now ?? Date.now(),
   };
@@ -129,6 +134,7 @@ export function act(dissent, action, { newCardIds = [], title = '', note = '', n
     ...dissent,
     action,
     status: STATE.ACTIONED,
+    version: (dissent.version ?? 0) + 1,
     title: String(title || ''),
     note,
     newCardIds,
@@ -165,7 +171,7 @@ export function notify(dissent, { now } = {}) {
     body: msg.body,
     deepLinks: msg.deepLinks,
     honesty: msg.honesty,
-    _next: { ...dissent, status: STATE.NOTIFIED, notifiedAt: now ?? Date.now() },
+    _next: { ...dissent, status: STATE.NOTIFIED, version: (dissent.version ?? 0) + 1, notifiedAt: now ?? Date.now() },
   };
 }
 
@@ -206,6 +212,7 @@ export function close(dissent, { reason = '', now } = {}) {
   return {
     ...dissent,
     status: STATE.CLOSED,
+    version: (dissent.version ?? 0) + 1,
     closeReason: trimmedReason,
     closedAt: now ?? Date.now(),
   };
@@ -237,7 +244,9 @@ export function ledgerEntry(dissent) {
     action: dissent.action,
     body: msg.body,
     deepLinks: msg.deepLinks,
-    actionedAt: dissent.actionedAt ?? null,
+    // Day-coarsened: a millisecond timestamp lets a dissenter (or a peer who
+    // was online) match a public entry to a submission.
+    actionedAt: dissent.actionedAt == null ? null : coarsenToDay(dissent.actionedAt).ms,
   };
 }
 

@@ -177,3 +177,17 @@ test('an empty statement fails the dedicated statement check, not observable (B-
   assert.ok(r.blockers.some((b) => b.check === 'statement'));
   assert.ok(!r.failed.some((f) => f.check === 'observable'));
 });
+
+test('no_leak catches trend-presupposing phrasings beyond the original eight (B-20)', () => {
+  for (const s of [
+    'Displacement is poised to deteriorate across the north, exceeding 500,000 by June.',
+    'Food insecurity is set to worsen, passing IPC Phase 4 in three districts.',
+    'Cases are projected to spike above 2,000 per week.',
+    'Violence is already escalating in the east, with over 100 deaths per month.',
+  ]) {
+    const r = gate({ statement: s, window: win });
+    assert.ok(r.blockers.some((b) => b.check === 'no_leak'), s);
+  }
+  const hazard = gate({ statement: 'Escalating clashes between armed groups lead to over 100,000 displaced.', window: win });
+  assert.ok(!hazard.blockers.some((b) => b.check === 'no_leak'), 'hazard framing is not an outcome leak');
+});

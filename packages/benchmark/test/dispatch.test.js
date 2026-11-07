@@ -8,7 +8,11 @@ test('the declaration gates who is told', () => {
   assert.equal(matches(card, { regions: ['ML'] }), true);
   assert.equal(matches(card, { regions: ['SD'] }), false);
   assert.equal(matches(card, { regions: ['SD'], themes: ['food'] }), false, 'region miss must win');
-  assert.equal(matches(card, {}), true, 'empty declaration means everything');
+  assert.equal(matches(card, {}), false, 'an empty Declaration must not mean "tell me everything" (B-13)');
+  assert.equal(matches(card, { regions: [], themes: [], countries: [] }), false);
+  assert.equal(matches(card, {}, { all: true }), true, 'matching everything is an explicit moderator choice');
+  assert.equal(matches({ ...card, country: 'MLI' }, { countries: ['MLI'] }), true);
+  assert.equal(matches({ ...card, country: 'MLI' }, { countries: ['SDN'] }), false);
 });
 
 test('the weekly cap is enforced and never exceeded', () => {

@@ -271,3 +271,67 @@ test('intervals and small-panel releases resist order-statistic & quartile inver
 });
 
 
+
+import crypto from 'node:crypto';
+import {
+  assignAliases, ballotToken, coarsenToDay, identifyingHints, removeIdentifyingDetail,
+} from '../../core/src/anonymity.js';
+
+test('aliases are keyed: the same roster under a different secret gives different aliases (B-02)', () => {
+  const ids = Array.from({ length: 30 }, (_, i) => `e${i}`);
+  const a = ids.map((id) => aliasFor(id, 'SDN', 'secret-number-one'));
+  const b = ids.map((id) => aliasFor(id, 'SDN', 'secret-number-two'));
+  assert.notDeepEqual(a, b);
+  for (const alias of a) {
+    const n = Number(alias.split(' ')[1]);
+    assert.ok(n >= 1000 && n < 1000 + ALIAS_SPACE);
+  }
+});
+
+test('assignAliases never renames an existing expert, even under a rotated salt (B-02)', () => {
+  const first = assignAliases({}, ['e1', 'e2', 'e3'], 'SDN', { salt: 'secret-number-one' });
+  assert.equal(Object.keys(first.added).length, 3);
+  const second = assignAliases(first.aliases, ['e1', 'e2', 'e3', 'e4'], 'SDN', { salt: 'secret-number-TWO' });
+  for (const id of ['e1', 'e2', 'e3']) assert.equal(second.aliases[id], first.aliases[id], `${id} was renamed`);
+  assert.deepEqual(Object.keys(second.added), ['e4'], 'only the new expert is added');
+  assert.equal(new Set(Object.values(second.aliases)).size, 4, 'no collisions');
+  assert.throws(() => assignAliases({}, ['e1'], 'SDN', {}), /deployment salt/);
+});
+
+test('ballot tokens are per card and per expert, keyed, and refuse a public secret (B-03)', () => {
+  const t = ballotToken('ballot-secret-1234', 'R1', 'e1');
+  assert.match(t, /^[0-9a-f]{64}$/);
+  assert.equal(t, ballotToken('ballot-secret-1234', 'R1', 'e1'));
+  assert.notEqual(t, ballotToken('ballot-secret-1234', 'R2', 'e1'), 'unlinkable across cards');
+  assert.notEqual(t, ballotToken('ballot-secret-1234', 'R1', 'e2'));
+  assert.notEqual(t, ballotToken('another-secret-5678', 'R1', 'e1'));
+  assert.equal(t, crypto.createHmac('sha256', 'ballot-secret-1234').update('ballot:v1:R1:e1').digest('hex'));
+  assert.throws(() => ballotToken(DEFAULT_DEV_SALT, 'R1', 'e1'), /deployment salt/);
+  assert.throws(() => ballotToken(undefined, 'R1', 'e1'), /deployment salt/);
+});
+
+test('coarsenToDay drops the time of day and accepts ms, Date and ISO input (B-04)', () => {
+  const want = { day: '2026-11-06', ms: Date.UTC(2026, 10, 6) };
+  assert.deepEqual(coarsenToDay('2026-11-06T23:59:59.999Z'), want);
+  assert.deepEqual(coarsenToDay(new Date('2026-11-06T00:00:01Z')), want);
+  assert.deepEqual(coarsenToDay(Date.UTC(2026, 10, 6, 13, 7)), want);
+  assert.throws(() => coarsenToDay('not a date'), TypeError);
+});
+
+test('leaksBy flags organisation, job title, first-person, uniqueness and self-location (B-04, B-20)', () => {
+  const kinds = (text) => new Set(identifyingHints(text).map((h) => h.kind));
+  assert.ok(kinds('WFP is moving trucks').has('organisation'));
+  assert.ok(kinds('The country director said no').has('role'));
+  assert.ok(kinds('I work on the Abyei file').has('first_person'));
+  assert.ok(kinds('I am the only analyst there').has('unique'));
+  assert.ok(kinds('I am based in Juba').has('place'));
+  const w = leaksBy({ text: 'As the country director for WFP in Juba, I work on the only crossing.' }, []);
+  assert.ok(w.length >= 4);
+  assert.deepEqual(leaksBy({ text: 'The crossing at Adré is the tell.' }, []), [], 'a place that is the subject of the forecast is not flagged');
+});
+
+test('removeIdentifyingDetail strips every hinted span (B-04)', () => {
+  const out = removeIdentifyingDetail('I work for WFP and I am based in Juba.');
+  assert.ok(!/WFP|Juba|I work/.test(out), out);
+  assert.equal(removeIdentifyingDetail('The crossing is closed.'), 'The crossing is closed.');
+});

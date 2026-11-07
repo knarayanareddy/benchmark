@@ -20,14 +20,14 @@ Specification plus runnable core and verification scripts (no UI), one unclosed 
 | Adopts without you | Partly — the four documents exist; the auth story does not. |
 | Has a customer | **No. ACAPS has not asked for this.** This is the largest gap. |
 | Sustains itself | No owner, no budget for expert incentives, no home for the output. |
-| **Proves itself** | **No. The panel has never been run. The baseline is now measured — and it is ACAPS, at 0.2168, not a regression.** |
+| **Proves itself** | **No. The panel has never been run. The baseline is now measured — and it is ACAPS, at 0.2171, not a regression.** |
 | Survives scrutiny | Ethics path unbuilt; consent and attribution for named experts unspecified. |
 
 ---
 
 ## The structural problem, stated plainly
 
-Doorway's missing evidence is a field-wide gap — nobody has shown that warnings work beyond minutes, so Doorway is not behind its competitors. **Benchmark's missing evidence is specific and comparative.** The bar is not "does it work at all," it is **ACAPS' own rating at 0.2168** — and, uncomfortably, a logistic regression on ACAPS' own fields does not clear it either.
+Doorway's missing evidence is a field-wide gap — nobody has shown that warnings work beyond minutes, so Doorway is not behind its competitors. **Benchmark's missing evidence is specific and comparative.** The bar is not "does it work at all," it is **ACAPS' own rating at 0.2171** — and, uncomfortably, a logistic regression on ACAPS' own fields is indistinguishable from it at n=104.
 
 So the product has to argue something narrow and testable: *the regression sees four fields of metadata; the panel reads the actual sentence, and the sentence contains information the fields do not.* That is a good argument. It is not a result.
 
@@ -37,11 +37,11 @@ So the product has to argue something narrow and testable: *the regression sees 
 |---|---|---|
 | Build | 4–6 weeks, 1–2 engineers | Ingest, gate, card, dispatch, dissent, aggregation, scoring. |
 | Rolling pilot | 3–6 months | Prospective elicitation on the **28 Active risks** and **266 dated triggers** as 30–90 day windows close (avoiding hindsight contamination on already-resolved crises). |
-| Powered evaluation | 6–9 months | Accumulate **n ≈ 445** resolved trigger/risk statements — the sample needed at `paired SD = 0.1505` (`scripts/measure-baseline.mjs`) to detect a `0.02` Brier improvement at 80% power (`n = 104` only detects `~0.041`). |
+| Powered evaluation | 6–9 months | Accumulate **n ≈ 506** resolved trigger/risk statements — the sample needed at `paired SD = 0.1605` (`scripts/measure-baseline.mjs`) to detect a `0.02` Brier improvement at 80% power (`n = 104` only detects `~0.044`; the ordinal reading gives 445 and `~0.041`). |
 
-**Why prospective triggers rather than retrospective risks.** The 104 already-resolved risks establish the incumbent baselines (`0.2425` floor, `0.2168` ACAPS, `0.2177` LOO logistic), but asking human country experts today to "forecast" historical 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) is contaminated by hindsight — experts already know what happened. And at `n = 104` the smallest paired difference detectable at 80% power is `0.0413` Brier. Scoring rolling 30–90 day trigger statements prospectively solves both hindsight contamination and sample size.
+**Why prospective triggers rather than retrospective risks.** The 104 already-resolved risks establish the incumbent baselines (`0.2425` floor, `0.2171` ACAPS, `0.2177` LOO logistic), but asking human country experts today to "forecast" historical 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) is contaminated by hindsight — experts already know what happened. And at `n = 104` the smallest paired difference detectable at 80% power is `0.0441` Brier. Scoring rolling 30–90 day trigger statements prospectively solves both hindsight contamination and sample size.
 
-**Why external resolution criteria matter (endogenous labels & selection).** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is assigned post-hoc by ACAPS' own analysts with no fixed end date and no independent oracle — so `0.2168` measures analyst-to-analyst self-consistency as much as exogenous forecast skill, on a non-random sample of published concerns (`61/104 = 58.7%` materialised). A credible prospective trial must bind each trigger's `objective` before opening to an external source (ACLED event logs, IPC Phase releases, UNHCR border counts, official decrees) rather than post-hoc editorial judgement.
+**Why external resolution criteria matter (endogenous labels & selection).** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is assigned post-hoc by ACAPS' own analysts with no fixed end date and no independent oracle — so `0.2171` measures analyst-to-analyst self-consistency as much as exogenous forecast skill, on a non-random sample of published concerns (`61/104 = 58.7%` materialised). A credible prospective trial must bind each trigger's `objective` before opening to an external source (ACLED event logs, IPC Phase releases, UNHCR border counts, official decrees) rather than post-hoc editorial judgement.
 
 ---
 
@@ -72,6 +72,6 @@ The accurate framing, which is also the strongest:
 
 And if a juror asks whether it works, the answer is the one written into the blueprint:
 
-> "We fitted the baseline rather than quoting one. A logistic regression on ACAPS' own structured fields scores 0.2177 out of sample; ACAPS' own analysts score 0.2168 on the same 104 risks. **The model loses.** Neither gap from the base rate is significant at n=104 (paired SD 0.1505, 80%-power MDE 0.0413) — ACAPS' judgement is a real signal sitting just under this sample's noise floor, and retrospective human scoring on resolved crises would be contaminated by hindsight. So the bar for any panel is ACAPS, not the regression, and our claim is specific: the model reads the fields, the panel reads the sentence, and prospective elicitation across ACAPS' rolling dated triggers (~266 per cycle; ~445 needed to power a 0.02 Brier test) can test that cleanly, paired, with intervals."
+> "We fitted the baseline rather than quoting one. A logistic regression on ACAPS' own structured fields scores 0.2177 out of sample; ACAPS' own analysts score 0.2171 on the same 104 risks. **The model is nominally behind, and indistinguishable.** Neither gap from the base rate is significant at n=104 (paired SD 0.1605, 80%-power MDE 0.0441) — ACAPS' judgement is a real signal sitting just under this sample's noise floor, and retrospective human scoring on resolved crises would be contaminated by hindsight. So the bar for any panel is ACAPS, not the regression, and our claim is specific: the model reads the fields, the panel reads the sentence, and prospective elicitation across ACAPS' rolling dated triggers (~266 per cycle; ~506 needed to power a 0.02 Brier test) can test that cleanly, paired, with intervals."
 
 That is a strong answer. It is not the same as a working product, and saying so is cheaper than being caught.

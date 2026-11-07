@@ -7,21 +7,27 @@
  * is larger than the gap between ACAPS's rating and any model tried.
  * Comparing them unpaired would be a mistake a juror should catch.
  *
- * PROVENANCE — read before quoting these numbers. All three are measured by
+ * PROVENANCE — read before quoting these numbers. All are measured by
  * scripts in this repo. Run `npm run ladder` and you get exactly these back.
  *
- *   naiveFloor   0.2425   scripts/measure-baseline.mjs        n=104
- *   acapsRatings 0.2168   scripts/measure-baseline.mjs        n=104
- *   logistic     0.2177   scripts/fit-baseline.mjs (LOO-CV)   n=104
+ *   naiveFloor    0.2425   scripts/measure-baseline.mjs        n=104
+ *   acapsRatings  0.2171   scripts/measure-baseline.mjs        n=104  HEADLINE: band midpoints
+ *   acapsOrdinal  0.2168   scripts/measure-baseline.mjs        n=104  sensitivity: rating / 5
+ *   logistic      0.2177   scripts/fit-baseline.mjs (LOO-CV)   n=104
+ *
+ * Why the midpoint is the headline: ACAPS publishes the percentage bands behind
+ * its scale (Very High = 81-100). Reading the ordinal as rating/5 scores "Very
+ * High" as a 100% forecast, which no analyst means and which is infinitely
+ * overconfident under a log score. The two readings differ by 0.0003 Brier.
  *
  * WHAT THIS LADDER SAYS — the opposite of what an earlier revision claimed.
  *
- * Lower Brier is better. 0.2177 > 0.2168. The regression is fractionally WORSE
- * than the analyst, and the paired difference (0.0009) is nowhere near
+ * Lower Brier is better. 0.2177 > 0.2171. The regression is fractionally WORSE (and indistinguishable)
+ * than the analyst, and the paired difference (0.0007) is nowhere near
  * distinguishable from zero. So the honest sentence is: a logistic regression
  * on ACAPS' own structured fields is statistically indistinguishable from
  * ACAPS' judgement, and neither is meaningfully distinguishable from the base
- * rate at n=104. ACAPS clears the floor by 0.0257; the model does not clear
+ * rate at n=104. ACAPS clears the floor by 0.0255 (paired interval spans zero); the model does not clear
  * ACAPS at all.
  *
  * TWO CORRECTIONS TO THE RECORD, both found by writing the scripts:
@@ -46,14 +52,16 @@
 
 export const LADDER = Object.freeze({
   naiveFloor: 0.2425, // measured, n=104  [0.2259, 0.2592]
-  acapsRatings: 0.2168, // measured, n=104  [0.1815, 0.2540]  ← ACAPS is BETTER
+  acapsRatings: 0.2171, // measured, n=104  [0.1872, 0.2492]  band midpoints (headline) ← ACAPS is BETTER
+  acapsOrdinal: 0.2168, // measured, n=104  [0.1815, 0.2540]  rating / 5 (sensitivity check)
   fourFieldLogistic: 0.2177, // measured, LOO-CV, n=104  [0.1783, 0.2600] — despite the name, 2 fields
 });
 
 /** Where each rung came from. Displayed in the product; not decoration. */
 export const LADDER_PROVENANCE = Object.freeze({
   naiveFloor: 'measured — scripts/measure-baseline.mjs',
-  acapsRatings: 'measured — scripts/measure-baseline.mjs',
+  acapsRatings: 'measured — scripts/measure-baseline.mjs (band midpoints)',
+  acapsOrdinal: 'measured — scripts/measure-baseline.mjs (rating / 5, sensitivity)',
   fourFieldLogistic: 'measured out-of-sample — scripts/fit-baseline.mjs',
 });
 

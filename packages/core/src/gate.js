@@ -54,6 +54,9 @@ const LEAK = [
   /\bto be revised\b/gi,
   /\bcontinued deterioration\b/gi,
   /\blikely to escalate\b/gi,
+  // Presupposes the trend ("is poised to deteriorate") without naming a threshold.
+  /\b(?:poised|projected|forecast|anticipated|predicted|bound|set|likely|certain|sure|due)\s+to\s+(?:worsen|deteriorate|escalate|intensify|spike|surge|rise|increase|decline|collapse|spread)\b/gi,
+  /\b(?:already|increasingly|steadily|rapidly)\s+(?:worsening|escalating|intensifying|deepening|spreading|collapsing)\b/gi,
 ];
 
 const INTENT = [/\bwill continue to\b/i, /\bintends?\b/i, /\bplans? to\b/i, /\baims? to\b/i];
