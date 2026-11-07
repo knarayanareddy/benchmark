@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createApi } from '../lib/api.js';
 import { kvGet, kvSet, kvDel } from '../lib/kv.js';
-import { flush, pending } from '../lib/queue.js';
+import { flush, pending, clearQueue } from '../lib/queue.js';
 import { sendEstimate } from '../lib/send.js';
 import { setSecret, hasDeviceSecret } from '../lib/device.js';
 import { decodeRecovery } from '../lib/recovery.js';
 import { Join } from './Join.jsx';
+import { resetLevelCache } from './CardView.jsx';
 import { Inbox } from './Inbox.jsx';
 import { MyData } from './MyData.jsx';
 import { Pulse } from './Pulse.jsx';
+import { QuestionPage } from './QuestionPage.jsx';
 import { Risks } from './Risks.jsx';
 import { Profile } from './Profile.jsx';
 import { DemoBanner } from '../DemoBanner.jsx';
@@ -59,6 +61,34 @@ export function App({ api: injected, deviceKeys = true }) {
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [queued, setQueued] = useState(0);
   const [tick, setTick] = useState(0);
+  const [question, setQuestion] = useState(/** @type {any} */ (null)); // the Pulse entry open in the question view
+  const [askCount, setAskCount] = useState(0);
+  const pendingView = useRef(/** @type {string | null} */ (null)); // where a nav click goes once the question page is left
+
+  /** Opening a question is a history entry, so the browser's Back returns to Pulse. */
+  const openQuestion = useCallback((/** @type {any} */ entry) => {
+    setQuestion(entry);
+    window.history.pushState({ view: 'question' }, '');
+    setView('question');
+  }, []);
+  const backToPulse = useCallback(() => window.history.back(), []);
+  /** Nav clicks while a question is open first leave its history entry, so Back never lands on a stale question. */
+  const go = (/** @type {string} */ to) => {
+    if (view !== 'question') { setView(to); return; }
+    pendingView.current = to;
+    window.history.back();
+  };
+
+  useEffect(() => {
+    const onPop = () => {
+      const target = pendingView.current;
+      pendingView.current = null;
+      if (window.history.state?.view === 'question') setView('question');
+      else setView((v) => (v === 'question' ? target ?? 'pulse' : v));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   const refreshQueued = useCallback(async () => setQueued((await pending()).length), []);
 
@@ -74,7 +104,7 @@ export function App({ api: injected, deviceKeys = true }) {
 
   const sync = useCallback(async () => {
     const m = (await kvGet(MODE)) || 'server';
-    const r = await flush((cardId, p) => sendEstimate(api, m, cardId, p));
+    const r = await flush((cardId, p, context) => sendEstimate(api, m, cardId, p, context));
     await refreshQueued();
     if (r.sent) setTick((t) => t + 1);
   }, [api, refreshQueued]);
@@ -96,24 +126,26 @@ export function App({ api: injected, deviceKeys = true }) {
   }, [sync]);
 
   async function signedIn({ token, mode: m }) {
-    await kvSet(TOKEN, token); await kvSet(MODE, m || 'server');
+    resetLevelCache(); await kvSet(TOKEN, token); await kvSet(MODE, m || 'server');
     setMode(/** @type {'server' | 'device'} */ (m || 'server')); setInvite(null);
     window.history.replaceState(null, '', window.location.pathname);
     await enter();
   }
-  const expired = useCallback(async () => { await kvDel(TOKEN); setView('landing'); }, []);
-  const out = async () => { await kvDel(TOKEN); await kvDel(MODE); setView('landing'); };
+  const expired = useCallback(async () => { await kvDel(TOKEN); resetLevelCache(); setView('landing'); }, []);
+  const out = async () => { await kvDel(TOKEN); await kvDel(MODE); await clearQueue(); resetLevelCache(); setQueued(0); setView('landing'); };
 
   return (
     <>
       <header>
         <h1>Ground Truth</h1>
-        {(view === 'pulse' || view === 'inbox' || view === 'risks' || view === 'data') && (
+        {(view === 'pulse' || view === 'inbox' || view === 'risks' || view === 'data' || view === 'question') && (
           <nav aria-label="Main">
-            <button type="button" className="secondary" aria-current={view === 'pulse' ? 'page' : undefined} onClick={() => setView('pulse')}>Pulse</button>
-            <button type="button" className="secondary" aria-current={view === 'inbox' ? 'page' : undefined} onClick={() => setView('inbox')}>Questions</button>
-            <button type="button" className="secondary" aria-current={view === 'risks' ? 'page' : undefined} onClick={() => setView('risks')}>Risks</button>
-            <button type="button" className="secondary" aria-current={view === 'data' ? 'page' : undefined} onClick={() => setView('data')}>My data</button>
+            <button type="button" className="secondary" aria-current={view === 'pulse' ? 'page' : undefined} onClick={() => go('pulse')}>
+              Pulse {askCount > 0 && <span className="pulse-badge">{askCount}</span>}
+            </button>
+            <button type="button" className="secondary" aria-current={view === 'inbox' ? 'page' : undefined} onClick={() => go('inbox')}>Questions</button>
+            <button type="button" className="secondary" aria-current={view === 'risks' ? 'page' : undefined} onClick={() => go('risks')}>Risks</button>
+            <button type="button" className="secondary" aria-current={view === 'data' ? 'page' : undefined} onClick={() => go('data')}>My data</button>
             <button type="button" className="secondary" onClick={out}>Sign out</button>
           </nav>
         )}
@@ -126,9 +158,10 @@ export function App({ api: injected, deviceKeys = true }) {
         {view === 'landing' && <Landing onRestored={() => hasDeviceSecret()} demo={config?.demo === true} onJoin={() => setView('onboard')} onDemo={() => setView('demo')} />}
         {(view === 'onboard' || view === 'demo') && !config && <p>Loading…</p>}
         {view === 'onboard' && config && <Join api={api} invite={invite} demo={false} deviceKeys={deviceKeys && config.deviceKeys} breakGlass={config.breakGlass} onDone={signedIn} onCancel={() => setView('landing')} />}
-        {view === 'demo' && config && <Join api={api} invite={null} demo deviceKeys={deviceKeys && config.deviceKeys} breakGlass={config.breakGlass} onDone={signedIn} onCancel={() => setView('landing')} />}
+        {view === 'demo' && config && <Join api={api} invite={null} demo demoLabels={config.demoLabels} deviceKeys={deviceKeys && config.deviceKeys} breakGlass={config.breakGlass} onDone={signedIn} onCancel={() => setView('landing')} />}
         {view === 'setup' && <Profile api={api} setup onSaved={() => setView('pulse')} />}
-        {view === 'pulse' && <Pulse api={api} mode={mode} onExpired={expired} onOpenQuestions={() => setView('inbox')} refreshKey={tick} />}
+        {view === 'pulse' && <Pulse api={api} mode={mode} onExpired={expired} onOpenQuestions={() => setView('inbox')} onOpenData={() => setView('data')} onOpen={openQuestion} onCount={setAskCount} refreshKey={tick} />}
+        {view === 'question' && question && <QuestionPage api={api} entry={question} mode={mode} onBack={backToPulse} onNext={backToPulse} />}
         {view === 'inbox' && <Inbox api={api} mode={mode} onExpired={expired} refreshKey={tick} />}
         {view === 'risks' && <Risks api={api} onExpired={expired} />}
         {view === 'data' && <><Profile api={api} /><MyData api={api} mode={mode} onErased={out} /></>}

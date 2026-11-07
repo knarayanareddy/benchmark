@@ -1,4 +1,4 @@
-/** @typedef {{ demo: boolean, deviceKeys: boolean, breakGlass: boolean }} Config */
+/** @typedef {{ demo: boolean, deviceKeys: boolean, breakGlass: boolean, demoLabels: boolean }} Config */
 
 /** @type {Config | null} */
 let cached = null;
@@ -9,7 +9,8 @@ export function resetConfigCache() { cached = null; }
 /**
  * What this deployment offers (GET /api/config). Any failure answers "off" for everything, so a broken
  * config route never turns the demo on or offers a device-held key the server cannot sign. Only a
- * successful answer is cached for the page's life. Unknown or non-boolean fields count as off.
+ * successful answer is cached for the page's life. Unknown or non-boolean fields count as off, except
+ * demoLabels, which fails closed to ON: if the config cannot be read, the demo label is still shown.
  * @returns {Promise<Config>}
  */
 export async function getConfig() {
@@ -18,9 +19,9 @@ export async function getConfig() {
     const res = await fetch('/api/config');
     if (!res.ok) throw new Error(`config ${res.status}`);
     const body = await res.json();
-    cached = { demo: body?.demo === true, deviceKeys: body?.deviceKeys === true, breakGlass: body?.breakGlass === true };
+    cached = { demo: body?.demo === true, deviceKeys: body?.deviceKeys === true, breakGlass: body?.breakGlass === true, demoLabels: body?.demoLabels !== false };
     return cached;
   } catch {
-    return { demo: false, deviceKeys: false, breakGlass: false };
+    return { demo: false, deviceKeys: false, breakGlass: false, demoLabels: true };
   }
 }

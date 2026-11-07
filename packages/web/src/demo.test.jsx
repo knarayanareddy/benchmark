@@ -8,8 +8,9 @@ import { routes, fail, json } from './test-helpers.js';
 import { getSecret, hasDeviceSecret } from './lib/device.js';
 import { decodeRecovery } from './lib/recovery.js';
 
-const CONFIG = { demo: true, deviceKeys: false, breakGlass: false };
-const OFF = { demo: false, deviceKeys: false, breakGlass: false };
+const CONFIG = { demo: true, deviceKeys: false, breakGlass: false, demoLabels: true };
+const PRESENTER = { ...CONFIG, demoLabels: false };
+const OFF = { demo: false, deviceKeys: false, breakGlass: false, demoLabels: true };
 const VERSION = '2026-11-v3';
 const CONSENT = { version: VERSION, text: 'CONSENT TEXT' };
 const CONSENTS = {
@@ -40,16 +41,29 @@ describe('getConfig', () => {
     expect(f).toHaveBeenCalledWith('/api/config');
   });
 
-  it('keeps only the three flags, even if the server sent anything else', async () => {
-    stubFetch(async () => json({ demo: true, deviceKeys: false, breakGlass: false, demoStaff: ['demo-secret-credential'] }));
+  it('keeps only the four flags, even if the server sent anything else', async () => {
+    stubFetch(async () => json({ demo: true, deviceKeys: false, breakGlass: false, demoLabels: true, demoStaff: ['demo-secret-credential'] }));
     const cfg = await getConfig();
     expect(cfg).toEqual(CONFIG);
-    expect(Object.keys(cfg).sort()).toEqual(['breakGlass', 'demo', 'deviceKeys']);
+    expect(Object.keys(cfg).sort()).toEqual(['breakGlass', 'demo', 'demoLabels', 'deviceKeys']);
   });
 
   it('passes deviceKeys and breakGlass through when the server says true', async () => {
     stubFetch(async () => json({ demo: false, deviceKeys: true, breakGlass: true }));
-    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: true });
+    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: true, demoLabels: true });
+  });
+
+  it('passes demoLabels through when the server says false (presenter mode)', async () => {
+    stubFetch(async () => json(PRESENTER));
+    expect(await getConfig()).toEqual(PRESENTER);
+  });
+
+  it('fails closed on demoLabels: anything but a literal false keeps the label on', async () => {
+    stubFetch(async () => json({ demo: true, demoLabels: 0 }));
+    expect(await getConfig()).toEqual({ ...CONFIG, demoLabels: true });
+    resetConfigCache();
+    stubFetch(async () => json({ demo: true }));
+    expect(await getConfig()).toEqual({ ...CONFIG, demoLabels: true });
   });
 
   it('counts any non-boolean or missing flag as off, so only a literal true turns a flag on', async () => {
@@ -57,7 +71,7 @@ describe('getConfig', () => {
     expect(await getConfig()).toEqual(OFF);
     resetConfigCache();
     stubFetch(async () => json({ deviceKeys: true }));
-    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: false });
+    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: false, demoLabels: true });
   });
 
   it('fails closed on a malformed body: every flag off, device-held key and override not offered', async () => {
@@ -117,6 +131,43 @@ describe('DemoBanner', () => {
     expect(screen.getByText('Demo deployment. Staff credentials are shown in the server console.')).toBeInTheDocument();
     expect(container.querySelector('code')).toBeNull();
     expect(container.textContent).not.toMatch(/demo-|moderator|password/i);
+  });
+});
+
+describe('DemoBanner in presenter mode', () => {
+  it('renders nothing when demoLabels is false, on the expert and the staff screen', async () => {
+    stubFetch(async () => json(PRESENTER));
+    const { container } = render(<DemoBanner />);
+    await settle();
+    expect(container).toBeEmptyDOMElement();
+    const staff = render(<DemoBanner staff />);
+    await settle();
+    expect(staff.container).toBeEmptyDOMElement();
+    expect(screen.queryByText(/Staff credentials/)).toBeNull();
+  });
+
+  it('still shows the banner when the config has no demoLabels field (an older server): the label stays on', async () => {
+    stubFetch(async () => json({ demo: true, deviceKeys: false, breakGlass: false }));
+    render(<DemoBanner />);
+    expect(await screen.findByRole('status')).toHaveTextContent('Demo data: these questions and the panel are made up');
+  });
+});
+
+describe('Join in presenter mode', () => {
+  it('hides the demo notice when demoLabels is false, but keeps the example hint and the name field', async () => {
+    render(<Join api={routes(CONSENTS)} invite={null} demo demoLabels={false} deviceKeys onDone={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.queryByText(/This is a demo deployment/)).toBeNull();
+    expect(screen.getByLabelText('Your name')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Fill with an example' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Example profile, change anything you like.');
+  });
+
+  it('shows the demo notice when demoLabels is true, and by default', () => {
+    const { unmount } = render(<Join api={routes(CONSENTS)} invite={null} demo demoLabels deviceKeys onDone={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByText(/This is a demo deployment/)).toBeInTheDocument();
+    unmount();
+    render(<Join api={routes(CONSENTS)} invite={null} demo deviceKeys onDone={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByText(/This is a demo deployment/)).toBeInTheDocument();
   });
 });
 

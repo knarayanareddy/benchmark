@@ -22,10 +22,10 @@ const EXAMPLE = { name: 'Example expert', organisation: 'Example organisation', 
  * The four-step "Join the circle" wizard (docs/13-onboarding.md). Pilot: a personal invitation, then the profile is
  * saved with the new session. Demo: no invitation; the person gives a name and the demo creates the account.
  * `breakGlass`: the deployment has a safety-override key (the anonymous card says so). Defaults to false: a
- * caller that does not know must not promise an override.
- * @param {{ api: import('../lib/api.js').Api, invite: string | null, demo: boolean, deviceKeys: boolean, breakGlass?: boolean, onDone: (s: { token: string, mode: string, level: string }) => void, onCancel?: () => void }} props
+ * caller that does not know must not promise an override. `demoLabels`: false in presenter mode hides the demo notice.
+ * @param {{ api: import('../lib/api.js').Api, invite: string | null, demo: boolean, deviceKeys: boolean, breakGlass?: boolean, demoLabels?: boolean, onDone: (s: { token: string, mode: string, level: string }) => void, onCancel?: () => void }} props
  */
-export function Join({ api, invite, demo, deviceKeys, breakGlass = false, onDone, onCancel }) {
+export function Join({ api, invite, demo, deviceKeys, breakGlass = false, demoLabels = true, onDone, onCancel }) {
   const recognised = parseInvite(invite);
   const firstStep = demo ? 2 : 1;
   const [step, setStep] = useState(firstStep);
@@ -192,7 +192,7 @@ export function Join({ api, invite, demo, deviceKeys, breakGlass = false, onDone
           <p className="muted">What you declare decides which questions we ask you, never how much weight your answers carry.</p>
           {demo && (
             <>
-              <p className="callout amber">This is a demo deployment. Your account is real here, but the questions and the other experts are made up.</p>
+              {demoLabels && <p className="callout amber">This is a demo deployment. Your account is real here, but the questions and the other experts are made up.</p>}
               <div className="field">
                 <label htmlFor="jn-name">Your name</label>
                 <input id="jn-name" type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -260,7 +260,7 @@ export function Join({ api, invite, demo, deviceKeys, breakGlass = false, onDone
 
       {step === 4 && (
         <>
-          <p>We only ask about {countries.map(countryName).join(', ')} and your chosen themes. Direct replies and impact receipts are the only other things we push.</p>
+          <p>We only ask about {countries.map(countryName).join(', ')} and your chosen themes. You will see anything else, such as a reply to something you raised, when you visit; nothing is sent to your phone or email.</p>
           <p className="field-label">Weekly limit</p>
           <ChipGroup label="Weekly limit" options={CAP_CHIPS} value={String(cap)} onChange={(v) => { if (v) setCap(Number(v)); }} />
           <dl className="summary">

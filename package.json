@@ -6,7 +6,7 @@
   "description": "Ninety-second expert elicitation on ACAPS risk statements, with intervals and a dissent loop.",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "test": "node --test packages/shared/core.test.js packages/*/test/*.test.js",

@@ -52,8 +52,9 @@ Off by default. Turned on only for showcase deployments; **never on a real pilot
   - a synthetic panel of 8 experts (roster `demo: true`, levels mixed: identified, pseudonymous, anonymous) and
   - 7 forecastable cards written from real radar risks, with `riskId`, `demo: true`, spread over regions and themes so different profiles get different Pulses: 4 open in Round 1; 1 closed in Round 1 with a roundtable thread and a few approved posts; 1 in Round 2 with a released aggregate and a second-look background; 1 more open card in a sensitive country.
   - Synthetic estimates are written for the panel only. Statements are plausible forecasts, not claims about real events, and each card's `objective` starts with "DEMO:".
-- `GET /api/config` (no login) -> `{ demo: boolean }` and nothing else. Demo staff credentials are random per boot (or set with `BENCHMARK_DEMO_STAFF_CREDENTIALS`) and are printed to the server console only; they are never served over HTTP.
-- Every screen shows `<DemoBanner/>` while `config.demo` is true: "Demo data: these questions and the panel are made up to show how it works. Nothing here is a result."
+- `GET /api/config` (no login) -> `{ demo, deviceKeys, breakGlass, demoLabels }`: four booleans and nothing else (`docs/13-onboarding.md`). `demoLabels` is true only with `demo` on and `BENCHMARK_DEMO_LABELS` not `0`. Demo staff credentials are random per boot (or set with `BENCHMARK_DEMO_STAFF_CREDENTIALS`) and are printed to the server console only; they are never served over HTTP.
+- Every screen shows `<DemoBanner/>` while `config.demoLabels` is true: "Demo data: these questions and the panel are made up to show how it works. Nothing here is a result."
+- Presenter mode: `BENCHMARK_DEMO_LABELS=0` (with `BENCHMARK_DEMO=1`) hides the banner, the demo notice in the Join wizard and the `DEMO:` prefix on card objectives. Demo flags on the data, the isolation from the second-look analysis and the database refusal are unchanged. It is for presenting a showcase, not for a pilot.
 - `secondLookSummary` ignores `demo` cards. (Test: a demo card with a full panel contributes nothing.) Nothing else does; see principle 5.
 
 ---
@@ -68,17 +69,20 @@ Source: the organisers' export already in the repo, `data/risk-radar.json` (139 
 
 ### The gating rule (the point of this section)
 Blind Round 1 only holds if an expert cannot read ACAPS's analysis of a risk **before** a question about it exists, because a card can be opened on any risk later. So:
-- **Experts** get the full view only for a risk that has at least one card linked to it **and every linked card is `resolved`**. For every other risk (no card yet, or any card not resolved) they get `neutralView`. The response says why: `hasQuestion: true` when a card is live, `false` when the analysis is simply kept back.
+- **Experts** get the full view unless a **live** card linked to the risk (open or closed; a `retired` card counts as neither) is **unanswered by them**: no Round-1 estimate on file for that card. A risk with no live card is full for every expert. A risk with a live card they have answered is full too.
+- **Device-held experts**: their answers are not on the server, so any live card locks the risk for them.
+- A locked risk gets `neutralView`, with `lock` (`answer` = an open card they have not answered; `closed` = the card closed before they answered; `device` = a device-held expert with a live card) and `question: { id, open, answered }` (`answered` is `null` for device-held experts). `hasQuestion: true` when a card is live.
 - **Staff** (analyst, moderator) always get the full view.
-- Consequence, stated plainly: until questions resolve, the expert's risk browser is a list of titles, places and themes, not ACAPS's reading. That is deliberate.
+- Consequence, stated plainly: while an expert has an unanswered live question on a risk, the risk's browser entry is a list of titles, places and themes, not ACAPS's reading. Answering Round 1 (or the card resolving) shows the analysis. That is deliberate.
+- The same rule guards the release: `GET /api/cards/:id/release` refuses an expert who has not answered Round 1 on an unresolved card, with `403` ("answer this question first to see the circle result"). Device-held experts are always refused on an unresolved card, because the server cannot see their answer. Staff, and any expert on a resolved card, are not refused.
 - A card's `theme` is chosen by the moderator, and a risk's derived `theme` (used for filtering) is classified from its **title only**, never from the hidden rationale.
 - The restricted fields are `status`, `outcome`, `level`, `probability`, `impact`, `rationale` and `triggers`. They must not appear anywhere in a neutral response (tests serialise the payload and regex it).
-- Response shapes: a full view is `{ view: 'full', hasQuestion, ...normalisedRisk }`; a neutral one is `{ view: 'neutral', hasQuestion, id, title, country, isos, region, theme, riskType }`. For staff the view is always `full`.
+- Response shapes: a full view is `{ view: 'full', hasQuestion, question, ...normalisedRisk, timeline }`; a locked expert's view is `{ view: 'neutral', hasQuestion, lock, question, id, title, country, isos, region, theme, riskType }`. For staff the view is always `full`.
 
 ### Methods (`radar.js`, `createRadar(ctx)`)
 | Method | Who | Behaviour |
 |---|---|---|
-| `listRisks(actor, { q, region, theme, country })` | expert (`risk.read`) or staff | `[{ id, title, country, region, theme, riskType, hasQuestion }]`, filtered (case-insensitive text match on title and country name; exact region, theme and iso), sorted by id, never more than 200. Always neutral. |
+| `listRisks(actor, { q, region, theme, country, view })` | expert (`risk.read`) or staff | `[{ id, title, country, region, theme, riskType, hasQuestion, liveQuestions, answered }]`, filtered (case-insensitive text match on title and country name; exact region, theme and iso; `view` = `active` or `history`), sorted by id, never more than 200. A row for a risk the expert is locked out of carries only the neutral fields; an unlocked row also carries `level`, `probability` and `status`. |
 | `getRisk(actor, id)` | same | The gated view above. 404 for an unknown id. |
 | `has(id)` | internal | Used by `createCard` to validate `riskId`. |
 | `hasLiveQuestion(riskId)` | internal | As defined above. |
@@ -121,11 +125,13 @@ POST /api/staff/dispatch/preview   { cardId } | { draft:{ country, region, theme
 ## 5. Screens
 
 ### Expert app
+*This section describes the earlier one-screen onboarding. The current join flow is the four-step Join wizard (`packages/web/src/expert/Join.jsx`), specified in [`docs/13-onboarding.md`](13-onboarding.md); the demo entry bullet below is superseded by it.*
 - Navigation: **Pulse** (the new home) · Questions (the current inbox, unchanged) · Risks · My data.
 - **Profile setup**: after signing in, if `needsSetup` the person sees the profile form before anything else. The form is also in **My data** as "My profile".
 - **Demo entry**: on the landing page, only when `config.demo`: "Try the demo": the person types a name, picks a level (and the device-held option where offered), accepts the consent text, and enters their profile.
 - **Pulse**: "Asked of you this week" (each with chips explaining why: `Covers TCD`, `Theme match`…), answer in place using the existing `CardView`; "On your radar, not pushed"; a strip linking to Questions when `waiting` is non-zero. Empty and error states.
 - **Risks**: search and filters (region, theme, country); a list; a detail page. A risk with a live question shows only the neutral header and a plain sentence that the analysis is hidden until the question is answered or resolved, so that the answer is the person's own.
+- **Round-1 answer card** (`expert/CardView.jsx`, used by Questions and Pulse): the statement, a "How this will be resolved" disclosure (the objective, the source and the resolver, all written by staff), the blind-round notice, and a slider or typed number with no starting value. Before "Lock in my estimate" the person may add, all optionally: how sure they are, a reason (600 characters at most), the basis for the estimate, and a conflict-of-interest box. Their level is shown, not chosen. Identifying details in the reason raise a warning and never block the answer. The screen sends the context with a first answer only, never with a revision. The guarantees are in the rows of `docs/05` and in amendment seven of `docs/06`. Checked in headless Chrome at 1180px and 390px in demo mode; submitting in a browser, the device-held path, the offline queue and Round 2 are not browser-checked.
 
 ### Staff app
 - **Dispatch** tab: pick a risk (search the radar, full view), see its analysis, then "Draft a card from this risk" (hands the draft to the **Cards** form, pre-filled with the country, region, theme, risk id and the ACAPS rating band; the moderator writes the statement, objective, resolution source and resolver). Below it, **Preview who would be asked** (by draft or by existing card) as a table of labels, reasons and decisions with the counts. Everything the tab says about experts is label-only.
@@ -134,7 +140,7 @@ POST /api/staff/dispatch/preview   { cardId } | { draft:{ country, region, theme
 ---
 
 ## 6. Shared wiring already in place (not owned by any feature agent)
-`taxonomy.js` constants; the four service modules as stubs; the routes in `http.js`; `GET /api/config`; the permissions `risk.read`, `dispatch.read`; `createCard` accepting `riskId`; the expert nav and views in `App.jsx`; the staff tab and `draft` state in `StaffApp.jsx`; `DemoBanner`, `DemoJoin` and `Profile` stubs; the migration-free storage (everything is a document field in existing tables).
+`taxonomy.js` constants; the four service modules as stubs; the routes in `http.js`; `GET /api/config`; the permissions `risk.read`, `dispatch.read`; `createCard` accepting `riskId`; the expert nav and views in `App.jsx`; the staff tab and `draft` state in `StaffApp.jsx`; `DemoBanner` and `Profile` stubs (the demo form `DemoJoin.jsx` and the consent form `Onboard.jsx` have since been deleted; the join flow is now the Join wizard in `packages/web/src/expert/Join.jsx`, see [`docs/13-onboarding.md`](13-onboarding.md)); the migration-free storage (everything is a document field in existing tables).
 
 ## 7. Decisions that belong to ACAPS
 1. Whether the risk browser should show experts any ACAPS analysis at all before a question resolves (the build says no).

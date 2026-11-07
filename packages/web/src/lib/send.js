@@ -8,13 +8,14 @@ import { obtainBallot } from './device.js';
  * @param {'server' | 'device'} mode
  * @param {string} cardId
  * @param {number} p probability 0..1
+ * @param {{ confidence?: number, reason?: string, evidenceType?: string, coi?: boolean }} [context] optional extras sent with the answer
  */
-export async function sendEstimate(api, mode, cardId, p) {
+export async function sendEstimate(api, mode, cardId, p, context = {}) {
   if (mode === 'device') {
     const ballot = await obtainBallot(api, cardId);
-    return anonymous('POST', '/api/anon/estimates', { ...ballot, p });
+    return anonymous('POST', '/api/anon/estimates', { ...ballot, p, ...context });
   }
-  return api('POST', '/api/estimates', { cardId, p });
+  return api('POST', '/api/estimates', { cardId, p, ...context });
 }
 
 /** The anonymous endpoints must not carry the login, so they use plain fetch and no Authorization. */

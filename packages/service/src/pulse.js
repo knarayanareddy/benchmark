@@ -4,6 +4,7 @@
  * not, and the preview places a card exactly as that person's own Pulse would. Docs: docs/10-pilot-experience.md, section 4.
  */
 import { LEVELS, coarsenToDay } from '@benchmark/core/anonymity';
+import { MIN_RELEASE_PANEL_SIZE } from '@benchmark/core/aggregate';
 import { matches } from '@benchmark/core/dispatch';
 import { rankAsks, WEEK_MS } from '@benchmark/core/pulse';
 import { REGIONS, THEMES } from '@benchmark/core/taxonomy';
@@ -27,6 +28,46 @@ export function createPulse(ctx) {
     const out = new Map();
     for (const c of cards) out.set(c.id, (await answers.estimates.find({ cardId: c.id, round: 1 })).length);
     return (/** @type {{ id: string }} */ card) => out.get(card.id) ?? 0;
+  }
+
+  /**
+   * The person's first declared country: how many consented people are in that circle (null under the release floor,
+   * shown as "forming"), its open or closed cards, and how many of those already have a closed panel release.
+   * @param {any} expert
+   */
+  async function circleOf(expert) {
+    const country = expert.declaration?.countries?.[0];
+    if (!country) return null;
+    const people = (await roster.experts.all()).filter((/** @type {any} */ e) => e.consent && e.declaration?.countries?.includes(country));
+    const cards = (await answers.cards.find({ country })).filter((/** @type {any} */ c) => c.status === 'open' || c.status === 'closed');
+    let withView = 0;
+    for (const c of cards) {
+      if ((await answers.releases.find({ cardId: c.id, visibility: 'panel', closed: true })).some((/** @type {any} */ r) => r.n >= MIN_RELEASE_PANEL_SIZE)) withView++;
+    }
+    return {
+      country,
+      members: people.length >= MIN_RELEASE_PANEL_SIZE ? people.length : null,
+      openCards: cards.length,
+      withView,
+    };
+  }
+
+  /**
+   * The person's own counts. Device-held answers sit under a key only the device holds, so there is no record to give.
+   * Anonymous objections carry no expert id, so a service-held anonymous expert's objections count as 0.
+   * @param {any} expert
+   */
+  async function recordOf(expert) {
+    if (expert.tokenMode === 'device') return null;
+    let answered = 0;
+    let revised = 0;
+    for (const c of await answers.cards.all()) {
+      const key = respondentKey(c, expert);
+      if (await answers.estimates.get(estimateKey(c.id, key, 1))) answered++;
+      if (await answers.estimates.get(estimateKey(c.id, key, 2))) revised++;
+    }
+    const objections = (await answers.dissents.find({ expert: expert.id })).length;
+    return { answered, revised, objections };
   }
 
   /** @param {any} actor */
@@ -54,6 +95,8 @@ export function createPulse(ctx) {
         offers: box.publications.filter((/** @type {any} */ p) => p.status === 'proposed').length,
       },
       deviceMode: box.deviceMode,
+      circle: await circleOf(expert),
+      record: await recordOf(expert),
     };
   }
 

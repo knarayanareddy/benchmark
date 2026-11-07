@@ -14,7 +14,7 @@ The primary score is the mean squared error between the stated probability and t
 
 ## R3 · Comparisons are paired
 
-Same risks, two methods. The errors are correlated, so a paired difference has far more power than comparing two independent scores. A paired comparison of the panel against ACAPS' 0.2171 is the *only* honest way to state the gap.
+Same risks, two methods. The errors are correlated, so a paired difference has far more power than comparing two independent scores. A paired comparison of the panel against ACAPS' 0.2171 is the *only* honest way to state the gap. Only the 28 Active risks carry an ACAPS rating, so a prospective head-to-head is at risk level; the trigger statements are scored against outcomes and a base rate (see `docs/06-protocol.md`).
 
 ## R4 · Unobservable ≠ miss
 
@@ -30,11 +30,19 @@ Round one: independent. Round two: the distribution is shown — **never who sai
 
 ## R7 · No public leaderboard
 
-Panel scores are public. Individual scores are private to the expert and the analyst. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
+**Amended 7 Nov 2026.** No per-person score is visible to staff. A private "my record" view for each expert, for themself only, is planned and not built.
 
-## R8 · Weighting by track record, never by self-declaration
+Panel scores are public. There is no public leaderboard, and no per-person score is shown to staff. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
 
-The Declaration screen (regions × themes) decides **who gets told**. It does not decide **how much weight their estimate carries**. Weighting comes from realised calibration on statements they were previously notified about. People are reliably overconfident about what they know, and the confidence errors correlate — which makes a self-weighted panel look tight and be wrong.
+> **Superseded (7 Nov 2026):** Panel scores are public. Individual scores are private to the expert and the analyst. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
+
+## R8 · Equal weight for every answer; the Declaration decides only who is asked
+
+**Amended 7 Nov 2026.** No track-record weighting in any aggregate. The Declaration decides who is asked, never how much an answer counts.
+
+The Declaration screen (countries, regions, themes) decides **who gets asked**. It does not decide **how much weight their estimate carries**, and no released aggregate weights an estimate by the expert's track record or by their self-declaration. The pure core still contains a track-record function, `seedWeights()` in `packages/core/src/aggregate.js`, which is reachable only through an optional `seedHistory` argument that no service route or screen passes. Removing it is a code change, not made by this rule.
+
+> **Superseded (7 Nov 2026):** The Declaration screen (regions × themes) decides **who gets told**. It does not decide **how much weight their estimate carries**. Weighting comes from realised calibration on statements they were previously notified about. People are reliably overconfident about what they know, and the confidence errors correlate — which makes a self-weighted panel look tight and be wrong.
 
 ## R9 · Round 1 is blind
 
@@ -68,7 +76,7 @@ The study design ships with the product. The most recent systematic review of di
 | **104** | Resolved risks (61 materialised, 43 not), and therefore scoreable |
 | **266** | Date-stamped trigger statements across those 139 risks |
 | **~17%** | Response rate when ACAPS surveyed 60+ experts (10 replied) — the behaviour baseline |
-| **73%** | Share of scored triggers with no written resolution criterion (101 of 139) |
+| **73%** | Share of triggers with a completion rate whose "Quantitative objective" field is empty (101 of 139). An empty field is not a resolution criterion. |
 | **0.2171** | ACAPS' own probability rating, read off ACAPS' published percentage bands (midpoints; "Very High" = 0.905) — **the bar to beat** |
 | 0.2168 | *sensitivity:* the same rating read as an ordinal (rating ÷ 5, so "Very High" = 1.00). Differs by 0.0003 — the bar does not move with the reading, but 1.00 is not a defensible forecast. |
 | 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar; the two are indistinguishable at n=104** |

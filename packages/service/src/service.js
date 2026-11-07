@@ -76,13 +76,15 @@ const isoList = (v) => {
  * @param {{
  *   roster: any, answers: any, secrets: { ballot: string, alias: string }, now?: () => number, releasePolicy?: string,
  *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string, sensitiveCountries?: readonly string[],
- *   radar?: Record<string, any>[], demo?: boolean
+ *   radar?: Record<string, any>[], demo?: boolean, demoLabels?: boolean,
+ *   showAcapsRound2?: boolean
  * }} deps
+ * `showAcapsRound2` (default true) false withholds ACAPS's reading from Round-2 entries. Round 1 never carries it.
  * `breakGlassPublicKey` (RSA, PEM) turns the safety override on: an anonymous objection then carries its
  * sender's id sealed to that key. The private key is NOT needed to run the service; it is supplied at collection.
  * `blindKey` (RSA private key, PEM) turns on device-held ballots: blind-signed tokens an expert's device keeps.
  */
-export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES, radar: radarRaw = [], demo = false } = /** @type {any} */ ({})) {
+export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES, radar: radarRaw = [], demo = false, demoLabels = true, showAcapsRound2 = true } = /** @type {any} */ ({})) {
   if (!roster || !answers) throw new TypeError('createService needs { roster, answers }');
   for (const k of ['ballot', 'alias']) {
     if (typeof secrets?.[k] !== 'string' || secrets[k].length < MIN_SECRET) {
@@ -142,6 +144,28 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     expert.level === LEVELS.ANONYMOUS
       ? ballotToken(secrets.ballot, card.id, expert.id)
       : `id:${expert.id}`;
+  const EVIDENCE = ['none', 'direct', 'local_source', 'data', 'analysis'];
+  const CONTACT = /[\w.+-]+@[\w-]+\.[\w.-]+|(?:\+?\d[\s().-]?){9,}/g;
+  /** The optional context that rides with an answer. Validated here; contact details are removed, never stored. */
+  const contextFields = (/** @type {any} */ input) => {
+    const out = {};
+    if (input.confidence !== undefined && input.confidence !== null) {
+      if (![1, 2, 3].includes(input.confidence)) throw new ValidationError('confidence must be 1, 2 or 3');
+      out.confidence = input.confidence;
+    }
+    if (input.evidenceType !== undefined && input.evidenceType !== null) {
+      if (!EVIDENCE.includes(input.evidenceType)) throw new ValidationError(`evidenceType must be one of ${EVIDENCE.join(', ')}`);
+      out.evidenceType = input.evidenceType;
+    }
+    if (input.coi !== undefined && input.coi !== null) out.coi = input.coi === true;
+    if (input.reason !== undefined && input.reason !== null) {
+      if (typeof input.reason !== 'string') throw new ValidationError('reason must be text');
+      const r = input.reason.trim();
+      if ([...r].length > 600) throw new ValidationError('reason must be 600 characters or fewer');
+      if (r) out.reason = r.replace(CONTACT, '[removed]');
+    }
+    return out;
+  };
   const estimateKey = (cardId, key, round) => `${cardId}|${key}|${round}`;
   // Recomputable from the respondent key and the ballot secret, so no identity is stored to know the arm.
   const armFor = (/** @type {string} */ cardId, /** @type {string} */ key) =>
@@ -376,7 +400,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
    * @param {Actor} actor
    * @param {{ cardId?: string, p?: number }} [input]
    */
-  async function submitEstimate(actor, { cardId, p } = {}) {
+  async function submitEstimate(actor, { cardId, p, ...context } = {}) {
     need(actor, 'estimate.submit');
     const expert = await expertOf(actor);
     if (!expert.level || !expert.consent) throw new ForbiddenError('choose an anonymity level and consent first');
@@ -385,6 +409,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     if (card.status !== 'open') throw new ConflictError(`card ${cardId} is not open for answers`);
     let clamped;
     try { clamped = clampForecast(/** @type {number} */ (p)); } catch (e) { throw new ValidationError(e instanceof Error ? e.message : String(e)); }
+    const extra = contextFields(context);
     const key = respondentKey(card, expert);
     if (card.round === 2 && !(await answers.estimates.get(estimateKey(card.id, key, 1)))) {
       throw new ConflictError('round 2 is a revision: you did not answer round 1');
@@ -395,6 +420,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         cardId: card.id, respondentKey: key, round: card.round, level: expert.level, p: clamped,
         expertId: anonymous ? null : expert.id,
         at: anonymous ? coarsenToDay(t()).ms : t(),
+        ...extra,
         ...(await secondLookFields(card, key)),
       });
     } catch (e) {
@@ -454,11 +480,33 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     return snap;
   }
 
+  /**
+   * The panel result for a card, for a person. Staff: always. An expert: only for a resolved card, or for a card they
+   * have answered in Round 1 (they have then already given their own number, so seeing the circle's is the point of
+   * Round 2). A device-held expert cannot prove an answer without a ballot, so they get it only once it is resolved.
+   * @param {Actor} actor @param {string} cardId
+   */
+  async function cardReleaseFor(actor, cardId) {
+    need(actor, 'release.read');
+    const card = await getCard(cardId);
+    if (actor.role === ROLES.EXPERT && card.status !== 'resolved') {
+      const expert = await expertOf(actor);
+      const answered = expert.tokenMode !== 'device' && Boolean(await answers.estimates.get(estimateKey(card.id, respondentKey(card, expert), 1)));
+      if (!answered) throw new ForbiddenError('answer this question first to see the circle result');
+    }
+    return cardRelease(cardId);
+  }
+
   // ── inbox: the pull path, so anonymous experts reach Round 2 ───────────
   const cardView = (c, extra = {}) => ({
     id: c.id, statement: c.statement, country: c.country, theme: c.theme, round: c.round,
-    window: c.window, version: c.version, ...extra,
+    window: c.window, version: c.version,
+    // What counts as "yes", where it will be checked and by whom: authored, neutral, and the first thing an expert needs.
+    resolution: c.objective ? { objective: c.objective, source: c.resolutionSource ?? null, resolver: c.resolver ?? null } : null,
+    ...extra,
   });
+  // Round 2 only: ACAPS's reading as a percentage, and only when the deployment shows it. Round 1 never carries it.
+  const acapsRound2 = (/** @type {any} */ c) => (showAcapsRound2 && typeof c.acapsP === 'number' ? { p: Math.round(c.acapsP * 100) } : null);
 
   async function inbox(actor) {
     need(actor, 'inbox.read');
@@ -471,7 +519,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         if (card.round === 1 && matches(card, expert.declaration)) toAnswer.push(cardView(card, { deviceHeld: true }));
         else if (card.round === 2) {
           openForRevision.push(cardView(card, {
-            release: await cardRelease(card.id, { round: 1 }), deviceHeld: true, secondLook: { available: Boolean(card.secondLook) },
+            acaps: acapsRound2(card), release: await cardRelease(card.id, { round: 1 }), deviceHeld: true, secondLook: { available: Boolean(card.secondLook) },
             thread: { available: Boolean(card.thread?.enabled) },
           }));
         }
@@ -485,7 +533,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         const first = await mine(1);
         if (first && !(await mine(2))) {
           openForRevision.push(cardView(card, {
-            yourEstimate: first.p, release: await cardRelease(card.id, { round: 1 }),
+            yourEstimate: first.p, acaps: acapsRound2(card), release: await cardRelease(card.id, { round: 1 }),
             secondLook: { available: Boolean(card.secondLook) && armFor(card.id, key) !== 'control' },
             thread: { available: Boolean(card.thread?.enabled) },
           }));
@@ -771,12 +819,13 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
    * can tell which expert it belongs to.
    * @param {{ cardId?: string, token?: string, signature?: string, p?: number }} [input]
    */
-  async function submitAnonymousEstimate({ cardId, token, signature, p } = {}) {
+  async function submitAnonymousEstimate({ cardId, token, signature, p, ...context } = {}) {
     const card = await getCard(String(cardId));
     checkBallot(card.id, token, signature);
     if (card.status !== 'open') throw new ConflictError(`card ${card.id} is not open for answers`);
     let clamped;
     try { clamped = clampForecast(/** @type {number} */ (p)); } catch (e) { throw new ValidationError(e instanceof Error ? e.message : String(e)); }
+    const extra = contextFields(context);
     const key = `bt:${token}`;
     if (card.round === 2 && !(await answers.estimates.get(estimateKey(card.id, key, 1)))) {
       throw new ConflictError('round 2 is a revision: this ballot did not answer round 1');
@@ -785,6 +834,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       await answers.estimates.insert(estimateKey(card.id, key, card.round), {
         cardId: card.id, respondentKey: key, round: card.round, level: LEVELS.ANONYMOUS, p: clamped, expertId: null,
         at: coarsenToDay(t()).ms,
+        ...extra,
         ...(await secondLookFields(card, key)),
       });
     } catch (e) {
@@ -1041,7 +1091,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   };
   /** @type {any} */
   let self = null;
-  const modules = { ...moduleCtx, radarRaw, demo, self: () => self };
+  const modules = { ...moduleCtx, radarRaw, demo, demoLabels, self: () => self };
   const roundtable = createRoundtable(moduleCtx);
   const publication = createPublication(moduleCtx);
   const profile = createProfile(modules);
@@ -1053,7 +1103,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   const api = Object.freeze({
     authenticate, createStaffSession, createInvite, createReinvite, listExperts, redeemInvite,
     createCard, listCards, closeRound, openRound2, resolveCard,
-    submitEstimate, cardRelease, inbox,
+    submitEstimate, cardRelease, cardReleaseFor, inbox,
     submitDissent, listDissents, routeDissent, actDissent, notifyDissent, closeDissent, publicLedger,
     setDeclaration, exportMe, eraseMe, applyRetention, readAudit,
     requestBreakGlass, decideBreakGlass, collectBreakGlass, listBreakGlass, ackNotice, consentFor,

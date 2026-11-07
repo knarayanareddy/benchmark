@@ -7,7 +7,7 @@ A ninety-second expert card that turns each ACAPS risk statement into a probabil
 **The one number.** ACAPS' own probability rating scores **0.2171** Brier on the 104 resolved risks; a logistic regression on the same fields scores **0.2177**. At n=104 the two are **indistinguishable from each other and from the base rate** (paired intervals span zero), so this is a bar to test against prospectively, not a finding. Reproduce it with `npm run ladder`.
 
 ```
-npm ci && npm run verify   # 1373 tests inside 15 checks, one pass/fail table
+npm ci && npm run verify   # 1439 tests inside 15 checks, one pass/fail table
 npm run serve              # the service and its pages (needs secrets; see docs/07-deploy.md)
 npm run worklist           # triage every headline and trigger for a human author
 ```

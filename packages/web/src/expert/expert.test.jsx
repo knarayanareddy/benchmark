@@ -22,13 +22,15 @@ describe('answering', () => {
   it('Round 1 is blind: nothing is filled in, Submit is off until the expert puts a number down, and no ACAPS text appears', async () => {
     const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p, clamped: false }) });
     const { container } = render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeDisabled();
     expect(screen.getByLabelText('Or type it (1–99)')).toHaveValue(null);
     expect(container.querySelector('output')).toHaveTextContent('—');
-    expect(container.textContent).not.toMatch(/ACAPS|71%|starts at/i);
+    // The blind-round notice names ACAPS on purpose; what must never appear is any number or rating of theirs.
+    expect(container.textContent.replace(/Blind round: ACAPS’s rating and the circle’s views are hidden until you answer\./, '')).not.toMatch(/ACAPS|71%|starts at/i);
+    expect(container.textContent).toMatch(/Blind round/);
     fireEvent.change(slider(), { target: { value: '40' } });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     expect(await screen.findByText(/Saved: 40%/)).toBeInTheDocument();
     expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.4 });
     expect(slider()).toBeDisabled();
@@ -42,11 +44,11 @@ describe('answering', () => {
     const box = screen.getByLabelText('Or type it (1–99)');
     await userEvent.type(box, '150');
     expect(await screen.findByRole('alert')).toHaveTextContent('whole number from 1 to 99');
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeDisabled();
     await userEvent.clear(box);
     await userEvent.type(box, '7');
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.07 }));
   });
 
@@ -56,7 +58,7 @@ describe('answering', () => {
     await userEvent.tab();
     await userEvent.tab();
     fireEvent.keyUp(slider(), { key: 'Tab' });
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeDisabled();
     expect(container.querySelector('output')).toHaveTextContent('—');
     await userEvent.type(screen.getByLabelText('Or type it (1–99)'), '150');
     expect(container.querySelector('output')).toHaveTextContent('—');
@@ -66,8 +68,8 @@ describe('answering', () => {
     const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 1, p: b.p }) });
     render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
     fireEvent.pointerUp(slider());
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(screen.getByRole('button', { name: 'Lock in my estimate' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     await waitFor(() => expect(a).toHaveBeenCalledWith('POST', '/api/estimates', { cardId: 'C1', p: 0.5 }));
   });
 
@@ -76,7 +78,7 @@ describe('answering', () => {
     const a = routes({ 'POST /api/estimates': () => { throw new ApiError('You appear to be offline.', { offline: true }); } });
     render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
     fireEvent.change(slider(), { target: { value: '33' } });
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     expect(await screen.findByText(/saved on this phone/)).toBeInTheDocument();
     expect(await pending()).toMatchObject([{ cardId: 'C1', p: 0.33 }]);
   });
@@ -85,17 +87,17 @@ describe('answering', () => {
     const a = routes({ 'POST /api/estimates': fail(409, 'you have already answered this round') });
     render(<CardView api={a} card={card()} mode="server" onNext={() => {}} />);
     fireEvent.change(slider(), { target: { value: '60' } });
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('already answered');
     expect(await pending()).toEqual([]);
   });
 
-  it('a revision shows the panel result and the first answer', async () => {
+  it('a revision shows the picture with the circle result and the first answer', async () => {
     const a = routes({ 'POST /api/estimates': (b) => ({ cardId: b.cardId, round: 2, p: b.p }) });
     const c = card({ round: 2, yourEstimate: 0.2, release: { suppressed: false, n: 6, estimate: 0.55, lo: 0.4, hi: 0.7 } });
     render(<CardView api={a} card={c} mode="server" revise onNext={() => {}} />);
-    expect(screen.getByText(/Panel \(6 experts\): 55%, range 40%–70%/)).toBeInTheDocument();
-    expect(screen.getByText(/Your first answer was 20%/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Circle pooled estimate 55 percent/ })).toBeInTheDocument();
+    expect(screen.getByText(/Your locked first estimate/)).toHaveTextContent('Your locked first estimate: 20%');
     expect(slider()).toHaveValue('20');
     await userEvent.click(screen.getByRole('button', { name: 'Save my revision' }));
     expect(await screen.findByText(/Saved/)).toBeInTheDocument();
@@ -124,7 +126,7 @@ describe('device-held key', () => {
     }));
     render(<CardView api={a} card={card({ deviceHeld: true })} mode="device" onNext={() => {}} />);
     fireEvent.change(screen.getByRole('slider', { name: /probability/i }), { target: { value: '25' } });
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Lock in my estimate' }));
     expect(await screen.findByText(/Saved: 25%/)).toBeInTheDocument();
     expect(seen).toHaveLength(1);
     expect(seen[0].url).toBe('/api/anon/estimates');
@@ -207,7 +209,7 @@ describe('second look (round 2)', () => {
   it('a logged-in expert fetches by the login, and sees balanced reasons under the same headings and markup', async () => {
     const a = routes({ 'POST /api/second-look': (b) => { expect(b).toEqual({ cardId: 'C1' }); return balanced; } });
     render(<CardView api={a} card={rev()} mode="server" revise onNext={() => {}} />);
-    expect(screen.getByText(/Your first answer was 20%/)).toBeInTheDocument();
+    expect(screen.getByText(/Your locked first estimate/)).toHaveTextContent('Your locked first estimate: 20%');
     await userEvent.click(offer());
     const higher = await screen.findByRole('heading', { name: 'Reasons it could be more likely' });
     const lower = screen.getByRole('heading', { name: 'Reasons it could be less likely' });

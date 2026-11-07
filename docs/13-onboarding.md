@@ -13,7 +13,7 @@
 1. **Invitation.** If the page address carries `#invite=<token>`: "Your invitation was recognised." and Continue. Otherwise a field "Paste your invitation link or code" (accepts a full link containing `invite=<token>` or the raw token; trims spaces). In demo mode this step is skipped and its pill shows it done; the demo starts at step 2, and it is entered from the landing screen's "Join the demo" button, with no invitation. On step 2, a button "Fill with an example" pre-fills the form with a made-up example profile the person can edit (labelled as an example; never a persona to impersonate).
 2. **Your expertise.** Demo only: your name (the pilot's name comes from the invitation staff wrote). Organisation (optional; "Only you see this."). Role: single-select chips from `ROLE_TYPES` (optional). Countries: searchable chips by country NAME (never typed ISO codes), at least 1, at most 6 (`MAX_COUNTRIES`), selected ones shown first. Themes: multi-select chips from `THEMES` (optional). Short plain text: what you declare decides which questions we ask you, never how much weight your answers carry.
 3. **Your visibility.** Three cards (Known = `identified`, Pseudonymous, Anonymous) in the prototype's layout with the tagline and a "What each audience sees" panel from `LEVEL_COPY` plus the fixed lines: the public sees aggregates only (`PUBLIC.minCount`), and for anonymous the safety line is the override sentence or the no-override sentence, depending on `breakGlass`, and it names the device-held case in both. Anonymous has the nested option "Keep my key on this device only", offered only when `deviceKeys`. A "Recommended for you" tag: on Pseudonymous by default; on Anonymous when any chosen country is in `DEFAULT_SENSITIVE_COUNTRIES` (`@benchmark/core/sensitive`), with the reason shown ("you cover a context where being named can put people at risk"). Choosing a level fetches `GET /api/consent/<level>[?mode=device]`.
-4. **Your rhythm and confirmation.** Weekly cap chips 1, 2, 3, 5 (default 3), explanatory line ("We only ask about <countries> and your chosen themes. Direct replies and impact receipts are the only other things we push."). A summary of everything chosen (name only in demo, countries by name, themes, visibility, cap). The consent text for the chosen level and mode (full, readable). Device-held: the recovery code panel and "I have saved my recovery code", shown on this step. The checkbox "I have read this and I choose this level." Then "Join the circle".
+4. **Your rhythm and confirmation.** Weekly cap chips 1, 2, 3, 5 (default 3), explanatory line ("We only ask about <countries> and your chosen themes. You will see anything else, such as a reply to something you raised, when you visit; nothing is sent to your phone or email."). A summary of everything chosen (name only in demo, countries by name, themes, visibility, cap). The consent text for the chosen level and mode (full, readable). Device-held: the recovery code panel and "I have saved my recovery code", shown on this step. The checkbox "I have read this and I choose this level." Then "Join the circle".
 
 ## What "Join" does
 - Pilot: `POST /api/invite/redeem { token, level, consentVersion, mode }` -> session; then `PUT /api/me/profile { organisation, roleType, countries, themes, weeklyCap }` with that session. If the profile save fails after the account exists, the person is still signed in and lands on the profile setup screen (`needsSetup`, the recovery path). The failure message is **not shown** to the person.
@@ -21,23 +21,24 @@
 - Then `onDone({ token, mode, level })` as today. Errors in role="alert". The recovery secret rules (create on choosing device, clear on switching off) are unchanged.
 
 ## /api/config
-`GET /api/config` returns exactly three booleans and nothing else, each from its own flag in `packages/service/bin/serve.mjs`:
+`GET /api/config` returns exactly four booleans and nothing else, each from its own flag in `packages/service/bin/serve.mjs`:
 
 ```json
-{ "demo": false, "deviceKeys": true, "breakGlass": true }
+{ "demo": false, "deviceKeys": true, "breakGlass": true, "demoLabels": false }
 ```
 
 - `demo`: `BENCHMARK_DEMO=1`.
 - `deviceKeys`: a blind-signature key is configured (`BENCHMARK_BLIND_KEY` or `BENCHMARK_BLIND_KEY_FILE`). The wizard offers a device-held key only when the server can issue one.
 - `breakGlass`: a break-glass public key is configured (`BENCHMARK_BREAKGLASS_PUBLIC_KEY` or `..._FILE`). It decides whether the anonymous safety line describes the override or says that nobody can open an objection.
+- `demoLabels`: true only when `demo` is on and `BENCHMARK_DEMO_LABELS` is not `0`. Presenter mode (`BENCHMARK_DEMO_LABELS=0`) answers false: the demo notice in the Join wizard and the demo banner are hidden. Demo flags on the data are unchanged.
 
-Key material is never returned. The client (`lib/config.js`) treats any failure, or any non-boolean field, as off, and caches only a successful answer.
+Key material is never returned. The client (`lib/config.js`) treats any failure, or any `demo`, `deviceKeys` or `breakGlass` value that is not `true`, as off. It treats `demoLabels` the other way: only a literal `false` hides the label, so an unreadable config keeps the demo label on.
 
 ## Components (all under packages/web/src)
 - `components/StepPills.jsx`: `StepPills({ steps: string[], current: number })` ordered list, `aria-current="step"`.
 - `components/ChipGroup.jsx`: `ChipGroup({ label, options:[{value,label,hint?}], value, onChange, multiple=false, max?, describedBy? })`; chips are `<button type="button" aria-pressed>` in a `role="group"` labelled by `label`; at max, unselected chips are disabled and a note says so. A weekly-cap chip cannot be cleared once chosen.
 - `components/CountryPicker.jsx`: `CountryPicker({ value: string[], onChange, max })`: a search box (filters by name, case and accent tolerant) over chips for `COUNTRY_NAMES`, selected chips pinned first, count "N of 6 chosen".
-- `expert/Join.jsx`: `Join({ api, invite, demo, deviceKeys, breakGlass = false, onDone, onCancel })`. `App.jsx` passes `breakGlass` and `deviceKeys` from `GET /api/config`.
+- `expert/Join.jsx`: `Join({ api, invite, demo, deviceKeys, breakGlass = false, demoLabels = true, onDone, onCancel })`. `App.jsx` passes `breakGlass`, `demoLabels` and `deviceKeys` from `GET /api/config`.
 - Core `packages/core/src/onboarding.js`: `MAX_COUNTRIES`, `CAP_OPTIONS`, `STEPS`, `COUNTRY_NAMES`, `countryName(iso)`, `searchCountries(q)`, `levelCards({ breakGlass })`, `recommendedLevel(countries, sensitive?)`, `validateStep(n, state)` (returns every problem at once), `parseInvite(input)`.
 
 ## Deviations from the first plan

@@ -3,7 +3,7 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
-  { ignores: ['node_modules/**', 'archive/**', 'data/**', 'mockups/**', 'organiser/**', 'coverage/**', '**/dist/**'] },
+  { ignores: ['node_modules/**', 'archive/**', 'data/**', 'mockups/**', 'organiser/**', 'coverage/**', '**/dist/**', 'packages/simulate/out/**'] },
   js.configs.recommended,
   {
     languageOptions: { ecmaVersion: 2023, sourceType: 'module', globals: { ...globals.node } },

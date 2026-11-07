@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { asErr } from '../lib/api.js';
 import { sendEstimate } from '../lib/send.js';
 import { enqueue } from '../lib/queue.js';
 import { obtainBallot } from '../lib/device.js';
 import { anonymous } from '../lib/send.js';
 import { SecondLook } from './SecondLook.jsx';
+import { Picture } from './Picture.jsx';
 import { Thread } from './Thread.jsx';
+import { ChipGroup } from '../components/ChipGroup.jsx';
+import { identifyingHints, LEVEL_COPY } from '@benchmark/core/anonymity';
+import { THEMES } from '@benchmark/core/taxonomy';
+import '../question.css';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 /** Plain words for the expert's own number, so a slider position means something. Never a reference to anyone else's view. @param {number} p */
@@ -19,15 +24,44 @@ function verbal(p) {
   return 'Almost certain';
 }
 
+const CONFIDENCE = [{ value: '1', label: 'Hunch' }, { value: '2', label: 'Fairly sure' }, { value: '3', label: 'Very sure' }];
+const BASIS = [
+  { value: 'none', label: 'Judgement only' }, { value: 'direct', label: 'I saw / heard it directly' },
+  { value: 'local_source', label: 'Trusted local source' }, { value: 'data', label: 'Data or monitoring' },
+  { value: 'analysis', label: 'Analysis / literature' },
+];
+const REASON_MAX = 600;
+
+/** The anonymity level is one per account, so this is shown, not chosen. Fetched once and remembered. */
+let levelCache = /** @type {Promise<string | null> | null} */ (null);
+/** @param {any} api @returns {Promise<string | null>} */
+const levelOf = (api) => {
+  const have = levelCache;
+  if (have) return have;
+  const fresh = /** @type {Promise<string | null>} */ (api('GET', '/api/me/profile').then((/** @type {any} */ p) => p?.level ?? null).catch(() => { levelCache = null; return null; }));
+  levelCache = fresh;
+  return fresh;
+};
+export const resetLevelCache = () => { levelCache = null; };
+
+/** Where, and by whom, the question will be settled. The first thing a forecaster needs. */
+function Resolution({ card }) {
+  const r = card.resolution;
+  if (!r && !card.window) return null;
+  return (
+    <details className="resolution">
+      <summary>How this will be resolved</summary>
+      {r?.objective && <p><strong>It counts as “yes” if:</strong> {r.objective}</p>}
+      {r?.source && <p><strong>Checked against:</strong> {r.source}{r.resolver ? ` · decided by ${r.resolver}` : ''}</p>}
+      {card.window && <p><strong>Window:</strong> {card.window.from} to {card.window.to}</p>}
+    </details>
+  );
+}
+
 const KINDS = [
   ['two_risks', 'This is really two questions'], ['window', 'The time window is wrong'],
   ['already_happening', 'This has already happened'], ['intent_not_condition', 'This is about intent, not something observable'],
 ];
-
-function describeRelease(r) {
-  if (!r || r.suppressed) return <p className="panel-line muted">The panel result is not published yet.</p>;
-  return <p className="panel-line">Panel ({r.n} experts): {pct(r.estimate)}, range {pct(r.lo)}–{pct(r.hi)}.</p>;
-}
 
 function Objection({ api, card }) {
   const [open, setOpen] = useState(false);
@@ -62,6 +96,7 @@ function Objection({ api, card }) {
 /** @param {{ api: import('../lib/api.js').Api, card: any, mode: 'server' | 'device', revise?: boolean, onNext: () => void, onQueued?: () => void }} props */
 export function CardView({ api, card, mode, revise = false, onNext, onQueued }) {
   const [first, setFirst] = useState(card.yourEstimate ?? null); // round-1 answer, for revisions
+  const [revised, setRevised] = useState(/** @type {number | null} */ (null)); // percent, once a revision is saved
   const [blocked, setBlocked] = useState('');
   // Round 1 is blind (rule R9): no ACAPS rating, no panel result, and no pre-filled number. The answer is
   // `null` until the expert has put one down, and Submit stays off until they have. A revision starts
@@ -72,6 +107,22 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
   const [look, setLook] = useState(/** @type {any} */ (null)); // the optional background, Round 2 only
   const [lookPhase, setLookPhase] = useState(/** @type {'idle' | 'loading'} */ ('idle'));
   const [lookError, setLookError] = useState('');
+  // Optional context that rides with a first answer: how sure, why, on what basis, any stake in the outcome.
+  const [confidence, setConfidence] = useState('');
+  const [reason, setReason] = useState('');
+  const [basis, setBasis] = useState('none');
+  const [coi, setCoi] = useState(false);
+  const [level, setLevel] = useState(/** @type {string | null} */ (null));
+  const shownLevel = mode === 'device' ? 'anonymous' : level;
+  const hints = useMemo(() => identifyingHints(reason), [reason]);
+  useEffect(() => {
+    if (revise) return undefined;
+    // A device-held key is always Anonymous, so it needs no login call just to say so (see `shownLevel`).
+    if (mode === 'device') return undefined;
+    let live = true;
+    levelOf(api).then((l) => { if (live) setLevel(l); });
+    return () => { live = false; };
+  }, [api, revise, mode]);
 
   // A device-held key means the server cannot say what this device already answered; the device asks.
   useEffect(() => {
@@ -90,23 +141,35 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
   }, [api, card.id, card.deviceHeld, revise]);
 
   /** Save one answer, the same way whether it is a new revision or the first answer kept. */
-  async function save(p) {
+  async function save(p, context = {}, asRevision = false) {
     setState({ phase: 'saving', text: '' });
     try {
-      const r = await sendEstimate(api, mode, card.id, p);
+      const r = await sendEstimate(api, mode, card.id, p, context);
+      if (asRevision) setRevised(Math.round(r.p * 100));
       setState({ phase: 'saved', text: `Saved: ${pct(r.p)}${r.clamped ? ' (kept within 1–99%)' : ''}. Thank you.` });
     } catch (e) {
       const err = asErr(e);
       if (err.offline) {
-        await enqueue(card.id, p);
+        await enqueue(card.id, p, context);
         setState({ phase: 'queued', text: 'You are offline. Your answer is saved on this phone and will be sent when you are back online.' });
         onQueued?.();
       } else setState({ phase: 'error', text: err.message });
     }
   }
+  /** Only what the person actually said is sent, so an answer with nothing extra looks exactly as it always did. */
+  function contextBody() {
+    if (revise) return {};
+    const c = /** @type {Record<string, any>} */ ({});
+    if (confidence) c.confidence = Number(confidence);
+    if (reason.trim()) c.reason = reason.trim();
+    if (basis !== 'none') c.evidenceType = basis;
+    if (coi) c.coi = true;
+    return c;
+  }
   async function submit() {
     if (!valid) return;
-    await save(/** @type {number} */ (value) / 100);
+    if ([...reason].length > REASON_MAX) return;
+    await save(/** @type {number} */ (value) / 100, contextBody(), revise);
   }
 
   /** The optional background. A device-held key proves its ballot first, exactly as an answer does. */
@@ -132,12 +195,15 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
       <div className="pills">
         {card.country && <span className="pill teal">{card.country}</span>}
         {card.window && <span className="pill">Resolves by {card.window.to}</span>}
-        {revise && <span className="pill indigo">Round 2 · revision</span>}
+        {card.theme && <span className="pill">{THEMES[card.theme] ?? card.theme}</span>}
+        {revise ? <span className="pill indigo">Round 2 · revision</span> : <span className="pill indigo">Risk question</span>}
+        {!revise && <span className="muted q-time">Takes about 90 seconds</span>}
       </div>
       <h3>{card.statement}</h3>
+      <Resolution card={card} />
       {revise
-        ? <>{describeRelease(card.release)}{first != null && <p className="muted">Your first answer was {pct(first)}. You may revise it.</p>}</>
-        : <p className="callout">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
+        ? card.round === 2 && <Picture acaps={card.acaps} release={card.release} mine={first} revised={revised} />
+        : <p className="callout">🔒 Blind round: ACAPS’s rating and the circle’s views are hidden until you answer. Nothing is filled in for you: move the slider or type a number from 1 to 99.</p>}
       {blocked ? <div className="msg warn">{blocked}</div> : (
         <>
           {revise && card.thread?.available && <Thread api={api} card={card} mode={mode} />}
@@ -168,6 +234,34 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
             </div>
           </div>
           {value != null && !valid && <div className="msg warn" role="alert">Use a whole number from 1 to 99.</div>}
+          {!revise && !done && (
+            <div className="q-context">
+              <h4>How sure are you?</h4>
+              <ChipGroup label="How sure are you?" options={CONFIDENCE} value={confidence} onChange={setConfidence} />
+              <label htmlFor={`why-${card.id}`}>Why? <span className="muted">(optional, a sentence is plenty)</span></label>
+              <textarea id={`why-${card.id}`} maxLength={REASON_MAX} value={reason} onChange={(e) => setReason(e.target.value)}
+                placeholder="What are you seeing that a report may not?" aria-describedby={`why-note-${card.id}`} />
+              <p id={`why-note-${card.id}`} className="muted">{[...reason].length} of {REASON_MAX}. Say what you see, not who you are. Email addresses and phone numbers are removed automatically.</p>
+              {hints.length > 0 && (
+                <div className="msg warn" role="status">
+                  This could point to you or someone else: {hints.map((h) => `“${h.match}”`).join(', ')}. Consider describing the role or the place in general terms.
+                </div>
+              )}
+              <h4>What is this based on?</h4>
+              <ChipGroup label="What is this based on?" options={BASIS} value={basis} onChange={(v) => setBasis(v || 'none')} />
+              <label className="plain q-coi">
+                <input type="checkbox" checked={coi} onChange={(e) => setCoi(e.target.checked)} />
+                <span>This outcome affects my organisation’s funding or position. <span className="muted">We record this so the analysis can check whether it matters. It never penalises you or changes anyone’s weight.</span></span>
+              </label>
+              {shownLevel && LEVEL_COPY[shownLevel] && (
+                <div className="q-identity">
+                  <p><strong>This will be shown as: {LEVEL_COPY[shownLevel].label}</strong></p>
+                  <p className="muted">{LEVEL_COPY[shownLevel].toPeers}</p>
+                  <p className="muted">This applies to everything you contribute. You can read what each level means in My data.</p>
+                </div>
+              )}
+            </div>
+          )}
           <div className="row">
             {done ? <button type="button" className="secondary" onClick={onNext}>Next question</button>
               : revise
@@ -176,10 +270,11 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
                   <button type="button" disabled={busy || first == null} onClick={() => save(first)}>Keep my first answer</button>
                   <button type="button" disabled={busy || first == null || !valid} onClick={submit}>Save my revision</button>
                 </>
-                : <button type="button" disabled={busy || !valid} onClick={submit}>Submit</button>}
+                : <button type="button" className="lock" disabled={busy || !valid} onClick={submit}>Lock in my estimate</button>}
           </div>
         </>
       )}
+      {!revise && !done && card.window && <p className="muted q-foot">Resolves {card.window.to}. Your first estimate is locked; you may revise it in the second round.</p>}
       {state.text && <div className={`msg ${state.phase === 'error' ? 'err' : state.phase === 'queued' ? 'warn' : 'ok'}`} role={state.phase === 'error' ? 'alert' : 'status'}>{state.text}</div>}
       <Objection api={api} card={card} />
     </div>

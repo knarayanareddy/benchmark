@@ -75,7 +75,7 @@ async function readJson(req, maxBytes) {
 /**
  * @typedef {{ login: () => Promise<string>, callback: (q: { code: string | null, state: string | null }) => Promise<{ id: string, role: string }> }} Oidc
  * @typedef {{
- *   config?: { demo?: boolean, deviceKeys?: boolean, breakGlass?: boolean },
+ *   config?: { demo?: boolean, deviceKeys?: boolean, breakGlass?: boolean, demoLabels?: boolean },
  *   service: any, oidc?: Oidc | null, staticDir?: string | null, ready?: () => Promise<void>,
  *   verifyStaff?: (req: any, body: any) => Promise<{ id: string, role: string } | null>,
  *   limits?: Record<string, number>, requireHttps?: boolean, trustProxy?: boolean, now?: () => number
@@ -87,7 +87,7 @@ export function createHandler({
   service,
   oidc = null,
   staticDir = null,
-  config = { demo: false, deviceKeys: false, breakGlass: false },
+  config = { demo: false, deviceKeys: false, breakGlass: false, demoLabels: true },
   ready = async () => {},
   verifyStaff = async () => null,
   limits = {},
@@ -110,12 +110,12 @@ export function createHandler({
     // experts
     ['POST', /^\/api\/invite\/redeem$/, async (req, m, b) => service.redeemInvite(b.token, { level: b.level, consentVersion: b.consentVersion, mode: b.mode })],
     ['GET', /^\/api\/inbox$/, async (req) => service.inbox(await actorOf(req))],
-    ['POST', /^\/api\/estimates$/, async (req, m, b) => service.submitEstimate(await actorOf(req), { cardId: b.cardId, p: b.p })],
+    ['POST', /^\/api\/estimates$/, async (req, m, b) => service.submitEstimate(await actorOf(req), { cardId: b.cardId, p: b.p, confidence: b.confidence, reason: b.reason, evidenceType: b.evidenceType, coi: b.coi })],
     ['POST', /^\/api\/dissents$/, async (req, m, b) => service.submitDissent(await actorOf(req), { cardId: b.cardId, kind: b.kind, text: b.text })],
     ['PUT', /^\/api\/me\/declaration$/, async (req, m, b) => service.setDeclaration(await actorOf(req), b)],
     ['GET', /^\/api\/me\/export$/, async (req) => service.exportMe(await actorOf(req))],
     ['DELETE', /^\/api\/me$/, async (req) => service.eraseMe(await actorOf(req))],
-    ['GET', /^\/api\/cards\/([^/]+)\/release$/, async (req, m) => { await actorOf(req); return service.cardRelease(m[1]); }],
+    ['GET', /^\/api\/cards\/([^/]+)\/release$/, async (req, m) => service.cardReleaseFor(await actorOf(req), m[1])],
     // The exact text an expert accepts, so the screen and the record cannot drift.
     ['GET', /^\/api\/consent\/([^/]+)$/, async (req, m) => service.consentFor(m[1], { device: new URL(req.url, 'http://x').searchParams.get('mode') === 'device' })],
     // public: the only unauthenticated reads, all of them aggregate or addressless
@@ -187,7 +187,7 @@ export function createHandler({
     // Profile, risk browser, Pulse, dispatch preview (docs/10-pilot-experience.md)
     ['GET', /^\/api\/me\/profile$/, async (req) => service.getProfile(await actorOf(req))],
     ['PUT', /^\/api\/me\/profile$/, async (req, m, b) => service.setProfile(await actorOf(req), b)],
-    ['GET', /^\/api\/risks$/, async (req) => { const q = new URL(req.url, 'http://x').searchParams; return service.listRisks(await actorOf(req), { q: q.get('q') || undefined, region: q.get('region') || undefined, theme: q.get('theme') || undefined, country: q.get('country') || undefined }); }],
+    ['GET', /^\/api\/risks$/, async (req) => { const q = new URL(req.url, 'http://x').searchParams; return service.listRisks(await actorOf(req), { q: q.get('q') || undefined, region: q.get('region') || undefined, theme: q.get('theme') || undefined, country: q.get('country') || undefined, view: q.get('view') || undefined }); }],
     ['GET', /^\/api\/risks\/([^/]+)$/, async (req, m) => service.getRisk(await actorOf(req), m[1])],
     ['GET', /^\/api\/pulse$/, async (req) => service.pulse(await actorOf(req))],
     ['POST', /^\/api\/staff\/dispatch\/preview$/, async (req, m, b) => service.previewDispatch(await actorOf(req), { cardId: b.cardId, draft: b.draft })],
@@ -198,7 +198,8 @@ export function createHandler({
     ['POST', /^\/api\/staff\/links$/, async (req, m, b) => service.createLink(await actorOf(req), { fromCardId: b.fromCardId, toCardId: b.toCardId, mechanism: b.mechanism, rival: b.rival })],
     ['DELETE', /^\/api\/staff\/links\/([^/]+)$/, async (req, m) => service.removeLink(await actorOf(req), m[1])],
     // Public: what this deployment offers. Booleans only: no keys, no credentials, nothing personal.
-    ['GET', /^\/api\/config$/, async () => ({ demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass) })],
+    // demoLabels is only ever true alongside demo: presenter mode (labels off) answers false.
+    ['GET', /^\/api\/config$/, async () => ({ demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass), demoLabels: Boolean(config.demo) && config.demoLabels !== false })],
     // Demo mode only: an account from the profile the person typed. No invite, no login.
     ['POST', /^\/api\/demo\/join$/, async (req, m, b) => {
       if (!service.demoJoin) throw new NotFoundError('no such route');

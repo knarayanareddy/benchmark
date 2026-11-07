@@ -99,6 +99,20 @@ for (const backend of BACKENDS) {
     }
   });
 
+  test('presenter mode (demoLabels false): no objective says DEMO:, statements are unchanged, and every card and expert is still flagged demo', async () => {
+    const w = await seeded({ demoLabels: false });
+    const cards = await w.answers.cards.all();
+    assert.equal(cards.length, DEMO_CARDS.length);
+    cards.forEach((c, i) => {
+      assert.equal(c.demo, true, `${c.id} is flagged`);
+      assert.doesNotMatch(c.objective, /DEMO:/, `${c.id} objective is not labelled`);
+      assert.equal(c.objective, DEMO_CARDS[i].objective.replace(/^DEMO: /, ''));
+      assert.equal(c.statement, DEMO_CARDS[i].statement);
+    });
+    const experts = await w.roster.experts.all();
+    assert.ok(experts.length > 0 && experts.every((e) => e.demo === true), 'every panel expert is flagged demo');
+  });
+
   test('every seeded card carries a theme key from THEMES and a region from REGIONS', async () => {
     const w = await seeded();
     for (const c of await w.answers.cards.all()) {
@@ -247,8 +261,8 @@ for (const backend of BACKENDS) {
     assert.ok((await empty.svc.listCards(empty.analyst)).every((c) => c.riskId === null));
   });
 
-  test('secondLookSummary ignores a demo card and counts the same shape on a non-demo card', async () => {
-    const w = await worldFor(backend, { demo: true });
+  for (const demoLabels of [true, false]) test(`secondLookSummary ignores a demo card and counts the same shape on a non-demo card (presenter mode: ${!demoLabels})`, async () => {
+    const w = await worldFor(backend, { demo: true, demoLabels });
     const es = await many(8, () => w.enroll('identified'));
     const { card: demoCard } = await w.svc.createCard(w.analyst, { ...CARD, statement: 'Cholera cases in Chad will exceed 12,000 by 30 April 2027.' });
     const { card: plain } = await w.svc.createCard(w.analyst, CARD);
@@ -308,37 +322,44 @@ for (const backend of BACKENDS) {
     const h = await boot(w);
     try {
       assert.equal((await h.call('POST', '/api/demo/join', { body: joinInput() })).status, 404);
-      assert.deepEqual((await h.call('GET', '/api/config')).json, { demo: false, deviceKeys: false, breakGlass: false });
+      assert.deepEqual((await h.call('GET', '/api/config')).json, { demo: false, deviceKeys: false, breakGlass: false, demoLabels: false });
     } finally { await h.close(); }
   });
 
-  baseTest(`[${backend}] HTTP: /api/config answers exactly three booleans, each taken from its own config flag, and no key material`, async () => {
+  baseTest(`[${backend}] HTTP: /api/config answers exactly four booleans, each taken from its own config flag, and no key material`, async () => {
     const w = await worldFor(backend);
     for (const config of [
       { demo: false, deviceKeys: true, breakGlass: false },
       { demo: false, deviceKeys: false, breakGlass: true },
       { demo: true, deviceKeys: true, breakGlass: true },
+      { demo: true, demoLabels: false },
+      { demo: true, demoLabels: true },
+      { demoLabels: true },
       {},
     ]) {
       const h = await boot(w, { config });
       try {
         const res = await h.call('GET', '/api/config');
         assert.equal(res.status, 200);
-        assert.deepEqual(Object.keys(res.json).sort(), ['breakGlass', 'demo', 'deviceKeys']);
-        assert.deepEqual(res.json, { demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass) });
+        assert.deepEqual(Object.keys(res.json).sort(), ['breakGlass', 'demo', 'demoLabels', 'deviceKeys']);
+        // demoLabels is true only when demo is on and the labels are not switched off.
+        assert.deepEqual(res.json, {
+          demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass),
+          demoLabels: Boolean(config.demo) && config.demoLabels !== false,
+        });
         assert.doesNotMatch(JSON.stringify(res.json), /BEGIN|PRIVATE|MII/);
       } finally { await h.close(); }
     }
   });
 
-  baseTest(`[${backend}] HTTP: with demo on, the join route works and /api/config reports only the three flags`, async () => {
+  baseTest(`[${backend}] HTTP: with demo on, the join route works and /api/config reports only the four flags`, async () => {
     const w = await worldFor(backend, { demo: true });
     await w.svc.seedDemo();
     const h = await boot(w, { config: { demo: true } });
     try {
       const cfg = await h.call('GET', '/api/config');
-      assert.deepEqual(Object.keys(cfg.json).sort(), ['breakGlass', 'demo', 'deviceKeys']);
-      assert.deepEqual(cfg.json, { demo: true, deviceKeys: false, breakGlass: false });
+      assert.deepEqual(Object.keys(cfg.json).sort(), ['breakGlass', 'demo', 'demoLabels', 'deviceKeys']);
+      assert.deepEqual(cfg.json, { demo: true, deviceKeys: false, breakGlass: false, demoLabels: true });
       assert.doesNotMatch(JSON.stringify(cfg.json), /demo-moderator|credential|password|demo-[A-Za-z0-9_-]{8,}/i);
       const bad = await h.call('POST', '/api/demo/join', { body: joinInput({ consentVersion: 'stale' }) });
       assert.equal(bad.status, 400);
@@ -403,7 +424,7 @@ baseTest('[memory] serve.mjs in demo mode prints two random staff credentials th
     assert.notEqual(printed[0], printed[1]);
     const base = `http://127.0.0.1:${port}`;
     const cfg = await (await fetch(`${base}/api/config`)).text();
-    assert.deepEqual(JSON.parse(cfg), { demo: true, deviceKeys: false, breakGlass: false });
+    assert.deepEqual(JSON.parse(cfg), { demo: true, deviceKeys: false, breakGlass: false, demoLabels: true });
     for (const c of printed) assert.ok(!cfg.includes(c));
     const signIn = (credential) => fetch(`${base}/api/staff/session`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ credential }),
@@ -445,12 +466,41 @@ baseTest('[memory] serve.mjs reports deviceKeys from BENCHMARK_BLIND_KEY_FILE an
     const blind = await serveWith({ BENCHMARK_BLIND_KEY_FILE: blindFile }); servers.push(blind);
     const both = await serveWith({ BENCHMARK_BLIND_KEY_FILE: blindFile, BENCHMARK_BREAKGLASS_PUBLIC_KEY: breakGlassPem }); servers.push(both);
     const cfg = async (s) => (await fetch(`${s.base}/api/config`)).text();
-    assert.deepEqual(JSON.parse(await cfg(none)), { demo: false, deviceKeys: false, breakGlass: false });
-    assert.deepEqual(JSON.parse(await cfg(blind)), { demo: false, deviceKeys: true, breakGlass: false });
-    assert.deepEqual(JSON.parse(await cfg(both)), { demo: false, deviceKeys: true, breakGlass: true });
+    assert.deepEqual(JSON.parse(await cfg(none)), { demo: false, deviceKeys: false, breakGlass: false, demoLabels: false });
+    assert.deepEqual(JSON.parse(await cfg(blind)), { demo: false, deviceKeys: true, breakGlass: false, demoLabels: false });
+    assert.deepEqual(JSON.parse(await cfg(both)), { demo: false, deviceKeys: true, breakGlass: true, demoLabels: false });
     for (const s of servers) assert.doesNotMatch(await cfg(s), /BEGIN|PRIVATE|MII/);
   } finally {
     for (const s of servers) s.stop();
+  }
+});
+
+// Presenter mode: BENCHMARK_DEMO_LABELS=0 switches the labels off and nothing else. The server still flags demo data.
+baseTest('[memory] serve.mjs with BENCHMARK_DEMO_LABELS=0 prints the presenter line, serves demoLabels false, and still prints staff credentials', async () => {
+  const port = await freePort();
+  const child = spawn(process.execPath, [SERVE], {
+    env: childEnv({
+      BENCHMARK_DEMO: '1', BENCHMARK_DEMO_LABELS: '0', BENCHMARK_ALLOW_HTTP: '1', PORT: String(port), BENCHMARK_STATIC_DIR: tmpdir(),
+      BENCHMARK_BALLOT_SECRET: SECRETS.ballot, BENCHMARK_ALIAS_SECRET: SECRETS.alias,
+    }),
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  try {
+    let out = '';
+    child.stdout.on('data', (d) => { out += d; });
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`serve.mjs did not start: ${out}`)), 20000);
+      const look = () => { if (out.includes('listening on')) { clearTimeout(timer); resolve(); } };
+      child.stdout.on('data', look);
+      child.on('exit', (code) => { clearTimeout(timer); reject(new Error(`serve.mjs exited with ${code}`)); });
+      look();
+    });
+    assert.ok(out.includes('DEMO LABELS OFF (presenter mode): the app will not say it is a demo.'), out);
+    assert.match(out, /Demo staff credentials \(sign in on the staff page\): demo-/);
+    const cfg = await (await fetch(`http://127.0.0.1:${port}/api/config`)).text();
+    assert.deepEqual(JSON.parse(cfg), { demo: true, deviceKeys: false, breakGlass: false, demoLabels: false });
+  } finally {
+    child.kill();
   }
 });
 

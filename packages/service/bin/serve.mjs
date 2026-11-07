@@ -29,8 +29,12 @@
  *                             credentials to the console (never served over HTTP). Refuses to start with
  *                             DATABASE_URL unless BENCHMARK_DEMO_ALLOW_DATABASE=1. NEVER on a real pilot database
  *                             (docs/10-pilot-experience.md).
+ *   BENCHMARK_DEMO_LABELS=0   presenter mode, with BENCHMARK_DEMO=1: the app does not say it is a demo (no banner, no
+ *                             notice in the Join wizard, no "DEMO:" on card objectives). Everything else is unchanged:
+ *                             demo flags, isolation from the second-look analysis, and the database refusal.
  *   BENCHMARK_DEMO_STAFF_CREDENTIALS  "a,b" optional: the two demo moderator credentials to use instead of random ones.
  *   BENCHMARK_DEMO_ALLOW_DATABASE=1   required, with BENCHMARK_DEMO=1 and DATABASE_URL, to start at all.
+ *   BENCHMARK_SHOW_ACAPS_ROUND2=0  withhold ACAPS's reading from Round-2 cards (default: shown). Round 1 never shows it.
  *   BENCHMARK_RADAR_FILE      the ACAPS radar export as JSON (default data/risk-radar.json in this repo)
  *   BENCHMARK_SENSITIVE_COUNTRIES  "TCD,SDN,..." ISO codes where being named needs an extra acknowledgement.
  *                             Optional: a conservative default list applies (docs/09-roundtable-and-credit.md).
@@ -67,6 +71,8 @@ const need = (k) => {
 };
 
 const demo = env.BENCHMARK_DEMO === '1';
+// Labels are on unless the presenter switches them off with exactly '0'.
+const demoLabels = env.BENCHMARK_DEMO_LABELS !== '0';
 if (demo && env.DATABASE_URL && env.BENCHMARK_DEMO_ALLOW_DATABASE !== '1') {
   console.error('BENCHMARK_DEMO=1 with DATABASE_URL: refusing to start. Demo writes synthetic accounts and data into that database. Set BENCHMARK_DEMO_ALLOW_DATABASE=1 only for a throwaway showcase database, never a pilot database.');
   process.exit(2);
@@ -106,7 +112,8 @@ const service = createService({
   ...stores,
   secrets: { ballot: need('BENCHMARK_BALLOT_SECRET'), alias: need('BENCHMARK_ALIAS_SECRET') },
   blindKey: read('BENCHMARK_BLIND_KEY'),
-  radar, demo,
+  radar, demo, demoLabels,
+  showAcapsRound2: env.BENCHMARK_SHOW_ACAPS_ROUND2 !== '0',
   breakGlassPublicKey: read('BENCHMARK_BREAKGLASS_PUBLIC_KEY'),
   breakGlassPrivateKey: read('BENCHMARK_BREAKGLASS_PRIVATE_KEY'),
   ...(env.BENCHMARK_SENSITIVE_COUNTRIES ? { sensitiveCountries: env.BENCHMARK_SENSITIVE_COUNTRIES.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean) } : {}),
@@ -136,13 +143,14 @@ demoStaff.forEach((cred, i) => staff.set(hashToken(cred), { id: `demo-mod${i + 1
 if (demo) {
   await service.seedDemo?.();
   console.log(`DEMO MODE. Demo staff credentials (sign in on the staff page): ${demoStaff.join(', ')}`);
+  if (!demoLabels) console.log('DEMO LABELS OFF (presenter mode): the app will not say it is a demo.');
 }
 const verifyStaff = async (req, body) =>
   oidc ? null : staff.get(hashToken(String(body.credential || ''))) || null;
 
 createServer({
   service, oidc, verifyStaff,
-  config: { demo, deviceKeys: Boolean(read('BENCHMARK_BLIND_KEY')), breakGlass: Boolean(read('BENCHMARK_BREAKGLASS_PUBLIC_KEY')) },
+  config: { demo, demoLabels: demo && demoLabels, deviceKeys: Boolean(read('BENCHMARK_BLIND_KEY')), breakGlass: Boolean(read('BENCHMARK_BREAKGLASS_PUBLIC_KEY')) },
   ready: async () => { await stores.answers.cards.get('__ready__'); await stores.roster.experts.get('__ready__'); },
   requireHttps: env.BENCHMARK_ALLOW_HTTP !== '1',
   trustProxy: env.BENCHMARK_TRUST_PROXY === '1',

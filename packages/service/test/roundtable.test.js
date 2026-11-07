@@ -432,7 +432,7 @@ for (const backend of BACKENDS) {
     const devs = (await w.svc.inbox(dev.actor)).discussion;
     assert.equal(devs.length, 1);
     assert.equal(devs[0].deviceHeld, true);
-    for (const c of mine) assert.deepEqual(Object.keys(c).sort(), ['country', 'id', 'round', 'statement', 'theme', 'thread', 'version', 'window']);
+    for (const c of mine) assert.deepEqual(Object.keys(c).sort(), ['country', 'id', 'resolution', 'round', 'statement', 'theme', 'thread', 'version', 'window']);
     await openR2(w, card);
     assert.deepEqual((await w.svc.inbox(ada.actor)).discussion, []);
     assert.equal((await w.svc.listPending(w.mod, { cardId: card.id })).length, 0);

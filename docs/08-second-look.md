@@ -26,7 +26,7 @@ Round 1 is blind. In Round 2 (a revision round a moderator opens after Round 1 c
 
 For each arm, the moderators see: the number of paired answers, the mean change from Round 1 to Round 2, the mean change **toward ACAPS's reading**, and how many opened the background. Any arm with fewer than 5 pairs shows no numbers.
 
-It **can** show whether the background moves people, and whether it moves them toward ACAPS more than the other arms do (an anchoring signal). It **cannot** show that the background makes forecasts more accurate: that needs resolved outcomes, which arrive 30 to 90 days after a card closes, and about 506 resolved statements to see a 0.02 gain. Pooling across cards treats answers as independent although they are clustered by expert and by risk, so intervals from it would be too narrow; the table is descriptive and carries no confidence interval by design.
+It **can** show whether the background moves people, and whether it moves them toward ACAPS more than the other arms do (an anchoring signal). It **cannot** show that the background makes forecasts more accurate: that needs resolved outcomes, which arrive 30 to 90 days after a card closes. The number of resolved statements needed to see a 0.02 gain is not yet set: the earlier figure of about 506 is withdrawn (see `docs/06-protocol.md`; the power analysis is in progress as `docs/14`, not yet written). Pooling across cards treats answers as independent although they are clustered by expert and by risk, so intervals from it would be too narrow; the table is descriptive and carries no confidence interval by design.
 
 ## Privacy
 
@@ -47,6 +47,6 @@ It **can** show whether the background moves people, and whether it moves them t
 ## Decisions that belong to ACAPS (not code)
 
 1. **Who writes the content?** The analyst who owns the risk writes the reasoning, sources and the two lists, per card, before Round 1 opens. Without content a card has no second look.
-2. **Do they accept randomisation?** Some experts get no background at all. If ACAPS will not accept a control arm, the feature can still run, but then it can show only whether people move, not whether they move *because* of the background.
+2. **Do they accept randomisation?** Some experts get no background at all. ACAPS has asked the project to make judgement calls like this one itself (`docs/11-questions-for-acaps.md`), so this is not a data or sign-off dependency. The control arm stays in the design as built. It is listed in the judgement-call register (`docs/15`, in progress), where ACAPS has a review and veto window. If ACAPS vetoes it, the feature can still run, but then it can show only whether people move, not whether they move *because* of the background.
 3. **Are the "higher" and "lower" lists written by someone other than the author of the ACAPS reasoning?** If the same person writes all three, the "balanced" arm is not independent of the `acaps_view` arm.
 4. **Is showing ACAPS's reasoning at all appropriate** given that the study compares the panel with ACAPS? The design keeps it after the first answer and out of the primary endpoint, but the question of whether it belongs in the product is ACAPS's.

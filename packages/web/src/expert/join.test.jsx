@@ -394,6 +394,8 @@ describe('rhythm and confirmation', () => {
     renderPilot(api());
     await toConfirm({ countries: ['Chad', 'Sudan'] });
     expect(screen.getByText(/We only ask about Chad, Sudan and your chosen themes\./)).toBeInTheDocument();
+    expect(screen.getByText(/You will see anything else, such as a reply to something you raised, when you visit; nothing is sent to your phone or email\./)).toBeInTheDocument();
+    expect(screen.queryByText(/impact receipts|only other things we push/)).toBeNull();
     const summary = screen.getByText('Countries').closest('dl');
     expect(summary).toHaveTextContent('Chad, Sudan');
     expect(summary).not.toHaveTextContent(/TCD|SDN/);

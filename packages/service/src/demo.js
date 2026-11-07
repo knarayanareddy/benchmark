@@ -31,7 +31,7 @@ const declarationOf = (profile) => ({ countries: profile?.countries, themes: pro
  * @param {any} ctx the shared context built by service.js
  */
 export function createDemo(ctx) {
-  const { roster, answers, t, radarRaw, updateCard } = ctx;
+  const { roster, answers, t, radarRaw, updateCard, demoLabels } = ctx;
 
   /** @returns {Promise<number>} */
   const countJoins = async () => (await roster.experts.find({ demoJoined: true })).length;
@@ -101,7 +101,8 @@ export function createDemo(ctx) {
       const { card: created } = await svc.createCard(SEED_ACTOR, {
         statement: c.statement, country: c.country, region: c.region, theme: c.theme,
         window: { from: dayOf(today + c.windowDays.from * 86400000), to: dayOf(today + c.windowDays.to * 86400000) },
-        objective: c.objective, resolutionSource: c.resolutionSource, resolver: c.resolver, probability: c.probability,
+        // Presenter mode (demoLabels off) drops the label from the objective only; the statement is unchanged.
+        objective: demoLabels ? c.objective : c.objective.replace(/^DEMO: /, ''), resolutionSource: c.resolutionSource, resolver: c.resolver, probability: c.probability,
         riskId: riskFor(c.country) ?? undefined,
       });
       const card = await updateCard(created, { demo: true });
