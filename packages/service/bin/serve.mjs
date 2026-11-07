@@ -15,6 +15,15 @@
  *                             "email:role,email:role" with role analyst|moderator.
  *   BENCHMARK_STAFF_TOKENS    "id:role:sha256hex,..." static credentials, only when
  *                             OIDC is not configured (pilot stand-in)
+ *   BENCHMARK_BLIND_KEY       RSA private key (PEM) that blind-signs device-held ballots. Optional: without
+ *                             it the device-held option is simply not offered. Generate: bin/blind-keygen.mjs
+ *   BENCHMARK_BREAKGLASS_PUBLIC_KEY   RSA public key (PEM) that seals anonymous objections for the
+ *                             two-moderator safety override. Optional: without it there is no override,
+ *                             and the consent text says so. Generate: bin/breakglass-keygen.mjs.
+ *                             The matching PRIVATE key should NOT be on this service; moderators supply it
+ *                             when they collect an approved request (BENCHMARK_BREAKGLASS_PRIVATE_KEY exists
+ *                             for single-host pilots only).
+ *   Every secret above also accepts a <NAME>_FILE variant that names a file (Docker/Kubernetes secrets).
  *   PORT                      default 8080
  *   BENCHMARK_TRUST_PROXY=1   behind a TLS-terminating proxy that sets
  *                             X-Forwarded-Proto / X-Forwarded-For
@@ -22,18 +31,27 @@
  * TLS is terminated by the proxy; the service refuses non-https requests
  * unless BENCHMARK_ALLOW_HTTP=1 (local development only).
  */
+import fs from 'node:fs';
 import path from 'node:path';
 import { createService } from '../src/service.js';
 import { createRosterStore, createAnswerStore } from '../src/store.js';
-import { createPgStores, migrate } from '../src/pg-store.js';
+import { createPgStores } from '../src/pg-store.js';
+import { migrate } from '../src/migrate.js';
 import { createServer } from '../src/http.js';
 import { hashToken } from '../src/auth.js';
 import { createOidc } from '../src/oidc.js';
 
 const env = process.env;
+/** Read NAME, or the file named by NAME_FILE. PEM values may carry literal \n from an env file. */
+const read = (k) => {
+  const file = env[`${k}_FILE`];
+  const v = env[k] ?? (file ? fs.readFileSync(file, 'utf8').trim() : undefined);
+  return v === undefined ? undefined : v.replace(/\\n/g, '\n');
+};
 const need = (k) => {
-  if (!env[k]) { console.error(`missing ${k}`); process.exit(2); }
-  return env[k];
+  const v = read(k);
+  if (!v) { console.error(`missing ${k}`); process.exit(2); }
+  return v;
 };
 
 let stores;
@@ -55,6 +73,9 @@ if (env.DATABASE_URL) {
 const service = createService({
   ...stores,
   secrets: { ballot: need('BENCHMARK_BALLOT_SECRET'), alias: need('BENCHMARK_ALIAS_SECRET') },
+  blindKey: read('BENCHMARK_BLIND_KEY'),
+  breakGlassPublicKey: read('BENCHMARK_BREAKGLASS_PUBLIC_KEY'),
+  breakGlassPrivateKey: read('BENCHMARK_BREAKGLASS_PRIVATE_KEY'),
 });
 
 /** @type {ReturnType<typeof createOidc> | null} */
@@ -85,5 +106,5 @@ createServer({
   ready: async () => { await stores.answers.cards.get('__ready__'); await stores.roster.experts.get('__ready__'); },
   requireHttps: env.BENCHMARK_ALLOW_HTTP !== '1',
   trustProxy: env.BENCHMARK_TRUST_PROXY === '1',
-  staticDir: new URL('../public/', import.meta.url).pathname,
+  staticDir: env.BENCHMARK_STATIC_DIR || new URL('../../web/dist/', import.meta.url).pathname,
 }).listen(Number(env.PORT || 8080), () => console.log(`benchmark service listening on ${env.PORT || 8080}`));

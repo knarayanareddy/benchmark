@@ -18,10 +18,12 @@ const node = (...args) => [process.execPath, ...args];
 
 const STEPS = [
   ['typecheck', 'types: server and shared code (tsc, strict)', ['npx', 'tsc', '-p', 'tsconfig.json']],
-  ['typecheck-ui', 'types: browser pages (tsc, strict)', ['npx', 'tsc', '-p', 'tsconfig.public.json']],
+  ['typecheck-ui', 'types: the React apps (tsc, strict)', ['npx', 'tsc', '-p', 'tsconfig.public.json']],
   ['lint', 'lint (eslint)', ['npx', 'eslint', '.']],
   ['spine', 'shared spine integrity', node('scripts/check-spine.mjs')],
+  ['build', 'build the expert and staff apps (React, Vite, PWA)', ['npm', 'run', 'build', '-w', '@benchmark/web']],
   ['test', 'unit and flow tests (memory, Postgres, pg driver)', node('--test', 'packages/shared/core.test.js', ...globTests())],
+  ['web', 'component tests for the expert and staff apps (vitest)', ['npm', 'test', '-w', '@benchmark/web']],
   ['anonymity', 'anonymity gate', node('scripts/gate-anonymity.mjs')],
   ['privacy', 'privacy gate', node('scripts/gate-privacy.mjs')],
   ['numbers', 'numbers gate (prose matches measurement)', node('scripts/numbers-gate.mjs')],

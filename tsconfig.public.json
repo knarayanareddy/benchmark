@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "types": [], "lib": ["ES2023", "DOM", "DOM.Iterable"], "paths": { "/*": ["./packages/service/public/*"] } },
-  "include": ["packages/service/public/*.js"],
-  "exclude": ["node_modules"]
+  "compilerOptions": { "types": ["vite/client"], "lib": ["ES2023", "DOM", "DOM.Iterable"], "jsx": "react-jsx", "noImplicitAny": false },
+  "include": ["packages/web/src/**/*.js", "packages/web/src/**/*.jsx", "packages/web/vite.config.js"],
+  "exclude": ["node_modules", "packages/web/src/**/*.test.js", "packages/web/src/**/*.test.jsx", "packages/web/src/test-helpers.js", "packages/web/src/test-setup.js", "packages/web/dist"]
 }

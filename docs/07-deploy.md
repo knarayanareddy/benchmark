@@ -18,7 +18,24 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d app cad
 curl -fsS https://<domain>/readyz
 ```
 
-`migrate` runs as the database owner, creates the schema and the roles `bm_roster` and `bm_answers`, and sets their passwords. The service then runs as those two roles, never as the owner (`BENCHMARK_MIGRATE=0`), so it cannot create tables, and neither role can read the other's schema.
+`migrate` runs as the database owner. It applies the versioned migrations in `packages/service/db/migrations/` (each in its own transaction, checksummed, under an advisory lock), re-applies the least-privilege grants, creates the roles `bm_roster` and `bm_answers` and sets their passwords. Run it again on every upgrade; `node packages/service/bin/migrate.mjs --status` shows what is applied and what is pending. The service then runs as those two roles, never as the owner (`BENCHMARK_MIGRATE=0`), so it cannot create tables, and neither role can read the other's schema.
+
+## Migrations
+
+Forward-only. There is no `down`: a destructive change ships in two releases, **expand** (add the new column or table, write both, backfill) then, once nothing reads the old one, **contract** (a later migration drops it). Editing a migration that has been applied anywhere is refused (its checksum is recorded), so fix mistakes with a new file. A migration that fails rolls back completely and is not recorded.
+
+## Optional features
+
+| Feature | Turn on | Leave off and |
+|---|---|---|
+| Device-held anonymous keys | `node packages/service/bin/blind-keygen.mjs > blind-key.pem`, set `BENCHMARK_BLIND_KEY_FILE` | the option is not offered |
+| Two-moderator safety override | `node packages/service/bin/breakglass-keygen.mjs`, give the service only the **public** key (`BENCHMARK_BREAKGLASS_PUBLIC_KEY_FILE`), keep the private key offline with the moderators who may approve | there is no override, and the consent text says so |
+
+Decide both before inviting anyone: the consent text an expert accepts describes what the deployment can do at that moment, and a hash of it is stored with their consent.
+
+## The apps
+
+`packages/web` is built by Vite (`npm run build -w @benchmark/web`; the Dockerfile does it) and served by the service at `/` (experts) and `/staff`. They are installable (a web app manifest and PNG icons) and the shell works offline through a service worker that never touches `/api/*`: no answer, token or ballot is cached by it. Answers given offline wait in the phone's IndexedDB and are sent on reconnect. Because the pages and the worker are served `no-cache`, a deploy reaches installed apps on their next visit. Installing needs HTTPS (Caddy provides it) and has not been tried on a physical phone.
 
 ## Secrets
 
@@ -33,7 +50,9 @@ Both must be at least 16 characters and different from each other; the service r
 
 - [ ] Run the migration and the service as above, and read `docs/05-service-and-privacy.md`.
 - [ ] Sign in as staff through your real identity provider (this path has only met a fake one).
-- [ ] Test backup and restore of the database, and store the secrets separately.
+- [ ] Test backup and restore of the database, and store the secrets (and the blind key) separately from it.
+- [ ] Have a cryptographer review `packages/core/src/blind.js` before offering device-held keys, or leave `BENCHMARK_BLIND_KEY` unset.
+- [ ] Open the app on a real phone over HTTPS, install it, switch to airplane mode, answer, reconnect.
 - [ ] Complete the DPIA and the data-sharing agreement. See `docs/06-protocol.md`.
 - [ ] Have counsel read the consent text (`packages/service/src/consent.js`).
 - [ ] Write the card objectives: `npm run worklist`, fill the `author_*` columns, then `node scripts/authoring-worklist.mjs --import <file> --out data/authored-cards.json`.

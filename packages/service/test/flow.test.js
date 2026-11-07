@@ -1,86 +1,14 @@
-import baseTest, { after } from 'node:test';
-import net from 'node:net';
+import baseTest from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { createService } from '../src/service.js';
 import { createRosterStore, createAnswerStore } from '../src/store.js';
-import { createPgStores, migrate } from '../src/pg-store.js';
+import { createPgStores } from '../src/pg-store.js';
+import { migrate } from '../src/migrate.js';
 import { CONSENT_VERSION } from '../src/consent.js';
 import { ACTION, KIND } from '@benchmark/domain/dissent';
 import { ballotToken } from '@benchmark/core/anonymity';
-
-const SECRETS = { ballot: 'ballot-secret-for-tests-0001', alias: 'alias-secret-for-tests-00002' };
-const DAY = 86400000;
-const T0 = Date.UTC(2026, 10, 7, 10, 23, 45, 123);
-const WINDOW = { from: '2026-11-01', to: '2027-04-30' };
-const CARD = {
-  statement: 'Cholera cases in Chad will exceed 10,000 by 30 April 2027.',
-  country: 'TCD', region: 'Sahel', theme: 'health', window: WINDOW,
-  objective: 'WHO weekly bulletin cumulative cases above 10,000', resolutionSource: 'IPC',
-  resolver: 'R. Resolver', probability: 'High',
-};
-
-let PGlite = null;
-let PGLiteSocketServer = null;
-let pg = null;
-try { ({ PGlite } = await import('@electric-sql/pglite')); } catch { /* dev dependency */ }
-try { ({ PGLiteSocketServer } = await import('@electric-sql/pglite-socket')); ({ default: pg } = await import('pg')); } catch { /* dev dependency */ }
-// 'postgres' runs PGlite in-process. 'pg-driver' runs the real `pg` client over the
-// Postgres wire protocol, which is what production uses.
-export const BACKENDS = ['memory', ...(PGlite ? ['postgres'] : []), ...(PGlite && PGLiteSocketServer && pg ? ['pg-driver'] : [])];
-
-const cleanups = [];
-after(async () => { for (const c of cleanups.splice(0)) await c(); });
-
-const freePort = () => new Promise((resolve) => {
-  const s = net.createServer();
-  s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => resolve(port)); });
-});
-
-async function pgDriverStores() {
-  const db = await PGlite.create();
-  const port = await freePort();
-  const server = new PGLiteSocketServer({ db, port, host: '127.0.0.1' });
-  await server.start();
-  const pool = new pg.Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres', max: 1 });
-  cleanups.push(async () => { await pool.end(); await server.stop(); await db.close(); });
-  // The pglite-socket test shim closes the connection after ANY SQL error (real Postgres
-  // does not), so the next query on that connection fails before it runs. Retry it once.
-  const db2 = {
-    async query(sql, params) {
-      try { return await pool.query(sql, params); } catch (e) {
-        if (e.code === 'ECONNRESET') return pool.query(sql, params);
-        throw e;
-      }
-    },
-  };
-  await migrate(db2);
-  return createPgStores({ roster: db2, answers: db2 });
-}
-
-const many = async (n, f) => { const out = []; for (let i = 0; i < n; i++) out.push(await f(i)); return out; };
-
-async function makeStores(backend) {
-  if (backend === 'memory') return { roster: createRosterStore(), answers: createAnswerStore() };
-  if (backend === 'pg-driver') return pgDriverStores();
-  const db = new PGlite();
-  await migrate(db);
-  return createPgStores({ roster: db, answers: db });
-}
-
-async function worldFor(backend, overrides = {}) {
-  const { roster, answers } = await makeStores(backend);
-  const clock = { now: T0 };
-  const svc = createService({ roster, answers, secrets: SECRETS, now: () => clock.now, ...overrides });
-  const mod = await svc.authenticate(await svc.createStaffSession({ id: 'mod1', role: 'moderator' }));
-  const analyst = await svc.authenticate(await svc.createStaffSession({ id: 'an1', role: 'analyst' }));
-  const enroll = async (level, { name, countries = ['TCD'] } = {}) => {
-    const inv = await svc.createInvite(mod, { declaration: { countries }, name });
-    const r = await svc.redeemInvite(inv.token, { level, consentVersion: CONSENT_VERSION });
-    return { ...r, actor: await svc.authenticate(r.sessionToken), invite: inv };
-  };
-  return { roster, answers, clock, svc, mod, analyst, enroll };
-}
+import { BACKENDS, SECRETS, DAY, T0, CARD, many, worldFor, pgDriverStores, PGlite } from './helpers.js';
 
 for (const backend of BACKENDS) {
 const test = (name, fn) => baseTest(`[${backend}] ${name}`, () => fn());
@@ -120,6 +48,11 @@ test('sessions expire', async () => {
   const e = await w.enroll('identified');
   assert.equal((await w.svc.authenticate(e.sessionToken)).expertId, e.expertId);
   w.clock.now += 13 * 3600 * 1000;
+  assert.equal((await w.svc.authenticate(e.sessionToken)).expertId, e.expertId, 'an expert session outlasts a working day');
+  const staff = await w.svc.createStaffSession({ id: 'mod9', role: 'moderator' });
+  w.clock.now += 13 * 3600 * 1000;
+  await assert.rejects(() => w.svc.authenticate(staff), /expired/, 'a staff session does not');
+  w.clock.now += 31 * 24 * 3600 * 1000;
   await assert.rejects(() => w.svc.authenticate(e.sessionToken), /expired/);
 });
 
@@ -429,6 +362,31 @@ test('state survives a restart (JSON snapshot for memory, the database for Postg
   assert.equal((await b.svc.authenticate(await b.svc.createStaffSession({ id: 'x', role: 'analyst' }))).role, 'analyst');
   if (!db && !shared) assert.ok(!fs.readFileSync(files.answers, 'utf8').includes(SECRETS.ballot));
   fs.rmSync(dir, { recursive: true });
+});
+
+test('a returning expert gets back in with a re-invite that changes nothing about their level or consent (B-01)', async () => {
+  const w = await world();
+  const e = await w.enroll('anonymous', { name: 'Back Again' });
+  await assert.rejects(() => w.svc.createReinvite(w.analyst, e.expertId), /may not invite\.create/);
+  await assert.rejects(() => w.svc.createReinvite(w.mod, 'ex_nobody'), /no such expert/);
+  const pending = await w.svc.createInvite(w.mod, { declaration: { countries: ['TCD'] } });
+  assert.ok(pending.expertId);
+  await assert.rejects(() => w.svc.createReinvite(w.mod, pending.expertId), /not completed onboarding/, 'cannot re-invite someone who never joined');
+
+  const list = await w.svc.listExperts(w.mod);
+  assert.equal(list.find((x) => x.id === e.expertId).joined, true);
+  assert.equal(list.find((x) => x.id === pending.expertId).joined, false);
+  assert.ok(!JSON.stringify(list).includes('anonymous'), 'the list does not reveal anyone\'s anonymity level');
+  await assert.rejects(() => w.svc.listExperts(w.analyst), /may not invite\.create/);
+
+  const before = await w.roster.experts.get(e.expertId);
+  const link = await w.svc.createReinvite(w.mod, e.expertId);
+  const back = await w.svc.redeemInvite(link.token, {});
+  assert.deepEqual([back.expertId, back.level, back.returning], [e.expertId, 'anonymous', true]);
+  assert.equal((await w.svc.authenticate(back.sessionToken)).expertId, e.expertId);
+  assert.deepEqual(await w.roster.experts.get(e.expertId), before, 'level, consent and key mode are untouched');
+  await assert.rejects(() => w.svc.redeemInvite(link.token, {}), /already used/);
+  assert.ok((await w.svc.readAudit(w.mod)).some((l) => l.action === 'invite.reinvite'));
 });
 
 test('concurrent writers: one invite redeem wins, one ballot wins, one dissent edit wins (B-05, B-06, B-12)', async () => {

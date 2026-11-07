@@ -97,3 +97,15 @@ test('roles: bm_answers cannot read the roster, bm_roster cannot read the answer
   await assert.rejects(() => db.exec('select * from answers.dissents'), /permission denied/);
   await db.exec('reset role');
 });
+
+test('break-glass: the database refuses a self-approved request and a second live request', async () => {
+  const db = await fresh();
+  const ins = (k, status, approver, dissent = 'd1') => `insert into answers.break_glass(k,doc,dissent_id,status,category,requester,approver)
+    values ('${k}','{}','${dissent}','${status}','safety_threat','mod1',${approver})`;
+  await rejects(db, ins('a', 'approved', "'mod1'"), /violates check/);
+  await db.exec(ins('b', 'approved', "'mod2'"));
+  await rejects(db, ins('c', 'requested', 'null'), /unique|duplicate/);
+  await db.exec(`update answers.break_glass set status='collected' where k='b'`);
+  await db.exec(ins('d', 'requested', 'null'));
+  await rejects(db, `insert into answers.break_glass(k,doc,dissent_id,status,category,requester) values ('e','{}','d2','requested','curiosity','mod1')`, /violates check/);
+});

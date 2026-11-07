@@ -10,8 +10,6 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HttpError, ValidationError, AuthError, NotFoundError } from './errors.js';
-import { CONSENT_VERSION, consentText } from './consent.js';
-import { resolveLevel } from '@benchmark/core/anonymity';
 
 /** Return one of these from a route to redirect instead of sending JSON. */
 export class Redirect { constructor(url) { this.url = url; } }
@@ -108,7 +106,7 @@ export function createHandler({
   /** @type {Array<[string, RegExp, (req: any, m: string[], b: any) => Promise<any>]>} */
   const routes = [
     // experts
-    ['POST', /^\/api\/invite\/redeem$/, async (req, m, b) => service.redeemInvite(b.token, { level: b.level, consentVersion: b.consentVersion })],
+    ['POST', /^\/api\/invite\/redeem$/, async (req, m, b) => service.redeemInvite(b.token, { level: b.level, consentVersion: b.consentVersion, mode: b.mode })],
     ['GET', /^\/api\/inbox$/, async (req) => service.inbox(await actorOf(req))],
     ['POST', /^\/api\/estimates$/, async (req, m, b) => service.submitEstimate(await actorOf(req), { cardId: b.cardId, p: b.p })],
     ['POST', /^\/api\/dissents$/, async (req, m, b) => service.submitDissent(await actorOf(req), { cardId: b.cardId, kind: b.kind, text: b.text })],
@@ -117,11 +115,7 @@ export function createHandler({
     ['DELETE', /^\/api\/me$/, async (req) => service.eraseMe(await actorOf(req))],
     ['GET', /^\/api\/cards\/([^/]+)\/release$/, async (req, m) => { await actorOf(req); return service.cardRelease(m[1]); }],
     // The exact text an expert accepts, so the screen and the record cannot drift.
-    ['GET', /^\/api\/consent\/([^/]+)$/, async (req, m) => {
-      const r = resolveLevel(m[1]);
-      if (!r.honoured) throw new NotFoundError('unknown anonymity level');
-      return { version: CONSENT_VERSION, level: r.level, text: consentText(r.level) };
-    }],
+    ['GET', /^\/api\/consent\/([^/]+)$/, async (req, m) => service.consentFor(m[1], { device: new URL(req.url, 'http://x').searchParams.get('mode') === 'device' })],
     // public: the only unauthenticated reads, all of them aggregate or addressless
     ['GET', /^\/api\/public\/cards\/([^/]+)$/, async (req, m) => service.cardRelease(m[1], { visibility: 'public' })],
     ['GET', /^\/api\/public\/cards\/([^/]+)\/ledger$/, async (req, m) => service.publicLedger(m[1])],
@@ -145,6 +139,9 @@ export function createHandler({
     }],
     ['POST', /^\/api\/staff\/invites$/, async (req, m, b) => service.createInvite(await actorOf(req), b)],
     ['GET', /^\/api\/staff\/cards$/, async (req) => service.listCards(await actorOf(req))],
+    ['GET', /^\/api\/staff\/me$/, async (req) => { const a = await actorOf(req); if (a.kind !== 'staff') throw new AuthError('staff only'); return { id: a.id, role: a.role }; }],
+    ['GET', /^\/api\/staff\/experts$/, async (req) => service.listExperts(await actorOf(req))],
+    ['POST', /^\/api\/staff\/experts\/([^/]+)\/reinvite$/, async (req, m) => service.createReinvite(await actorOf(req), m[1])],
     ['POST', /^\/api\/staff\/cards$/, async (req, m, b) => service.createCard(await actorOf(req), b)],
     ['POST', /^\/api\/staff\/cards\/([^/]+)\/close$/, async (req, m) => service.closeRound(await actorOf(req), m[1])],
     ['POST', /^\/api\/staff\/cards\/([^/]+)\/round2$/, async (req, m) => service.openRound2(await actorOf(req), m[1])],
@@ -154,6 +151,17 @@ export function createHandler({
     ['POST', /^\/api\/staff\/dissents\/([^/]+)\/act$/, async (req, m, b) => service.actDissent(await actorOf(req), m[1], b)],
     ['POST', /^\/api\/staff\/dissents\/([^/]+)\/notify$/, async (req, m, b) => service.notifyDissent(await actorOf(req), m[1], b)],
     ['POST', /^\/api\/staff\/dissents\/([^/]+)\/close$/, async (req, m, b) => service.closeDissent(await actorOf(req), m[1], b)],
+    // Device-held ballots. /api/anon/* take NO login: the blind-signed token is the credential.
+    ['GET', /^\/api\/blind\/key$/, async () => service.blindPublicKey()],
+    ['POST', /^\/api\/blind\/issue$/, async (req, m, b) => service.issueBlindToken(await actorOf(req), b)],
+    ['POST', /^\/api\/anon\/estimates$/, async (req, m, b) => service.submitAnonymousEstimate(b)],
+    ['POST', /^\/api\/anon\/status$/, async (req, m, b) => service.anonymousStatus(b)],
+    ['POST', /^\/api\/anon\/erase$/, async (req, m, b) => service.eraseAnonymousEstimate(b)],
+    ['GET', /^\/api\/staff\/breakglass$/, async (req) => service.listBreakGlass(await actorOf(req))],
+    ['POST', /^\/api\/staff\/breakglass$/, async (req, m, b) => service.requestBreakGlass(await actorOf(req), b)],
+    ['POST', /^\/api\/staff\/breakglass\/([^/]+)\/decide$/, async (req, m, b) => service.decideBreakGlass(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/staff\/breakglass\/([^/]+)\/collect$/, async (req, m, b) => service.collectBreakGlass(await actorOf(req), m[1], b)],
+    ['DELETE', /^\/api\/me\/notices\/([^/]+)$/, async (req, m) => service.ackNotice(await actorOf(req), m[1])],
     ['POST', /^\/api\/staff\/retention$/, async (req, m, b) => service.applyRetention(await actorOf(req), b)],
     ['GET', /^\/api\/staff\/audit$/, async (req) => service.readAudit(await actorOf(req))],
   ];
@@ -177,20 +185,26 @@ export function createHandler({
     return req.socket.remoteAddress || 'unknown';
   };
 
-  const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
+  const MIME = {
+    '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+    '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+  };
   // The pages are static and use only same-origin script and style: no inline code, no third parties.
-  const PAGE_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+  const PAGE_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
 
   function serveStatic(req, res, pathname) {
     if (!staticDir || (req.method !== 'GET' && req.method !== 'HEAD')) return false;
-    const rel = pathname === '/' ? '/index.html' : pathname;
+    const rel = pathname === '/' ? '/index.html' : pathname === '/staff' ? '/staff.html' : pathname;
     const file = path.normalize(path.join(staticDir, rel));
     if (!file.startsWith(path.normalize(staticDir)) || !MIME[path.extname(file)]) return false;
     let body;
     try { body = fs.readFileSync(file); } catch { return false; }
+    // Built assets are content-hashed, so they can be cached for good. Pages and the worker must be
+    // re-checked every time, or a deploy would not reach people who already have the app installed.
+    const immutable = rel.startsWith('/assets/');
     res.writeHead(200, {
       ...SECURITY_HEADERS, 'Content-Security-Policy': PAGE_CSP, 'Content-Type': MIME[path.extname(file)],
-      'Content-Length': body.length, 'Cache-Control': 'no-cache',
+      'Content-Length': body.length, 'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
     });
     res.end(req.method === 'HEAD' ? undefined : body);
     return true;

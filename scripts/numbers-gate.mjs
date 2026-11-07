@@ -158,11 +158,15 @@ const TEST_MAP = [
   ['packages/service/src/service.js', 'packages/service/test/flow.test.js'],
   ['packages/service/src/http.js', 'packages/service/test/http.test.js'],
   ['packages/service/src/oidc.js', 'packages/service/test/oidc.test.js'],
+  ['packages/service/src/migrate.js', 'packages/service/test/migrate.test.js'],
+  ['packages/service/test/breakglass.test.js', 'packages/service/test/breakglass.test.js'],
+  ['packages/service/test/device.test.js', 'packages/service/test/device.test.js'],
+  ['packages/core/src/blind.js', 'packages/benchmark/test/blind.test.js'],
   ['packages/core/src/stats.js', 'packages/benchmark/test/stats.test.js'],
   ['packages/core/src/csv.js', 'packages/benchmark/test/csv.test.js'],
   ['packages/core/src/authoring.js', 'packages/benchmark/test/authoring.test.js'],
-  ['packages/service/public/', 'packages/service/test/ui.test.js'],
-  ['packages/service/db/schema.sql', 'packages/service/test/schema.test.js'],
+  ['packages/service/test/ui.test.js', 'packages/service/test/ui.test.js'],
+  ['packages/service/db/migrations/', 'packages/service/test/schema.test.js'],
   ['packages/benchmark/src/dissent.js', 'packages/benchmark/test/dissent.test.js'],
 ];
 
@@ -180,12 +184,39 @@ for (const [modLabel, relTest] of TEST_MAP) {
   });
   const m = /^# tests (\d+)$/m.exec(run.stdout || '');
   if (run.status !== 0 || !m) {
-    fail(`could not measure test count from ${relTest} (exit=${run.status})`);
+    // Say WHY: the names of the failing tests and the tail of the output, so a flaky test is diagnosable.
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    const failing = [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((x) => x[1]).slice(0, 5);
+    fail(`could not measure test count from ${relTest} (exit=${run.status}${run.signal ? `, signal ${run.signal}` : ''})${failing.length ? `; failing: ${failing.join(' | ')}` : ''}\n${out.trim().split('\n').slice(-12).join('\n')}`);
     continue;
   }
   const n = Number(m[1]);
   perModuleTests.set(modLabel, n);
   totalTests += n;
+}
+
+// The React apps are tested with vitest, which reports its own counts.
+const WEB_MAP = [
+  ['packages/web/src/lib/', 'packages/web/src/lib/lib.test.js'],
+  ['packages/web/src/expert/', 'packages/web/src/expert/expert.test.jsx'],
+  ['packages/web/src/staff/', 'packages/web/src/staff/staff.test.jsx'],
+];
+{
+  const out = path.join(ROOT, 'packages/web/.vitest-count.json');
+  const run = spawnSync('npx', ['vitest', 'run', '--reporter=json', `--outputFile=${out}`], { cwd: path.join(ROOT, 'packages/web'), encoding: 'utf8' });
+  if (run.status !== 0 || !fs.existsSync(out)) {
+    fail(`could not run the web tests to count them (exit=${run.status})`);
+  } else {
+    const rep = JSON.parse(fs.readFileSync(out, 'utf8'));
+    fs.rmSync(out);
+    for (const [modLabel, rel] of WEB_MAP) {
+      const f = rep.testResults.find((r) => r.name.endsWith(rel.replace('packages/web/', '')));
+      const n = f ? f.assertionResults.length : 0;
+      if (!f || n === 0) { fail(`vitest reported no tests for ${rel}`); continue; }
+      perModuleTests.set(modLabel, n);
+      totalTests += n;
+    }
+  }
 }
 
 const readmeSrc = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');

@@ -2,7 +2,7 @@
  * Storage port + a dependency-free adapter.
  *
  * The service never touches storage directly; it uses these small, explicit
- * operations so each one maps to one SQL statement (see db/schema.sql). There
+ * operations so each one maps to one SQL statement (see db/migrations). There
  * are TWO stores on purpose:
  *
  *   roster  — who the experts are: identities, declarations, invites, sessions,
@@ -140,6 +140,8 @@ export const createRosterStore = (opts) =>
       invites: {},
       sessions: {},
       aliases: {},
+      notices: {},
+      issuances: {},
     },
     opts
   );
@@ -153,6 +155,7 @@ export const createAnswerStore = (opts) => {
       releases: { unique: [['cardId', 'round', 'visibility', 'n', 'closed']] },
       dissents: {},
       notifications: {},
+      break_glass: {},
       audit: {},
     },
     opts
