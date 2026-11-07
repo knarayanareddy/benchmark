@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
-  resolveLevel, aliasFor, panelAliases, attribute, leaksBy, publicable, PUBLIC,
+  resolveLevel, aliasFor, DEFAULT_DEV_SALT, panelAliases, attribute, leaksBy, publicable, PUBLIC,
 } from '../../core/src/anonymity.js';
 import {
   aggregate,
@@ -10,6 +10,7 @@ import {
   RELEASE_POLICIES,
 } from '../../core/src/aggregate.js';
 
+const SALT = 'test-deployment-salt-not-for-prod';
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
 
 test('the default is the hedge, not the extreme', () => {
@@ -24,8 +25,8 @@ test('identified attribution keeps the name and drops the internal id', () => {
 });
 
 test('pseudonymous attribution gives a stable alias and drops the name', () => {
-  const a = attribute(A, LEVELS.PSEUDONYMOUS);
-  const b = attribute(A, LEVELS.PSEUDONYMOUS);
+  const a = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const b = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.equal(a.by, b.by, 'the alias must be stable across contributions');
   assert.match(a.by, /^Analyst \d{4}$/);
   assert.equal(a.name, undefined);
@@ -33,8 +34,8 @@ test('pseudonymous attribution gives a stable alias and drops the name', () => {
 });
 
 test('two experts in the same country get different aliases', () => {
-  const x = attribute(A, LEVELS.PSEUDONYMOUS);
-  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS);
+  const x = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.notEqual(x.by, y.by);
 });
 
@@ -106,8 +107,27 @@ test('public anonymity is a rule, not a setting', () => {
 });
 
 test('alias derivation is deterministic across runs and salts', () => {
-  assert.equal(aliasFor('e-001', 'TCD'), aliasFor('e-001', 'TCD'));
-  assert.notEqual(aliasFor('e-001', 'TCD', 'v2'), aliasFor('e-001', 'TCD', 'v1'));
+  assert.equal(aliasFor('e-001', 'TCD', SALT), aliasFor('e-001', 'TCD', SALT));
+  assert.notEqual(aliasFor('e-001', 'TCD', 'deploy-secret-v2'), aliasFor('e-001', 'TCD', 'deploy-secret-v1'));
+});
+
+test('pseudonyms fail closed: no salt, no persisted alias, no pseudonym (B-02)', () => {
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: DEFAULT_DEV_SALT }), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: 'short' }), /deployment salt/);
+  assert.throws(() => aliasFor('e-001', 'TCD'), /deployment salt/);
+  assert.throws(() => aliasFor('e-001', 'TCD', DEFAULT_DEV_SALT), /deployment salt/);
+  // A persisted alias needs no salt — that is the intended production path.
+  assert.equal(attribute(A, LEVELS.PSEUDONYMOUS, { panelAliases: { [A.expertId]: 'Analyst 4242' } }).by, 'Analyst 4242');
+  // No other level needs a salt.
+  assert.doesNotThrow(() => attribute(A, LEVELS.IDENTIFIED));
+  assert.doesNotThrow(() => attribute(A, LEVELS.ANONYMOUS));
+});
+
+test('publicable() validates its input shape and defaults to an object (B-20)', () => {
+  assert.deepEqual(publicable(), { published: {}, suppressedCells: 0 });
+  assert.throws(() => publicable([1, 2, 3]), TypeError);
+  assert.throws(() => publicable(null), TypeError);
 });
 
 test('every casing of anonymous resolves to the anonymous level', () => {
@@ -162,7 +182,7 @@ test('attribute() enforces an allowlist — email, IP, role and org never leak a
   };
 
   for (const lvl of [...Object.values(LEVELS), 'unrecognised-level']) {
-    const out = attribute(rich, lvl);
+    const out = attribute(rich, lvl, { salt: SALT });
     for (const pii of ['email', 'ip', 'role', 'org', 'sessionToken', 'expertId', 'name']) {
       assert.ok(!(pii in out), `${lvl} leaked disallowed field "${pii}"`);
     }

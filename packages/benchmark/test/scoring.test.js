@@ -106,3 +106,26 @@ test('scoring boundary rejects out-of-range probabilities and non-binary outcome
   assert.deepEqual(observed([{ p: 0.5, y: null }, { p: 0.5, y: undefined }]), []);
 });
 
+
+test('paired throws on duplicate ids instead of inflating n (B-07, probe P9b)', () => {
+  const a = [{ id: 1, p: 0.9, y: 0 }, { id: 1, p: 0.9, y: 0 }];
+  const b = [{ id: 1, p: 0.1, y: 0 }];
+  assert.throws(() => paired(a, b), /duplicate id 1 in the first array/);
+  assert.throws(() => paired(b, a), /duplicate id 1 in the second array/);
+});
+
+test('paired reports n_unique and n_dropped so an array mismatch is visible (B-07)', () => {
+  const a = det.map((d) => ({ ...d, p: 0.5 }));
+  const b = det.slice(0, 100).map((d) => ({ ...d, p: 0.6 }));
+  const r = paired(a, b);
+  assert.equal(r.n, 100);
+  assert.equal(r.n_unique, 100);
+  assert.equal(r.n_dropped, 4);
+  const tiny = paired([{ id: 'x', p: 0.5, y: 1 }], [{ id: 'y', p: 0.5, y: 1 }]);
+  assert.equal(tiny.n_unique, 0);
+  assert.equal(tiny.n_dropped, 2);
+});
+
+test('a non-finite probability is reported as NaN, not null (B-20)', () => {
+  assert.throws(() => brier([{ p: Number.NaN, y: 1 }]), /got NaN/);
+});

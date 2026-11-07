@@ -13,6 +13,11 @@
  *     5. `condition` — catches statements of actor intent rather than
  *        observable external conditions.
  *
+ *   `ok` vs `dispatchable`: `ok` is true only when every check passes (warnings
+ *   included); `dispatchable` is true when no BLOCKER failed, so a card with
+ *   only an `observable` warning is `ok: false, dispatchable: true`.
+ *   An empty statement fails a separate `statement` blocker, not `observable`.
+ *
  *   Authoring warning (`ok: false`, `dispatchable: true` when only warnings fire):
  *     2. `observable` — lexical heuristic flagging statements that carry
  *        neither a numeric threshold (excluding calendar dates and proper-noun
@@ -33,6 +38,7 @@ export const SEVERITY = Object.freeze({
 
 export const CHECK_SEVERITY = Object.freeze({
   window: SEVERITY.BLOCKER,
+  statement: SEVERITY.BLOCKER,
   observable: SEVERITY.WARNING,
   single: SEVERITY.BLOCKER,
   no_leak: SEVERITY.BLOCKER,
@@ -127,7 +133,7 @@ export function gate(card) {
   const statement = isObj ? card.statement : card;
   if (!String(statement || '').trim()) {
     const emptyFailure = {
-      check: 'observable',
+      check: 'statement',
       severity: SEVERITY.BLOCKER,
       reason: 'statement is empty',
     };
@@ -138,7 +144,7 @@ export function gate(card) {
       blockers: [emptyFailure],
       warnings: [],
       failed: [emptyFailure],
-      results: [{ check: 'observable', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
+      results: [{ check: 'statement', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
     };
   }
   const t = String(statement || '');

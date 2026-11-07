@@ -73,6 +73,22 @@ export function resolveLevel(requested) {
 export const ALIAS_SPACE = 9000;
 export const DEFAULT_DEV_SALT = 'dev-unsalted';
 
+/**
+ * An alias derived from a public constant can be recomputed by anyone holding
+ * a roster, which de-pseudonymises the whole panel. Every path that derives an
+ * alias must go through this check; there is no default salt.
+ */
+function assertDeploymentSalt(salt, who) {
+  if (
+    typeof salt !== 'string' ||
+    salt.trim().length < 8 ||
+    salt === 'v1' ||
+    salt === DEFAULT_DEV_SALT
+  ) {
+    throw new Error(`${who} requires a non-public deployment salt of at least 8 characters`);
+  }
+}
+
 function hashSlot(input) {
   let h1 = 0x811c9dc5;
   let h2 = 0x9e3779b9;
@@ -95,7 +111,8 @@ function hashSlot(input) {
  * Production panels should pass a deployment secret to `panelAliases()`, which
  * guarantees zero collisions across the panel and rejects public default salts.
  */
-export function aliasFor(expertId, country, salt = DEFAULT_DEV_SALT) {
+export function aliasFor(expertId, country, salt) {
+  assertDeploymentSalt(salt, 'aliasFor()');
   return `Analyst ${hashSlot(`${salt}:${country}:${expertId}`)}`;
 }
 
@@ -105,9 +122,7 @@ export function aliasFor(expertId, country, salt = DEFAULT_DEV_SALT) {
  * precompute aliases from a public repository constant.
  */
 export function panelAliases(expertIds = [], country = '', { salt } = {}) {
-  if (typeof salt !== 'string' || salt.trim().length < 8 || salt === 'v1' || salt === DEFAULT_DEV_SALT) {
-    throw new Error('panelAliases() requires a non-public deployment salt of at least 8 characters');
-  }
+  assertDeploymentSalt(salt, 'panelAliases()');
   const unique = [...new Set(expertIds.filter((id) => id !== undefined && id !== null && String(id).trim() !== '').map(String))].sort();
   if (unique.length > ALIAS_SPACE) {
     throw new RangeError(`panel size ${unique.length} exceeds alias space ${ALIAS_SPACE}`);
@@ -201,6 +216,7 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
     opts.panelAliases instanceof Map
       ? opts.panelAliases.get(expertId)
       : opts.panelAliases?.[expertId];
+  // Fail closed: no persisted alias and no deployment salt means no pseudonym.
   kept.by = preassigned || aliasFor(expertId, country, opts.salt);
   kept.level = LEVELS.PSEUDONYMOUS;
   return kept;
@@ -255,7 +271,10 @@ export function leaksBy(contribution, peers = []) {
  */
 export const PUBLIC = Object.freeze({ attributable: false, minCount: 10 });
 
-export function publicable(counts = [], minCount = PUBLIC.minCount) {
+export function publicable(counts = {}, minCount = PUBLIC.minCount) {
+  if (counts === null || typeof counts !== 'object' || Array.isArray(counts)) {
+    throw new TypeError('publicable() expects an object of { cell: count }');
+  }
   const out = {};
   let suppressed = 0;
   for (const [k, n] of Object.entries(counts)) {

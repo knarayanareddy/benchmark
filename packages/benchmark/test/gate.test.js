@@ -170,3 +170,10 @@ test('evaluateObservable() measures precision and false-warn rate across 50 labe
   assert.ok(audit.disagreements.some((d) => d.id === 'R1067' && d.kind === 'false_warn'));
 });
 
+
+test('an empty statement fails the dedicated statement check, not observable (B-20)', () => {
+  const r = gate({ statement: '', window: win });
+  assert.equal(r.dispatchable, false);
+  assert.ok(r.blockers.some((b) => b.check === 'statement'));
+  assert.ok(!r.failed.some((f) => f.check === 'observable'));
+});

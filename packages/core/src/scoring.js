@@ -71,13 +71,15 @@ export function mulberry32(seed) {
   };
 }
 
+const show = (v) => (typeof v === 'number' ? String(v) : JSON.stringify(v));
+
 function validatePair(d, label = 'item') {
   if (!d || typeof d !== 'object') {
     throw new TypeError(`${label} must be an object with { p, y }`);
   }
   if (typeof d.p !== 'number' || !Number.isFinite(d.p) || d.p < 0 || d.p > 1) {
     throw new RangeError(
-      `${label}.p must be a finite probability in [0, 1], got ${JSON.stringify(d.p)}`
+      `${label}.p must be a finite probability in [0, 1], got ${show(d.p)}`
     );
   }
   if (d.y !== 0 && d.y !== 1 && d.y !== null && d.y !== undefined) {
@@ -163,6 +165,16 @@ export function paired(aPairs, bPairs, opts = {}) {
     const missing = aPairs.concat(bPairs).filter((d) => d.id === undefined).length;
     if (missing) throw new Error('paired() requires an id on every item — unlabelled pairing is unsafe');
   }
+  for (const [label, arr] of [['first', aPairs], ['second', bPairs]]) {
+    const seen = new Set();
+    for (const d of arr) {
+      if (seen.has(d.id)) {
+        throw new Error(`paired() received duplicate id ${JSON.stringify(d.id)} in the ${label} array — one item cannot be counted twice`);
+      }
+      seen.add(d.id);
+    }
+  }
+  const allIds = new Set(aPairs.concat(bPairs).map((d) => d.id));
   const keyed = new Map(observed(bPairs).map((d) => [d.id, d]));
   const diffs = [];
   for (const d of observed(aPairs)) {
@@ -171,7 +183,9 @@ export function paired(aPairs, bPairs, opts = {}) {
     if (d.y !== other.y) throw new Error(`paired() matched ${d.id} across different outcomes`);
     diffs.push(brierItem(d) - brierItem(other));
   }
-  if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: diffs.length, significant: null };
+  const n_unique = diffs.length;
+  const n_dropped = allIds.size - n_unique;
+  if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: n_unique, n_unique, n_dropped, significant: null };
   const rnd = mulberry32(opts.seed ?? 7);
   const reps = opts.reps ?? 10000;
   const means = new Array(reps);
@@ -187,7 +201,9 @@ export function paired(aPairs, bPairs, opts = {}) {
     diff: mean(diffs),
     lo,
     hi,
-    n: diffs.length,
+    n: n_unique,
+    n_unique,
+    n_dropped,
     significant: lo > 0 || hi < 0,
     note:
       lo > 0
