@@ -387,6 +387,19 @@ for (const backend of BACKENDS) {
     }
   });
 
+  test('a question holds the analysis back only for experts it is put to', async () => {
+    const w = await world();
+    await openCardOn(w);
+    const asked = await w.enroll('identified');
+    const notAsked = await w.enroll('identified', { countries: ['KEN'] });
+    assert.equal((await w.svc.getRisk(asked.actor, 'R1066')).view, 'neutral');
+    const other = await w.svc.getRisk(notAsked.actor, 'R1066');
+    assert.equal(other.view, 'full');
+    assert.equal(other.question.answered, false);
+    const row = (await w.svc.listRisks(notAsked.actor, { q: 'chad' })).find((r) => r.id === 'R1066');
+    assert.ok(row && 'level' in row, 'the list row carries the analysis too');
+  });
+
   test('over HTTP: the view parameter reaches the service, so History and Active differ', async () => {
     const w = await world();
     await openCardOn(w);

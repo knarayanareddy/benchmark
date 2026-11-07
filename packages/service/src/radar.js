@@ -1,12 +1,14 @@
 /**
- * The risk browser: the organisers' radar, read-only. An expert sees a risk's analysis unless it has a live question
- * (an open or closed card, not retired) that they have not answered: Round 1 is blind to ACAPS's reading, so that
- * question holds the analysis back until they answer it or it is resolved (docs/10-pilot-experience.md, section 3).
- * Device-held experts' answers are not on the server, so any live question holds the analysis back for them.
+ * The risk browser: the organisers' radar, read-only. An expert's analysis is held back only while a live question on the
+ * risk (an open or closed card, not retired) is put to them (it matches their declaration, the inbox's `matches` rule) and
+ * they have not answered it: Round 1 is blind to ACAPS's reading, so that question holds the analysis back until they answer
+ * it or it is resolved (docs/10-pilot-experience.md, section 3). Device-held experts' answers are not on the server, so any
+ * matching live question holds the analysis back for them. An expert never asked a question on a risk sees it in full.
  * Staff always see the full view.
  */
 import { loadRadar, neutralView } from '@benchmark/core/radar';
 import { buildTimeline } from '@benchmark/core/timeline';
+import { matches } from '@benchmark/core/dispatch';
 import { NotFoundError, ValidationError } from './errors.js';
 import { ROLES } from './auth.js';
 
@@ -42,13 +44,14 @@ export function createRadar(ctx) {
   };
 
   /**
-   * The expert's gate for one risk. `locked` when a live card is not answered by them (a device-held expert has no
-   * answer the server can see, so every live card locks). `card` is the card the lock is about: open before closed.
+   * The expert's gate for one risk. `locked` when a live card put to them is not answered by them (a device-held expert
+   * has no answer the server can see, so every matching live card locks). `card` is the card the lock is about: open before closed.
    */
   const gateFor = async (/** @type {any} */ expert, /** @type {any[]} */ liveCards) => {
     const ordered = [...liveCards].sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || byId(a, b));
     const pending = [];
-    for (const c of ordered) if ((await answeredBy(expert, c)) !== true) pending.push(c);
+    // Only a question put to this person (their declared countries, regions and themes) can hold the analysis back.
+    for (const c of ordered) if (matches(c, expert.declaration) && (await answeredBy(expert, c)) !== true) pending.push(c);
     return { locked: pending.length > 0, card: pending[0] ?? null };
   };
 
