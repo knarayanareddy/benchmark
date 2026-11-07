@@ -228,19 +228,15 @@
         <div class="body">
           <div class="eyebrow"><span>Eastern Chad · round 2</span></div>
           <h2 class="q" style="font-size:19px">Here's where the panel landed.</h2>
-          <p class="distmeta">Round 1 closed — all seven panellists have answered (released at close, never after single submissions).</p>
+          <p class="distmeta">Round 1 closed — 7 panellists answered. Below <code>n = 10</code>, individual peer positions and quartiles stay hidden; showing median and smoothed 95% interval.</p>
 
-          <div class="dist" id="panel-dots">
-            <div class="dp" data-p="0.15" style="left:15%"></div>
-            <div class="dp" data-p="0.55" style="left:55%"></div>
-            <div class="dp" data-p="0.60" style="left:60%"></div>
-            <div class="dp" data-p="0.61" style="left:61%"></div>
-            <div class="dp" data-p="0.68" style="left:68%"></div>
-            <div class="dp you" data-p="0.72" style="left:72%"></div>
-            <div class="dp" data-p="0.80" style="left:80%"></div>
+          <div class="dist" id="panel-band">
+            <div id="ci-band" style="position:absolute;top:5px;height:12px;left:49%;width:25%;background:rgba(139,26,26,.16);border-radius:6px"></div>
+            <div class="dp" id="med-dot" title="Panel median 61%" style="left:61%"></div>
+            <div class="dp you" title="Your call 72%" style="left:72%"></div>
           </div>
           <div class="axis"><span>0%</span><span>50%</span><span>100%</span></div>
-          <div class="statline"><span><b>4 of 7</b> above 60%</span><span><b>1</b> well below</span><span>spread <b>65 pts</b></span></div>
+          <div class="statline"><span>median <b id="e6-med">61%</b></span><span>95% interval <b id="e6-ci">[49, 74]</b></span><span>you <b>72%</b></span></div>
 
           <p class="rlabel">Reasons the panel gave</p>
           <div class="reason">"Road access to the east has been cut twice since June — the infrastructure target is no longer theoretical."</div>
@@ -265,13 +261,13 @@
 
           <div class="scoregrid">
             <div class="scorebox me"><div class="sbl">You</div><div class="sbv">72%</div></div>
-            <div class="scorebox"><div class="sbl">Panel</div><div class="sbv" id="panel-est">61%</div><div style="font-size:9px;color:var(--muted)" id="panel-ci">[55, 72]</div></div>
+            <div class="scorebox"><div class="sbl">Panel</div><div class="sbv" id="panel-est">61%</div><div style="font-size:9px;color:var(--muted)" id="panel-ci">[49, 74]</div></div>
             <div class="scorebox"><div class="sbl">ACAPS (High)</div><div class="sbv">80%</div><div style="font-size:9px;color:var(--muted)">61–80% band</div></div>
           </div>
-          <p class="scorenote">Outcome 0: You were 72 pts off · Panel 61 [55, 72] · ACAPS High (4/5 = 80%).</p>
+          <p class="scorenote">Outcome 0: You were 72 pts off · Panel 61 [49, 74] · ACAPS High (4/5 = 80%).</p>
 
           <div class="changed">
-            <div class="cl">What changed because of your dissent</div>
+            <div class="cl">What changed because of your dissent · also on card ledger</div>
             <p>Your round-2 note went into the R1043 rationale. Alexander rewrote this paragraph.</p>
             <p class="ins">"…though cross-border incidents have so far remained localised rather than expanding across eastern Chad, a judgement shared by the panel…"</p>
           </div>
@@ -289,18 +285,18 @@
         <h3>Cannot publish this view.</h3>
         <p class="gp">2 experts in this cell, one of them fully anonymous. A reader who knows which two people work on eastern Chad could work out which position was whose by elimination.</p>
 
-        <div class="route"><span class="rnum">1</span><span><b>Wait for Round-1 close or a 3-respondent cohort —</b> analyst/panel views require <code>MIN_PANEL_SIZE = 3</code> and release at close or in <code>&ge; 3</code>-person steps (<code>releaseAggregate()</code>), preventing both one-shot and sequential differencing.</span></div>
+        <div class="route"><span class="rnum">1</span><span><b>Wait for at least 5 respondents and Round-1 close —</b> released analyst/panel views require <code>MIN_RELEASE_PANEL_SIZE = 5</code>, suppress quartiles/extremes below <code>10</code>, use variance-preserving smoothed bootstrap intervals, and update only at close or in <code>&ge; 3</code>-person steps (<code>releaseAggregate()</code>).</span></div>
         <div class="route"><span class="rnum">2</span><span><b>Roll up to the regional/thematic view</b> — public outputs require <code>n &ge; 10</code> (<code>PUBLIC.minCount = 10</code>).</span></div>
         <div class="route"><span class="rnum">3</span><span><b>Widen the date range</b> so the cell is no longer distinctive.</span></div>
 
-        <p class="gatefoot">Why you're seeing this: every publication is checked for small-cell, sequential-differencing and attribute-combination risk before it goes out. <span class="link">How the check works</span></p>
+        <p class="gatefoot">Why you're seeing this: every publication is checked for small-cell, order-statistic inversion, sequential-differencing and attribute-combination risk before it goes out. <span class="link">How the check works</span></p>
       </div>
     </div>
 
   </div>
 
   <footer>
-    <p><b>Note on the numbers.</b> ACAPS ratings (R1043 Probability = High, 61–80% band, scored at 4/5 = 80% on the adopted ladder), trigger IDs, trigger completion progress (T0618 at 40%, T0619 at 10%, T0620 at 20% — progress toward threshold, never probability), the 59% corpus base rate (61/104), and R1043's title are real values from <code>risk-radar-export.csv</code>. The panel distribution and <code>61% [55, 72]</code> median come from running <code>aggregate()</code> on illustrative synthetic inputs, per the brief's rule against using real experts' personal data; the 90-second target applies to a single recurring question card (E3) and has not yet been timed in a user study.</p>
+    <p><b>Note on the numbers.</b> ACAPS ratings (R1043 Probability = High, 61–80% band, scored at 4/5 = 80% on the adopted ladder), trigger IDs, trigger completion progress (T0618 at 40%, T0619 at 10%, T0620 at 20% — progress toward threshold, never probability), the 59% corpus base rate (61/104), and R1043's title are real values from <code>risk-radar-export.csv</code>. The <code>61% [49, 74]</code> panel summary comes from running <code>releaseAggregate()</code> on 7 illustrative synthetic inputs (quartiles/extremes suppressed below <code>n = 10</code>, smoothed bootstrap CI), per the brief's rule against using real experts' personal data; the 90-second target applies to a single recurring question card (E3) and has not yet been timed in a user study.</p>
     <p><b>Companion.</b> <code>PRODUCT-blueprint.html</code> — the full screen-by-screen specification with copy rationale and ground-rule mapping.</p>
   </footer>
 
@@ -322,17 +318,24 @@
   import { releaseAggregate } from '../packages/core/src/aggregate.js';
 
   // Keep E6 and E7 mathematically locked to packages/core/src/aggregate.js via
-  // releaseAggregate(..., { closed: true }) so Round-2 reveal only occurs at close.
-  const dotEls = [...document.querySelectorAll('#panel-dots .dp[data-p]')];
-  if (dotEls.length) {
-    const agg = releaseAggregate(
-      dotEls.map((el, i) => ({ expertId: `e${i + 1}`, p: Number(el.dataset.p) })),
-      { closed: true }
-    );
-    if (!agg.suppressed) {
-      document.getElementById('panel-est').textContent = `${Math.round(agg.estimate * 100)}%`;
-      document.getElementById('panel-ci').textContent = `[${Math.round(agg.lo * 100)}, ${Math.round(agg.hi * 100)}]`;
-    }
+  // releaseAggregate(..., { closed: true }) — quartiles/extremes stay null below 10.
+  const SYNTHETIC_PANEL = [0.15, 0.55, 0.60, 0.61, 0.68, 0.72, 0.80].map((p, i) => ({
+    expertId: `e${i + 1}`,
+    p,
+  }));
+  const agg = releaseAggregate(SYNTHETIC_PANEL, { closed: true });
+  if (!agg.suppressed) {
+    const estPct = Math.round(agg.estimate * 100);
+    const loPct = Math.round(agg.lo * 100);
+    const hiPct = Math.round(agg.hi * 100);
+    document.getElementById('panel-est').textContent = `${estPct}%`;
+    document.getElementById('panel-ci').textContent = `[${loPct}, ${hiPct}]`;
+    document.getElementById('e6-med').textContent = `${estPct}%`;
+    document.getElementById('e6-ci').textContent = `[${loPct}, ${hiPct}]`;
+    document.getElementById('med-dot').style.left = `${estPct}%`;
+    const band = document.getElementById('ci-band');
+    band.style.left = `${loPct}%`;
+    band.style.width = `${Math.max(2, hiPct - loPct)}%`;
   }
 
   const box = document.getElementById('anon-options');

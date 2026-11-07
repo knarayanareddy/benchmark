@@ -79,3 +79,30 @@ test('paired refuses unlabelled items and outcome mismatches', () => {
     /different outcomes/
   );
 });
+
+test('scoring boundary rejects out-of-range probabilities and non-binary outcomes (B2)', () => {
+  // Whole-number percentages like 70 must throw RangeError rather than yielding Brier = 4761
+  for (const badP of [70, -0.01, 1.01, NaN, Infinity, '0.7', null, true]) {
+    assert.throws(
+      () => brier([{ p: badP, y: 1 }]),
+      (err) => err instanceof RangeError,
+      `bad p=${badP}`
+    );
+    assert.throws(
+      () => bootstrapBrier([{ p: badP, y: 1 }, { p: 0.5, y: 0 }]),
+      (err) => err instanceof RangeError,
+      `bad p=${badP}`
+    );
+  }
+  assert.throws(() => brier([null]), TypeError);
+
+  // Invalid outcome values like y=2 must throw rather than silently disappearing as unobservable
+  for (const badY of [2, -1, 0.5, '1', true, false, NaN]) {
+    assert.throws(() => observed([{ p: 0.5, y: badY }]), RangeError, `bad y=${badY}`);
+    assert.throws(() => brier([{ p: 0.5, y: badY }]), RangeError, `bad y=${badY}`);
+  }
+
+  // Genuine unobservable markers (null / undefined) are still excluded cleanly
+  assert.deepEqual(observed([{ p: 0.5, y: null }, { p: 0.5, y: undefined }]), []);
+});
+

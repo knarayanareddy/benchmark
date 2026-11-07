@@ -169,18 +169,88 @@ export function notify(dissent, { now } = {}) {
   };
 }
 
-/** Finalise a dissent into STATE.CLOSED (after notification, or directly for anonymous dissent). */
+/**
+ * Finalise a dissent into STATE.CLOSED with strict transition guards (B3):
+ *   - `STATE.OPEN` is rejected (cannot bypass analyst routing).
+ *   - `STATE.ROUTED` dismissal without action requires a non-empty `reason`.
+ *   - `STATE.ACTIONED` with `contactable === true` is rejected until `notify()`
+ *     transitions it to `STATE.NOTIFIED`, so contactable dissenters are never
+ *     silently closed without hearing back.
+ *   - `STATE.ACTIONED` with `contactable === false` (`ANONYMOUS`) closes
+ *     directly since outbound notifications are suppressed for safety.
+ *   - `STATE.NOTIFIED` closes cleanly.
+ */
 export function close(dissent, { reason = '', now } = {}) {
-  const allowed = [STATE.OPEN, STATE.ROUTED, STATE.ACTIONED, STATE.NOTIFIED];
-  if (!dissent || !allowed.includes(dissent.status)) {
+  if (!dissent || typeof dissent !== 'object') {
     throw new Error(`cannot close dissent in state ${dissent?.status}`);
   }
+  const trimmedReason = typeof reason === 'string' ? reason.trim() : '';
+
+  if (dissent.status === STATE.OPEN) {
+    throw new Error('cannot close unrouted dissent in state open (must be routed first)');
+  }
+  if (dissent.status === STATE.ROUTED) {
+    if (!trimmedReason) {
+      throw new Error('closing an unactioned dissent from state routed requires a non-empty reason');
+    }
+  } else if (dissent.status === STATE.ACTIONED) {
+    if (dissent.contactable && dissent.expert) {
+      throw new Error(
+        'cannot close actioned dissent for contactable expert before notify()'
+      );
+    }
+  } else if (dissent.status !== STATE.NOTIFIED) {
+    throw new Error(`cannot close dissent in state ${dissent.status}`);
+  }
+
   return {
     ...dissent,
     status: STATE.CLOSED,
-    closeReason: reason,
+    closeReason: trimmedReason,
     closedAt: now ?? Date.now(),
   };
+}
+
+/**
+ * Emit an addressless, card-scoped "you said, we did" ledger entry (B4).
+ *
+ * Closes the feedback loop for `ANONYMOUS` dissenters (and informs the wider
+ * panel) on the card itself without storing or addressing any individual:
+ * carries zero `expert`, `to`, `by`, `name`, `country`, `level`, or `dissentId`
+ * attributes, and composes copy via `packages/shared/loop.js`.
+ */
+export function ledgerEntry(dissent) {
+  if (!dissent || !dissent.action) return null;
+  const validStates = [STATE.ACTIONED, STATE.NOTIFIED, STATE.CLOSED];
+  if (!validStates.includes(dissent.status)) return null;
+
+  const deepLinks = (dissent.newCardIds || []).map((id) => `/c/${id}`);
+  const msg = compose(dissent.action, {
+    title: dissent.title || undefined,
+    count: dissent.newCardIds?.length || undefined,
+    deepLinks,
+  });
+
+  return {
+    cardId: dissent.cardId,
+    kind: dissent.kind,
+    action: dissent.action,
+    body: msg.body,
+    deepLinks: msg.deepLinks,
+    actionedAt: dissent.actionedAt ?? null,
+  };
+}
+
+/** Build the chronological de-identified "you said, we did" ledger for a card or feed. */
+export function cardLedger(dissents, cardId) {
+  if (!Array.isArray(dissents)) {
+    throw new TypeError('dissents must be an array');
+  }
+  return dissents
+    .filter((d) => (cardId === undefined ? true : d?.cardId === cardId))
+    .map(ledgerEntry)
+    .filter((entry) => entry !== null)
+    .sort((a, b) => (a.actionedAt ?? 0) - (b.actionedAt ?? 0));
 }
 
 /** Elapsed ms from creation to loop completion, delegated to `packages/shared/loop.js`. */

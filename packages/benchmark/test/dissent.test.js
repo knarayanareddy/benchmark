@@ -10,6 +10,8 @@ import {
   act,
   notify,
   close,
+  ledgerEntry,
+  cardLedger,
   loopLatencyMs,
 } from '../src/dissent.js';
 import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
@@ -137,7 +139,7 @@ test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit o
   }
 });
 
-test('invalid dissent transitions and kinds throw explicit errors, including skipping route()', () => {
+test('invalid dissent transitions and kinds throw explicit errors, including skipping route() or notify()', () => {
   assert.throws(() => newDissent({ cardId: 'R1', expert: 'e1', kind: 'bad_kind' }), /unknown dissent kind/);
   const open = newDissent({ cardId: 'R1', expert: 'e1', kind: KIND.WINDOW });
 
@@ -148,9 +150,73 @@ test('invalid dissent transitions and kinds throw explicit errors, including ski
     'act() must reject unrouted OPEN dissents'
   );
 
+  // B3 regression: OPEN -> CLOSED with no analyst must fail
+  assert.throws(
+    () => close(open, { reason: 'ignored' }),
+    /cannot close unrouted dissent/,
+    'close() must reject unrouted OPEN dissents'
+  );
+
   const routed = route(open);
   assert.throws(() => route(routed), /cannot route/);
-  const closed = close(routed);
-  assert.throws(() => act(closed, ACTION.RETIRE), /cannot act/);
-  assert.throws(() => close(closed), /cannot close/);
+
+  // B3 regression: ROUTED -> CLOSED without a non-empty dismissal reason must fail
+  assert.throws(() => close(routed), /non-empty reason/);
+  assert.throws(() => close(routed, { reason: '   ' }), /non-empty reason/);
+
+  // B3 regression: contactable ACTIONED dissent cannot close before notify()
+  const actionedContactable = act(routed, ACTION.REWRITE);
+  assert.throws(
+    () => close(actionedContactable, { reason: 'skip_inbox' }),
+    /before notify\(\)/,
+    'contactable dissenter must not be closed without notification'
+  );
+
+  const dismissed = close(routed, { reason: 'duplicate_of_R1043b' });
+  assert.equal(dismissed.status, STATE.CLOSED);
+  assert.equal(dismissed.closeReason, 'duplicate_of_R1043b');
+  assert.throws(() => act(dismissed, ACTION.RETIRE), /cannot act/);
+  assert.throws(() => close(dismissed, { reason: 'again' }), /cannot close/);
 });
+
+test('cardLedger() provides an addressless "you said, we did" loop for ANONYMOUS dissenters (B4)', () => {
+  const anon = newDissent({
+    cardId: 'R1043',
+    expert: 'e_SECRET_99',
+    name: 'Hidden Person',
+    country: 'TCD',
+    kind: KIND.ALREADY_HAPPENING,
+    level: LEVELS.ANONYMOUS,
+    now: 1000,
+  });
+  // Before action, ledgerEntry is null
+  assert.equal(ledgerEntry(anon), null);
+  assert.equal(ledgerEntry(route(anon, { now: 1100 })), null);
+
+  const anonClosed = close(
+    act(route(anon, { now: 1100 }), ACTION.RESOLVE_EARLY, { now: 1400 }),
+    { now: 1500 }
+  );
+  // Outbound notification is still null (safe), while card-level ledger entry closes the loop!
+  const entry = ledgerEntry(anonClosed);
+  assert.ok(entry !== null);
+  assert.equal(entry.cardId, 'R1043');
+  assert.equal(entry.action, ACTION.RESOLVE_EARLY);
+  assert.equal(entry.body, compose(LOOP_KIND.RESOLVE_EARLY).body);
+
+  // Zero identifying, pseudonymous, or correlation fields survive into the ledger
+  for (const forbidden of ['expert', 'to', 'by', 'name', 'country', 'level', 'dissentId', 'id']) {
+    assert.ok(!(forbidden in entry), `ledgerEntry leaked field "${forbidden}"`);
+  }
+  assert.ok(!JSON.stringify(entry).includes('e_SECRET_99'));
+  assert.ok(!JSON.stringify(entry).includes('Hidden Person'));
+
+  const dismissedOnly = close(
+    route(newDissent({ cardId: 'R1043', expert: 'e2', kind: KIND.WINDOW })),
+    { reason: 'out_of_scope' }
+  );
+  const ledger = cardLedger([anonClosed, dismissedOnly], 'R1043');
+  assert.equal(ledger.length, 1, 'unactioned dismissals do not appear as "we did" card changes');
+  assert.equal(ledger[0].action, ACTION.RESOLVE_EARLY);
+});
+

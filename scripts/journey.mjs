@@ -11,6 +11,7 @@ import {
   act,
   notify,
   close,
+  cardLedger,
   loopLatencyMs,
   STATE,
   ACTION,
@@ -67,18 +68,33 @@ console.log(`               "${n.body}"  links: ${n.deepLinks.join(', ')}`);
 const closed = close(n._next, { reason: 'delivered' });
 console.log(`5  closed      state=${closed.status}`);
 
-// Verify ANONYMOUS dissent never retains expert id or emits an outbound recipient.
+// Verify ANONYMOUS dissent never retains expert id or emits an outbound recipient,
+// yet still closes the feedback loop on the card via `cardLedger()` ("you said, we did").
 const anon = newDissent({
   cardId: 'R1043',
   expert: 'e_secret',
   kind: KIND.WINDOW,
   level: LEVELS.ANONYMOUS,
 });
-const anonClosed = close(act(route(anon), ACTION.REWRITE), { reason: 'anonymous_opt_out' });
-if (anon.expert !== null || notify(act(route(anon), ACTION.REWRITE)) !== null || anonClosed.status !== STATE.CLOSED) {
-  console.error('✗ anonymous dissent leaked expert id or failed to close cleanly');
+const anonActioned = act(
+  route(anon),
+  ACTION.REWRITE,
+  { title: 'Cross-border attacks in Ouaddaï exceed 15 ACLED events before 30 June 2027' }
+);
+const anonClosed = close(anonActioned, { reason: 'anonymous_opt_out' });
+const ledger = cardLedger([closed, anonClosed], 'R1043');
+if (
+  anon.expert !== null ||
+  notify(anonActioned) !== null ||
+  anonClosed.status !== STATE.CLOSED ||
+  ledger.length !== 2 ||
+  JSON.stringify(ledger).includes('e_secret') ||
+  JSON.stringify(ledger).includes('e_8f21')
+) {
+  console.error('✗ anonymous dissent leaked expert id or failed to record de-identified card ledger');
   process.exit(1);
 }
+console.log(`6  ledger      ${ledger.length} de-identified "you said, we did" entries on R1043 (anonymous loop closed without address)`);
 
 const ms = loopLatencyMs(closed);
 console.log(`\nin-process state-machine execution: ${ms} ms (note: measures synchronous code path, not human analyst turnaround)`);
