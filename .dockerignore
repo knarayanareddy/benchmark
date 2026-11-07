@@ -1,7 +1,8 @@
 node_modules
 .git
 archive
-data
+data/*
+!data/risk-radar.json
 mockups
 organiser
 docs

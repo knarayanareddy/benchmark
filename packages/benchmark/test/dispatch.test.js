@@ -15,6 +15,14 @@ test('the declaration gates who is told', () => {
   assert.equal(matches({ ...card, country: 'MLI' }, { countries: ['SDN'] }), false);
 });
 
+test('a question with no theme or region is not hidden by a declared theme or region', () => {
+  const bare = { country: 'MLI' };
+  assert.equal(matches(bare, { countries: ['MLI'], themes: ['health'] }), true);
+  assert.equal(matches(bare, { countries: ['MLI'], regions: ['Sahel & West/Central Africa'] }), true);
+  assert.equal(matches(bare, { countries: ['SDN'], themes: ['health'] }), false, 'the country still gates');
+  assert.equal(matches({ country: 'MLI', theme: 'food' }, { countries: ['MLI'], themes: ['health'] }), false, 'a classified question still needs the theme');
+});
+
 test('the weekly cap is enforced and never exceeded', () => {
   const cands = Array.from({ length: 8 }, () => ({ type: TYPES.new_statement, card, expert: 'e1' }));
   const out = dispatch(cands, { perWeek: 3, instantOnlyAbove: 3 }, []);

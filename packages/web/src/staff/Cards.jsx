@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useLoad, problems } from './hooks.js';
+import { REGIONS, THEMES } from '@benchmark/core/taxonomy';
 
 const SOURCES = ['ACLED', 'IPC', 'UNHCR', 'IMF', 'official_decree'];
-const BANDS = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
+export const BANDS = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
 const blank = { statement: '', country: '', region: '', theme: '', from: '', to: '', objective: '', source: 'ACLED', resolver: '', probability: 'Medium' };
 const MAX_SOURCES = 8;
 const lines = (/** @type {string} */ s) => s.split('\n').map((x) => x.trim()).filter(Boolean);
@@ -110,20 +111,34 @@ function Row({ api, c, reload }) {
   );
 }
 
-export function Cards({ api }) {
+/**
+ * @param {{ api: import('../lib/api.js').Api, draft?: any, setDraft?: (d: any) => void }} props
+ * `draft` comes from a risk in the Dispatch tab: it pre-fills the form and rides along as riskId until the card is created or discarded.
+ */
+export function Cards({ api, draft = null, setDraft = () => {} }) {
   const { data, error, reload } = useLoad(() => api('GET', '/api/staff/cards'));
-  const [f, setF] = useState(blank);
+  const [f, setF] = useState(() => (draft
+    ? { ...blank, country: draft.country ?? blank.country, region: draft.region ?? blank.region, theme: draft.theme ?? blank.theme, probability: draft.probability ?? blank.probability }
+    : blank));
   const [msg, setMsg] = useState(/** @type {{ kind: string, text: string } | null} */ (null));
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   async function create() {
     try {
       const r = await api('POST', '/api/staff/cards', {
         statement: f.statement, country: f.country, region: f.region || undefined, theme: f.theme || undefined,
-        window: { from: f.from, to: f.to }, objective: f.objective, resolutionSource: f.source, resolver: f.resolver, probability: f.probability,
+        window: { from: f.from, to: f.to }, objective: f.objective, resolutionSource: f.source, resolver: f.resolver,
+        // A blank rating is omitted, not sent as '': the service stores what it gets (null when absent).
+        ...(f.probability ? { probability: f.probability } : {}),
+        ...(draft ? { riskId: draft.riskId } : {}),
       });
       setMsg({ kind: 'ok', text: `Created ${r.card.id}.${r.warnings.length ? ` Warnings: ${r.warnings.join('; ')}` : ''}` });
-      setF(blank); reload();
+      setF(blank); setDraft(null); reload();
     } catch (e) { setMsg({ kind: 'err', text: problems(e) }); }
+  }
+  // Only the fields the draft filled are cleared; what the moderator typed stays.
+  function discard() {
+    setF((x) => ({ ...x, country: blank.country, region: blank.region, theme: blank.theme, probability: blank.probability }));
+    setDraft(null);
   }
   return (
     <>
@@ -137,17 +152,23 @@ export function Cards({ api }) {
       <section>
         <h2>Author a card</h2>
         <p className="muted">A card opens only with real dates, a written objective, an external source and a named resolver, fixed now and never at resolution.</p>
+        {draft && (
+          <div className="callout">
+            <p>{`Drafted from risk ${draft.riskId}: ${draft.riskTitle}`}</p>
+            <div className="row"><button type="button" className="secondary" onClick={discard}>Discard draft</button></div>
+          </div>
+        )}
         <div className="form-grid">
           <div className="field wide"><label htmlFor="statement">Statement</label><textarea id="statement" value={f.statement} onChange={set('statement')} /></div>
           <div className="field"><label htmlFor="country">Country (ISO code)</label><input id="country" type="text" value={f.country} onChange={set('country')} /></div>
-          <div className="field"><label htmlFor="region">Region (optional)</label><input id="region" type="text" value={f.region} onChange={set('region')} /></div>
-          <div className="field"><label htmlFor="theme">Theme (optional)</label><input id="theme" type="text" value={f.theme} onChange={set('theme')} /></div>
+          <div className="field"><label htmlFor="region">Region (optional)</label><select id="region" value={f.region} onChange={set('region')}><option value="">Not set</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+          <div className="field"><label htmlFor="theme">Theme (optional)</label><select id="theme" value={f.theme} onChange={set('theme')}><option value="">Not set</option>{Object.entries(THEMES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}</select></div>
           <div className="field"><label htmlFor="source">Resolution source</label><select id="source" value={f.source} onChange={set('source')}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</select></div>
           <div className="field"><label htmlFor="from">Window starts</label><input id="from" type="date" value={f.from} onChange={set('from')} /></div>
           <div className="field"><label htmlFor="to">Window ends</label><input id="to" type="date" value={f.to} onChange={set('to')} /></div>
           <div className="field wide"><label htmlFor="objective">Objective: what exactly counts as “yes”?</label><textarea id="objective" value={f.objective} onChange={set('objective')} /></div>
           <div className="field"><label htmlFor="resolver">Named resolver</label><input id="resolver" type="text" value={f.resolver} onChange={set('resolver')} /></div>
-          <div className="field"><label htmlFor="prob">ACAPS’s own rating of this risk (kept for scoring; never shown to experts before they answer)</label><select id="prob" value={f.probability} onChange={set('probability')}>{BANDS.map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div className="field"><label htmlFor="prob">ACAPS’s own rating of this risk (kept for scoring; never shown to experts before they answer)</label><select id="prob" value={f.probability} onChange={set('probability')}><option value="">Not rated by ACAPS</option>{BANDS.map((s) => <option key={s}>{s}</option>)}</select></div>
         </div>
         <div className="row"><button type="button" onClick={create}>Create card</button></div>
         {msg && <div className={`msg ${msg.kind}`} role={msg.kind === 'err' ? 'alert' : 'status'}>{msg.text}</div>}

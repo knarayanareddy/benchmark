@@ -8,11 +8,14 @@ import { Invites } from './Invites.jsx';
 import { SecondLook } from './SecondLook.jsx';
 import { Discussion } from './Discussion.jsx';
 import { PublicationStaff } from './PublicationStaff.jsx';
+import { Dispatch } from './Dispatch.jsx';
+import { Evolution } from './Evolution.jsx';
+import { DemoBanner } from '../DemoBanner.jsx';
 import { Audit } from './Audit.jsx';
 
 const TOKEN = 'session.staff';
-/** @type {Array<[string, string, (p: { api: import('../lib/api.js').Api, me: { id: string, role: string } }) => any]>} */
-const TABS = [['cards', 'Cards', Cards], ['dissents', 'Objections', Dissents], ['breakglass', 'Safety override', BreakGlass], ['invites', 'Invites', Invites], ['secondlook', 'Second look', SecondLook], ['discussion', 'Discussion', Discussion], ['publications', 'Publication', PublicationStaff], ['audit', 'Audit', Audit]];
+/** @type {Array<[string, string, (p: { api: import('../lib/api.js').Api, me: { id: string, role: string }, draft?: any, setDraft?: (d: any) => void, goto?: (tab: string) => void }) => any]>} */
+const TABS = [['cards', 'Cards', Cards], ['dispatch', 'Dispatch', Dispatch], ['evolution', 'Evolution', Evolution], ['dissents', 'Objections', Dissents], ['breakglass', 'Safety override', BreakGlass], ['invites', 'Invites', Invites], ['secondlook', 'Second look', SecondLook], ['discussion', 'Discussion', Discussion], ['publications', 'Publication', PublicationStaff], ['audit', 'Audit', Audit]];
 
 function SignIn({ api, onDone }) {
   const [cred, setCred] = useState('');
@@ -41,6 +44,8 @@ export function StaffApp({ api: injected }) {
   const api = useMemo(() => injected || createApi(TOKEN), [injected]);
   const [me, setMe] = useState(/** @type {{ id: string, role: string } | null} */ (null));
   const [tab, setTab] = useState('cards');
+  // A card drafted from a risk in the Dispatch tab, handed to the Cards form.
+  const [draft, setDraft] = useState(/** @type {any} */ (null));
   const [phase, setPhase] = useState('loading');
 
   const load = useCallback(async () => {
@@ -71,10 +76,11 @@ export function StaffApp({ api: injected }) {
           </nav>
         )}
       </header>
+      <DemoBanner staff />
       <main>
         {phase === 'loading' && <p>Loading…</p>}
         {phase === 'out' && <SignIn api={api} onDone={signedIn} />}
-        {phase === 'in' && me && <><p className="muted">Signed in as {me.id} ({me.role})</p><Current api={api} me={me} /></>}
+        {phase === 'in' && me && <><p className="muted">Signed in as {me.id} ({me.role})</p><Current api={api} me={me} draft={draft} setDraft={setDraft} goto={setTab} /></>}
       </main>
     </>
   );

@@ -1,0 +1,20 @@
+/* ── Pulse and the risk browser ───────────────────────────────────────── */
+.pulse-waiting { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: space-between; }
+.pulse-entry { margin: 1rem 0 1.5rem; }
+.pulse-why { display: flex; flex-wrap: wrap; gap: .3rem; margin: .4rem 0 0; }
+.pulse-why .pill { margin: 0; }
+.pulse-radar { margin-top: 2rem; }
+.pulse-radar > button { margin: .6rem 0 0; }
+#pulse-radar-list { margin-top: .5rem; }
+
+.risk-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .4rem .9rem; align-items: end; margin-bottom: 1.25rem; }
+.risk-filters .field label { margin-top: .6rem; }
+.risk-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.risk-row { background: #fff; border: 1px solid var(--stone-200); border-radius: .9rem; padding: .8rem 1rem; }
+.risk-title { font: 600 1rem/1.3 var(--serif); color: var(--ink); text-align: left; padding: 0; }
+.risk-detail h2 { font: 600 1.35rem/1.25 var(--serif); margin: .5rem 0 .75rem; }
+.risk-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem 1.1rem; margin: 1rem 0; }
+.risk-facts dt { color: var(--ink-3); font-size: .9rem; }
+.risk-facts dd { margin: 0; }
+
+.back { margin-bottom: .9rem; }

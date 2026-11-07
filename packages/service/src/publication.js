@@ -79,6 +79,8 @@ export function createPublication(ctx) {
     if (!isStr(text)) throw new ValidationError('the contribution has no text to offer');
 
     const card = await getCard(cardId);
+    // Demo data is synthetic: it must never reach the public credits page.
+    if (card.demo) throw new ConflictError('demo content cannot be published');
     const pub = {
       id: newId('pub'), version: 0, status: STATUS.PROPOSED,
       sourceKind, sourceId: id, expertId, cardId: card.id,
@@ -186,20 +188,20 @@ export function createPublication(ctx) {
     need(actor, 'publication.propose');
     const offered = new Set((await store.all()).map((p) => `${p.sourceKind}:${p.sourceId}`));
     const out = [];
-    const statements = new Map();
-    const statementOf = async (/** @type {string} */ cardId) => {
-      if (!statements.has(cardId)) statements.set(cardId, (await getCard(cardId)).statement);
-      return statements.get(cardId);
+    const cards = new Map();
+    const cardOf = async (/** @type {string} */ cardId) => {
+      if (!cards.has(cardId)) cards.set(cardId, await getCard(cardId));
+      return cards.get(cardId);
     };
     for (const d of await answers.dissents.all()) {
       if (!ACTIONED_DISSENT.includes(d.status) || !d.expert || offered.has(`dissent:${d.id}`) || !isStr(d.text)) continue;
-      if (!(await canConsent(d.expert))) continue;
-      out.push({ sourceKind: 'dissent', sourceId: d.id, cardId: d.cardId, statement: await statementOf(d.cardId), kind: d.kind, label: null, text: d.text });
+      if (!(await canConsent(d.expert)) || (await cardOf(d.cardId)).demo) continue;
+      out.push({ sourceKind: 'dissent', sourceId: d.id, cardId: d.cardId, statement: (await cardOf(d.cardId)).statement, kind: d.kind, label: null, text: d.text });
     }
     for (const p of await answers.thread_posts.all()) {
       if (p.status !== 'approved' || !String(p.respondentKey).startsWith('id:') || offered.has(`post:${p.id}`)) continue;
-      if (!(await canConsent(String(p.respondentKey).slice(3)))) continue;
-      out.push({ sourceKind: 'post', sourceId: p.id, cardId: p.cardId, statement: await statementOf(p.cardId), kind: p.kind, label: p.label, text: p.text });
+      if (!(await canConsent(String(p.respondentKey).slice(3))) || (await cardOf(p.cardId)).demo) continue;
+      out.push({ sourceKind: 'post', sourceId: p.id, cardId: p.cardId, statement: (await cardOf(p.cardId)).statement, kind: p.kind, label: p.label, text: p.text });
     }
     return out;
   }

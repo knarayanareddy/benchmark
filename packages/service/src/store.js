@@ -157,6 +157,7 @@ export const createAnswerStore = (opts) => {
       thread_posts: {},
       thread_participants: { unique: [['cardId', 'respondentKey'], ['cardId', 'n']] },
       thread_views: { unique: [['cardId', 'respondentKey']] },
+      card_links: { unique: [['fromCardId', 'toCardId']] },
       releases: { unique: [['cardId', 'round', 'visibility', 'n', 'closed']] },
       dissents: {},
       notifications: {},

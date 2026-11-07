@@ -24,6 +24,14 @@
  *                             when they collect an approved request (BENCHMARK_BREAKGLASS_PRIVATE_KEY exists
  *                             for single-host pilots only).
  *   Every secret above also accepts a <NAME>_FILE variant that names a file (Docker/Kubernetes secrets).
+ *   BENCHMARK_DEMO=1          showcase deployment: lets a visitor open an account without an invite, seeds clearly
+ *                             labelled demo questions and a synthetic panel, and prints two random demo staff
+ *                             credentials to the console (never served over HTTP). Refuses to start with
+ *                             DATABASE_URL unless BENCHMARK_DEMO_ALLOW_DATABASE=1. NEVER on a real pilot database
+ *                             (docs/10-pilot-experience.md).
+ *   BENCHMARK_DEMO_STAFF_CREDENTIALS  "a,b" optional: the two demo moderator credentials to use instead of random ones.
+ *   BENCHMARK_DEMO_ALLOW_DATABASE=1   required, with BENCHMARK_DEMO=1 and DATABASE_URL, to start at all.
+ *   BENCHMARK_RADAR_FILE      the ACAPS radar export as JSON (default data/risk-radar.json in this repo)
  *   BENCHMARK_SENSITIVE_COUNTRIES  "TCD,SDN,..." ISO codes where being named needs an extra acknowledgement.
  *                             Optional: a conservative default list applies (docs/09-roundtable-and-credit.md).
  *   PORT                      default 8080
@@ -35,6 +43,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { createService } from '../src/service.js';
 import { createRosterStore, createAnswerStore } from '../src/store.js';
 import { createPgStores } from '../src/pg-store.js';
@@ -56,6 +66,21 @@ const need = (k) => {
   return v;
 };
 
+const demo = env.BENCHMARK_DEMO === '1';
+if (demo && env.DATABASE_URL && env.BENCHMARK_DEMO_ALLOW_DATABASE !== '1') {
+  console.error('BENCHMARK_DEMO=1 with DATABASE_URL: refusing to start. Demo writes synthetic accounts and data into that database. Set BENCHMARK_DEMO_ALLOW_DATABASE=1 only for a throwaway showcase database, never a pilot database.');
+  process.exit(2);
+}
+
+// A demo deployment gets two moderator credentials (two-person rules need two): random per boot, printed to
+// the console only, or the operator's own pair from BENCHMARK_DEMO_STAFF_CREDENTIALS. Never sent over HTTP.
+const demoStaff = demo
+  ? (env.BENCHMARK_DEMO_STAFF_CREDENTIALS
+    ? env.BENCHMARK_DEMO_STAFF_CREDENTIALS.split(',').map((s) => s.trim()).filter(Boolean)
+    : [0, 1].map(() => `demo-${crypto.randomBytes(12).toString('base64url')}`))
+  : [];
+if (demo && demoStaff.length !== 2) { console.error('BENCHMARK_DEMO_STAFF_CREDENTIALS must name exactly two credentials'); process.exit(2); }
+
 let stores;
 if (env.DATABASE_URL) {
   const { default: pg } = await import('pg');
@@ -72,10 +97,16 @@ if (env.DATABASE_URL) {
   };
 }
 
+if (demo && env.DATABASE_URL) console.warn('BENCHMARK_DEMO=1 with a real database: demo accounts and synthetic data will be written to it. Do not do this on a pilot database.');
+const radarFile = env.BENCHMARK_RADAR_FILE || fileURLToPath(new URL('../../../data/risk-radar.json', import.meta.url));
+let radar = [];
+try { radar = JSON.parse(fs.readFileSync(radarFile, 'utf8')); } catch { console.warn(`no radar loaded from ${radarFile}: the risk browser will be empty`); }
+
 const service = createService({
   ...stores,
   secrets: { ballot: need('BENCHMARK_BALLOT_SECRET'), alias: need('BENCHMARK_ALIAS_SECRET') },
   blindKey: read('BENCHMARK_BLIND_KEY'),
+  radar, demo,
   breakGlassPublicKey: read('BENCHMARK_BREAKGLASS_PUBLIC_KEY'),
   breakGlassPrivateKey: read('BENCHMARK_BREAKGLASS_PRIVATE_KEY'),
   ...(env.BENCHMARK_SENSITIVE_COUNTRIES ? { sensitiveCountries: env.BENCHMARK_SENSITIVE_COUNTRIES.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean) } : {}),
@@ -101,13 +132,18 @@ const staff = new Map(
     return [hash, { id, role }];
   })
 );
+demoStaff.forEach((cred, i) => staff.set(hashToken(cred), { id: `demo-mod${i + 1}`, role: 'moderator' }));
+if (demo) {
+  await service.seedDemo?.();
+  console.log(`DEMO MODE. Demo staff credentials (sign in on the staff page): ${demoStaff.join(', ')}`);
+}
 const verifyStaff = async (req, body) =>
   oidc ? null : staff.get(hashToken(String(body.credential || ''))) || null;
 
 createServer({
-  service, oidc, verifyStaff,
+  service, oidc, verifyStaff, config: { demo },
   ready: async () => { await stores.answers.cards.get('__ready__'); await stores.roster.experts.get('__ready__'); },
   requireHttps: env.BENCHMARK_ALLOW_HTTP !== '1',
   trustProxy: env.BENCHMARK_TRUST_PROXY === '1',
-  staticDir: env.BENCHMARK_STATIC_DIR || new URL('../../web/dist/', import.meta.url).pathname,
+  staticDir: env.BENCHMARK_STATIC_DIR || fileURLToPath(new URL('../../web/dist/', import.meta.url)),
 }).listen(Number(env.PORT || 8080), () => console.log(`benchmark service listening on ${env.PORT || 8080}`));

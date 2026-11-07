@@ -22,6 +22,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY packages ./packages
+# The risk browser reads this (BENCHMARK_RADAR_FILE overrides). It is the organisers' export that already lives in the repo.
+COPY data/risk-radar.json ./data/risk-radar.json
 COPY --from=build /app/packages/web/dist ./packages/web/dist
 RUN rm -rf packages/*/test packages/web/src packages/web/public packages/web/*.html packages/web/vite.config.js \
  && useradd --system --no-create-home bm

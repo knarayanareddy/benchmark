@@ -53,6 +53,7 @@ const TABLES = {
     columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey, status: d.status, kind: d.kind, parent_id: d.parentId ?? null }),
   },
   thread_participants: { schema: 'answers', columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey, n: d.n }) },
+  card_links: { schema: 'answers', columns: (d) => ({ from_card_id: d.fromCardId, to_card_id: d.toCardId }) },
   thread_views: { schema: 'answers', columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey }) },
   publications: {
     schema: 'roster',

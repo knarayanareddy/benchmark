@@ -1,0 +1,17 @@
+/* Profile form, demo entry and demo banner. Uses the variables and classes in styles.css. */
+.profile-fields fieldset { border: 0; padding: 0; margin: .9rem 0 0; }
+.profile-fields legend { font-weight: 600; color: var(--ink-2); margin-bottom: .2rem; }
+.choice-inline { display: block; font-weight: 400; margin: .2rem 0; }
+.chips { list-style: none; margin: .4rem 0 0; padding: 0; }
+.chips .tag.bad { background: var(--rose-50); color: var(--rose-800); box-shadow: inset 0 0 0 1px var(--rose-200); }
+
+.demo-join { margin-top: 1.2rem; border-top: 1px solid var(--stone-200); padding-top: 1rem; }
+.demo-join > summary { cursor: pointer; font-weight: 600; color: var(--teal-800); }
+.demo-join-body { margin-top: .9rem; }
+.demo-join-body .field { margin-top: .9rem; }
+.plain-fieldset { border: 0; padding: 0; margin: .9rem 0 0; }
+.demo-join-body .callout { margin-top: 0; }
+
+.demo-banner { background: var(--amber-50); color: var(--amber-900); border-bottom: 1px solid var(--amber-300); padding: .6rem 1rem; font-size: .9rem; }
+.demo-banner p { margin: .15rem 0; }
+.demo-banner code { font-family: var(--mono); font-size: .85rem; }

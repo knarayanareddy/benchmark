@@ -1,0 +1,15 @@
+/* Staff Dispatch tab: risk browser and preview. Uses the variables and classes in styles.css. */
+.risk-search { display: flex; flex-wrap: wrap; gap: .6rem; align-items: flex-end; margin-bottom: .6rem; }
+.risk-search .field { flex: 1 1 12rem; margin: 0; }
+.risk-search .row { margin-top: 0; }
+.dsp-risk-list { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .5rem; max-height: 26rem; overflow-y: auto; }
+.dsp-risk-row { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; width: 100%; text-align: left; background: #fff; color: var(--ink); border: 1px solid var(--stone-200); box-shadow: none; font: 400 .93rem/1.4 var(--sans); padding: .7rem .95rem; min-height: 0; }
+.dsp-risk-row:hover:not(:disabled) { background: var(--stone-50); border-color: var(--stone-300); }
+.dsp-risk-row.on { border-color: var(--teal-700); background: var(--teal-50); box-shadow: 0 0 0 2px rgb(15 118 110 / .25); }
+.dsp-risk-row .pills { margin-top: .15rem; }
+.dsp-risk-detail { margin-top: 1rem; }
+.dsp-risk-detail h3 { margin-top: 0; }
+.dsp-risk-facts { display: grid; grid-template-columns: max-content 1fr; gap: .45rem 1rem; margin: .8rem 0 0; font-size: .93rem; }
+.dsp-risk-facts dt { color: var(--ink-3); font-weight: 600; }
+.dsp-risk-facts dd { margin: 0; overflow-wrap: anywhere; }
+.dsp-risk-facts dd ul { margin: 0; padding-left: 1.1rem; }

@@ -37,6 +37,11 @@ import { can, ROLES, newToken, hashToken } from './auth.js';
 import { isSensitiveCountry, DEFAULT_SENSITIVE_COUNTRIES } from '@benchmark/core/sensitive';
 import { createRoundtable } from './roundtable.js';
 import { createPublication } from './publication.js';
+import { createProfile } from './profile.js';
+import { createRadar } from './radar.js';
+import { createPulse } from './pulse.js';
+import { createDemo } from './demo.js';
+import { createEvolution } from './evolution.js';
 import { CONSENT_VERSION, consentText, consentHash, RETENTION_MONTHS } from './consent.js';
 
 export const BREAK_GLASS_CATEGORIES = Object.freeze(['safety_threat', 'safety_welfare', 'legal_obligation']);
@@ -70,13 +75,14 @@ const isoList = (v) => {
 /**
  * @param {{
  *   roster: any, answers: any, secrets: { ballot: string, alias: string }, now?: () => number, releasePolicy?: string,
- *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string, sensitiveCountries?: readonly string[]
+ *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string, sensitiveCountries?: readonly string[],
+ *   radar?: Record<string, any>[], demo?: boolean
  * }} deps
  * `breakGlassPublicKey` (RSA, PEM) turns the safety override on: an anonymous objection then carries its
  * sender's id sealed to that key. The private key is NOT needed to run the service; it is supplied at collection.
  * `blindKey` (RSA private key, PEM) turns on device-held ballots: blind-signed tokens an expert's device keeps.
  */
-export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES } = /** @type {any} */ ({})) {
+export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES, radar: radarRaw = [], demo = false } = /** @type {any} */ ({})) {
   if (!roster || !answers) throw new TypeError('createService needs { roster, answers }');
   for (const k of ['ballot', 'alias']) {
     if (typeof secrets?.[k] !== 'string' || secrets[k].length < MIN_SECRET) {
@@ -118,6 +124,8 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   const consentOpts = (device = false) => ({ breakGlass: Boolean(breakGlassPublicKey), device });
 
   const t = () => now();
+  /** @type {any} */
+  let radar = { has: () => false, hasLiveQuestion: async () => false };
   const audit = (actor, action, target, reason = '') =>
     answers.audit.append({ at: t(), actorId: actor.id, role: actor.role, action, target, reason });
   const need = (actor, permission) => {
@@ -274,6 +282,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     await roster.experts.put(e.id, {
       ...e,
       level: r.level,
+      // A device-held key can never be opened by the safety override, so the name typed at invite has no purpose there.
+      // A service-held anonymous account keeps it: reaching the sender is exactly what the two-moderator override is for.
+      name: device ? null : e.name,
       tokenMode: device ? 'device' : 'server',
       consent: { version: CONSENT_VERSION, textHash: consentHash(r.level, consentOpts(device)), at: coarsenToDay(t()).ms },
     });
@@ -290,10 +301,12 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   async function createCard(actor, input) {
     need(actor, 'card.author');
     const { c, warnings } = checkCardInput(input);
+    const riskId = isStr(input.riskId) ? input.riskId.trim() : null;
+    if (riskId && !radar.has(riskId)) throw new ValidationError(`riskId ${riskId} is not a risk on the radar`);
     const id = isStr(input.id) ? input.id.trim() : `C${crypto.randomBytes(4).toString('hex')}`;
     const card = await answers.cards.insert(id, {
       id, version: 0, parentId: null, status: 'open', round: 1,
-      statement: c.statement.trim(), country: c.country, region: c.region ?? null, theme: c.theme ?? null,
+      statement: c.statement.trim(), country: c.country, region: c.region ?? null, theme: c.theme ?? null, riskId,
       window: c.window, objective: c.objective.trim(), resolutionSource: c.resolutionSource, resolver: c.resolver,
       // ACAPS's own reading, for scoring and analysis. It is never sent to an expert before they lock Round 1.
       acapsBand: c.probability ?? null, acapsP: BAND_MIDPOINT[c.probability] ?? null,
@@ -312,7 +325,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       out.push({
         id: c.id, statement: c.statement, country: c.country, status: c.status, round: c.round,
         parentId: c.parentId, window: c.window, resolver: c.resolver, resolutionSource: c.resolutionSource,
-        version: c.version, responses: rows.length, hasSecondLook: Boolean(c.secondLook), threadEnabled: Boolean(c.thread?.enabled),
+        version: c.version, responses: rows.length, hasSecondLook: Boolean(c.secondLook), threadEnabled: Boolean(c.thread?.enabled), riskId: c.riskId ?? null, demo: Boolean(c.demo),
       });
     }
     return out;
@@ -322,7 +335,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     need(actor, 'round.manage');
     const card = await getCard(cardId);
     if (card.status !== 'open') throw new ConflictError(`card ${cardId} is ${card.status}, not open`);
-    const next = await updateCard(card, { status: 'closed' });
+    // Cards from before closedRounds existed have no record: a round-2 card's round 1 was necessarily closed.
+    const earlier = card.closedRounds ?? (card.round === 2 ? [1] : []);
+    const closedRounds = [...new Set([...earlier, card.round])];
+    const next = await updateCard(card, { status: 'closed', closedRounds });
     await audit(actor, 'round.close', cardId, `round ${card.round}`);
     // Closing a round IS its release: the result is ledgered now, so Round 2 can
     // show it and no later call can publish a different one.
@@ -408,8 +424,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       p: r.p, round: r.round, level: r.level,
       ...(r.expertId ? { expertId: r.expertId } : { ballotToken: r.respondentKey }),
     }));
-    // Round-closed state comes from the database, never from the caller.
-    const closed = card.status !== 'open';
+    // Round-closed state comes from the database, never from the caller. Status alone is not enough: a card resolved
+    // straight from an open round 2 has status 'resolved' but that round never closed.
+    const closed = card.closedRounds ? card.closedRounds.includes(card.round) : card.status !== 'open';
     const ledger = (await answers.releases.find({ cardId: card.id, round: card.round, visibility }))
       .sort((a, b) => a.n - b.n);
     const n = new Set(estimates.map((e) => e.expertId ?? e.ballotToken)).size;
@@ -590,6 +607,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         id: k.id, version: 0, parentId: parent.id, status: 'open', round: 1, statement: k.statement,
         country: parent.country, region: parent.region, theme: parent.theme, window: parent.window,
         objective: parent.objective, resolutionSource: parent.resolutionSource, resolver: parent.resolver,
+        riskId: parent.riskId ?? null, demo: Boolean(parent.demo),
         acapsBand: parent.acapsBand ?? null, acapsP: parent.acapsP ?? null, createdAt: coarsenToDay(t()).ms,
       });
     }
@@ -879,7 +897,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     const pairs = [];
     let cards = 0;
     for (const card of await answers.cards.all()) {
-      if (!card.secondLook) continue;
+      if (!card.secondLook || card.demo) continue;
       cards++;
       const first = new Map((await answers.estimates.find({ cardId: card.id, round: 1 })).map((r) => [r.respondentKey, r]));
       for (const r2 of await answers.estimates.find({ cardId: card.id, round: 2 })) {
@@ -1021,10 +1039,18 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     ensureAlias, cardView, isSensitive: (/** @type {string} */ c) => isSensitiveCountry(c, sensitiveCountries),
     newId: (/** @type {string} */ prefix) => `${prefix}_${crypto.randomUUID()}`,
   };
+  /** @type {any} */
+  let self = null;
+  const modules = { ...moduleCtx, radarRaw, demo, self: () => self };
   const roundtable = createRoundtable(moduleCtx);
   const publication = createPublication(moduleCtx);
+  const profile = createProfile(modules);
+  radar = createRadar(modules);
+  const pulseModule = createPulse(modules);
+  const demoModule = createDemo(modules);
+  const evolution = createEvolution(modules);
 
-  return Object.freeze({
+  const api = Object.freeze({
     authenticate, createStaffSession, createInvite, createReinvite, listExperts, redeemInvite,
     createCard, listCards, closeRound, openRound2, resolveCard,
     submitEstimate, cardRelease, inbox,
@@ -1037,6 +1063,14 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     openAnonymousThread: roundtable.openAnonymousThread, postAnonymous: roundtable.postAnonymous,
     listPending: roundtable.listPending, moderate: roundtable.moderate, eraseAnonymous: roundtable.eraseAnonymous,
     propose: publication.propose, respond: publication.respond, review: publication.review, publish: publication.publish,
-    withdraw: publication.withdraw, listForStaff: publication.listForStaff, listOfferable: publication.listOfferable, listPublic: publication.listPublic,
+    withdraw: publication.withdraw, listForStaff: publication.listForStaff, listOfferable: publication.listOfferable,
+    getProfile: profile.getProfile, setProfile: profile.setProfile,
+    listRisks: radar.listRisks, getRisk: radar.getRisk,
+    pulse: pulseModule.pulse, previewDispatch: pulseModule.previewDispatch,
+    cardSeries: evolution.cardSeries, evolutionGrid: evolution.evolutionGrid,
+    listLinks: evolution.listLinks, createLink: evolution.createLink, removeLink: evolution.removeLink,
+    ...(demo ? { demoJoin: demoModule.demoJoin, seedDemo: demoModule.seedDemo } : {}), listPublic: publication.listPublic,
   });
+  self = api;
+  return api;
 }

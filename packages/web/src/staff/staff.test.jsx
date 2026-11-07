@@ -378,3 +378,90 @@ describe('invites', () => {
     expect(screen.getByText('Only moderators can invite.')).toBeInTheDocument();
   });
 });
+
+describe('cards drafted from a risk', () => {
+  const draft = { riskId: 'R1', riskTitle: 'Cholera spreads in Chad', country: 'TCD', region: 'Sahel & West/Central Africa', theme: 'health', probability: 'High' };
+  const spy = () => { const f = (x) => { f.calls.push(x); }; f.calls = []; return f; };
+
+  it('pre-fills the form, sends the riskId with the card, and clears the draft once the card is created', async () => {
+    let cards = [];
+    const setDraft = spy();
+    const a = routes({
+      'GET /api/staff/cards': () => cards,
+      'POST /api/staff/cards': (b) => {
+        expect(b).toMatchObject({ country: 'TCD', region: 'Sahel & West/Central Africa', theme: 'health', probability: 'High', riskId: 'R1', objective: 'WHO bulletin above 10,000', resolver: 'R. Resolver' });
+        cards = [{ id: 'C9', statement: b.statement, status: 'open', round: 1, responses: 0 }];
+        return { card: cards[0], warnings: [] };
+      },
+    });
+    render(<Cards api={a} draft={draft} setDraft={setDraft} />);
+    expect(await screen.findByText('Drafted from risk R1: Cholera spreads in Chad')).toBeInTheDocument();
+    expect(screen.getByLabelText('Country (ISO code)')).toHaveValue('TCD');
+    expect(screen.getByLabelText('Region (optional)')).toHaveValue('Sahel & West/Central Africa');
+    expect(screen.getByLabelText('Theme (optional)')).toHaveValue('health');
+    expect(screen.getByLabelText(/ACAPS’s own rating/)).toHaveValue('High');
+    await userEvent.type(screen.getByLabelText('Statement'), 'Cholera cases in Chad will exceed 10,000 by 30 April 2027.');
+    await userEvent.type(screen.getByLabelText('Named resolver'), 'R. Resolver');
+    await userEvent.type(screen.getByLabelText('Window starts'), '2026-11-01');
+    await userEvent.type(screen.getByLabelText('Window ends'), '2027-04-30');
+    await userEvent.type(screen.getByLabelText(/Objective/), 'WHO bulletin above 10,000');
+    await userEvent.click(screen.getByRole('button', { name: 'Create card' }));
+    expect(await screen.findByText('Created C9.')).toBeInTheDocument();
+    expect(setDraft.calls).toEqual([null]);
+  });
+
+  it('discard clears the drafted fields, keeps what the moderator typed, and removes the draft line', async () => {
+    const setDraft = spy();
+    const a = routes({ 'GET /api/staff/cards': [] });
+    const { rerender } = render(<Cards api={a} draft={draft} setDraft={setDraft} />);
+    await userEvent.type(await screen.findByLabelText('Statement'), 'Typed by hand.');
+    await userEvent.click(screen.getByRole('button', { name: 'Discard draft' }));
+    expect(setDraft.calls).toEqual([null]);
+    expect(screen.getByLabelText('Country (ISO code)')).toHaveValue('');
+    expect(screen.getByLabelText('Region (optional)')).toHaveValue('');
+    expect(screen.getByLabelText('Theme (optional)')).toHaveValue('');
+    expect(screen.getByLabelText(/ACAPS’s own rating/)).toHaveValue('Medium');
+    expect(screen.getByLabelText('Statement')).toHaveValue('Typed by hand.');
+    rerender(<Cards api={a} draft={null} setDraft={setDraft} />);
+    expect(screen.queryByText(/Drafted from risk/)).toBeNull();
+    expect(a).not.toHaveBeenCalledWith('POST', expect.anything(), expect.anything());
+  });
+
+  it('a risk with no ACAPS band sends no probability key at all, not a blank one', async () => {
+    const unrated = { ...draft, probability: '' };
+    const a = routes({
+      'GET /api/staff/cards': [],
+      'POST /api/staff/cards': (b) => { expect(b).not.toHaveProperty('probability'); expect(b).toHaveProperty('riskId', 'R1'); return { card: { id: 'C7' }, warnings: [] }; },
+    });
+    render(<Cards api={a} draft={unrated} setDraft={spy()} />);
+    expect(await screen.findByLabelText(/ACAPS’s own rating/)).toHaveValue('');
+    await userEvent.type(screen.getByLabelText('Statement'), 'A statement.');
+    await userEvent.type(screen.getByLabelText('Named resolver'), 'R. Resolver');
+    await userEvent.type(screen.getByLabelText('Window starts'), '2026-11-01');
+    await userEvent.type(screen.getByLabelText('Window ends'), '2027-04-30');
+    await userEvent.type(screen.getByLabelText(/Objective/), 'An objective.');
+    await userEvent.click(screen.getByRole('button', { name: 'Create card' }));
+    expect(await screen.findByText('Created C7.')).toBeInTheDocument();
+  });
+
+  it('a card without a draft sends no riskId, and the region and theme are choices from the vocabulary', async () => {
+    const a = routes({
+      'GET /api/staff/cards': [],
+      'POST /api/staff/cards': (b) => { expect(b).not.toHaveProperty('riskId'); return { card: { id: 'C2' }, warnings: [] }; },
+    });
+    render(<Cards api={a} />);
+    await screen.findByText('No cards yet.');
+    expect(screen.queryByText(/Drafted from risk/)).toBeNull();
+    expect(screen.getByLabelText('Region (optional)').tagName).toBe('SELECT');
+    expect(within(screen.getByLabelText('Theme (optional)')).getByRole('option', { name: 'Conflict & security' })).toHaveValue('conflict');
+    expect(within(screen.getByLabelText('Region (optional)')).getAllByRole('option')).toHaveLength(7);
+    await userEvent.type(screen.getByLabelText('Statement'), 'A statement.');
+    await userEvent.type(screen.getByLabelText('Country (ISO code)'), 'TCD');
+    await userEvent.type(screen.getByLabelText('Named resolver'), 'R. Resolver');
+    await userEvent.type(screen.getByLabelText('Window starts'), '2026-11-01');
+    await userEvent.type(screen.getByLabelText('Window ends'), '2027-04-30');
+    await userEvent.type(screen.getByLabelText(/Objective/), 'An objective.');
+    await userEvent.click(screen.getByRole('button', { name: 'Create card' }));
+    expect(await screen.findByText('Created C2.')).toBeInTheDocument();
+  });
+});

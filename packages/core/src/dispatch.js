@@ -29,8 +29,10 @@ export function matches(card, declaration = {}, { all = false } = {}) {
   const themes = declaration.themes || [];
   if (countries.length === 0 && regions.length === 0 && themes.length === 0) return false;
   const countryHit = countries.length === 0 || countries.includes(card.country);
-  const regionHit = regions.length === 0 || regions.includes(card.region);
-  const themeHit = themes.length === 0 || themes.includes(card.theme);
+  // A question that was not given a region or a theme cannot be narrowed by it: a person who ticked "health" is
+  // not hidden from a question nobody classified.
+  const regionHit = regions.length === 0 || !card.region || regions.includes(card.region);
+  const themeHit = themes.length === 0 || !card.theme || themes.includes(card.theme);
   return countryHit && regionHit && themeHit;
 }
 

@@ -75,6 +75,7 @@ async function readJson(req, maxBytes) {
 /**
  * @typedef {{ login: () => Promise<string>, callback: (q: { code: string | null, state: string | null }) => Promise<{ id: string, role: string }> }} Oidc
  * @typedef {{
+ *   config?: { demo?: boolean },
  *   service: any, oidc?: Oidc | null, staticDir?: string | null, ready?: () => Promise<void>,
  *   verifyStaff?: (req: any, body: any) => Promise<{ id: string, role: string } | null>,
  *   limits?: Record<string, number>, requireHttps?: boolean, trustProxy?: boolean, now?: () => number
@@ -86,6 +87,7 @@ export function createHandler({
   service,
   oidc = null,
   staticDir = null,
+  config = {},
   ready = async () => {},
   verifyStaff = async () => null,
   limits = {},
@@ -182,6 +184,26 @@ export function createHandler({
     ['POST', /^\/api\/publications\/([^/]+)\/withdraw$/, async (req, m) => service.withdraw(await actorOf(req), m[1])],
     // The one public list that can carry a name, and only a name its owner agreed to for that one item.
     ['GET', /^\/api\/public\/credits$/, async () => service.listPublic()],
+    // Profile, risk browser, Pulse, dispatch preview (docs/10-pilot-experience.md)
+    ['GET', /^\/api\/me\/profile$/, async (req) => service.getProfile(await actorOf(req))],
+    ['PUT', /^\/api\/me\/profile$/, async (req, m, b) => service.setProfile(await actorOf(req), b)],
+    ['GET', /^\/api\/risks$/, async (req) => { const q = new URL(req.url, 'http://x').searchParams; return service.listRisks(await actorOf(req), { q: q.get('q') || undefined, region: q.get('region') || undefined, theme: q.get('theme') || undefined, country: q.get('country') || undefined }); }],
+    ['GET', /^\/api\/risks\/([^/]+)$/, async (req, m) => service.getRisk(await actorOf(req), m[1])],
+    ['GET', /^\/api\/pulse$/, async (req) => service.pulse(await actorOf(req))],
+    ['POST', /^\/api\/staff\/dispatch\/preview$/, async (req, m, b) => service.previewDispatch(await actorOf(req), { cardId: b.cardId, draft: b.draft })],
+    // Situation evolution (docs/12-situation-evolution.md): staff only
+    ['GET', /^\/api\/staff\/cards\/([^/]+)\/series$/, async (req, m) => service.cardSeries(await actorOf(req), m[1])],
+    ['GET', /^\/api\/staff\/evolution\/grid$/, async (req) => service.evolutionGrid(await actorOf(req))],
+    ['GET', /^\/api\/staff\/links$/, async (req) => service.listLinks(await actorOf(req))],
+    ['POST', /^\/api\/staff\/links$/, async (req, m, b) => service.createLink(await actorOf(req), { fromCardId: b.fromCardId, toCardId: b.toCardId, mechanism: b.mechanism, rival: b.rival })],
+    ['DELETE', /^\/api\/staff\/links\/([^/]+)$/, async (req, m) => service.removeLink(await actorOf(req), m[1])],
+    // Public: whether this is a showcase deployment. Nothing personal.
+    ['GET', /^\/api\/config$/, async () => ({ demo: Boolean(config.demo) })],
+    // Demo mode only: an account from the profile the person typed. No invite, no login.
+    ['POST', /^\/api\/demo\/join$/, async (req, m, b) => {
+      if (!service.demoJoin) throw new NotFoundError('no such route');
+      return service.demoJoin(b);
+    }],
     ['GET', /^\/api\/staff\/breakglass$/, async (req) => service.listBreakGlass(await actorOf(req))],
     ['POST', /^\/api\/staff\/breakglass$/, async (req, m, b) => service.requestBreakGlass(await actorOf(req), b)],
     ['POST', /^\/api\/staff\/breakglass\/([^/]+)\/decide$/, async (req, m, b) => service.decideBreakGlass(await actorOf(req), m[1], b)],

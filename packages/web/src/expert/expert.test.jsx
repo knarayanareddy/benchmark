@@ -12,6 +12,9 @@ import { getSecret, hasDeviceSecret, createSecret, obtainBallot, cachedBallot } 
 import { decodeRecovery } from '../lib/recovery.js';
 import { pending } from '../lib/queue.js';
 
+/** What the Pulse screen needs to render, with nothing asked of the person. */
+const EMPTY_PULSE = { week: { from: '2026-11-01', to: '2026-11-08' }, weeklyCap: 3, minMatch: 30, asks: [], radar: [], outside: 0, waiting: { revise: 0, discussion: 0, offers: 0 }, deviceMode: false };
+
 const CONSENT = { version: '2026-11-v2', level: 'x', text: 'Consent 2026-11-v2\nResidual risk: something' };
 
 beforeEach(() => { window.history.replaceState(null, '', '/'); });
@@ -429,7 +432,7 @@ describe('inbox and the whole app', () => {
 
   it('an expired session sends the person back, with a way to restore a device key', async () => {
     await kvSet('session.expert', 'old');
-    const a = routes({ 'GET /api/inbox': fail(401, 'session invalid or expired') });
+    const a = routes({ 'GET /api/me/profile': fail(401, 'session invalid or expired'), 'GET /api/pulse': fail(401, 'session invalid or expired'), 'GET /api/inbox': fail(401, 'session invalid or expired') });
     render(<App api={a} />);
     expect(await screen.findByText(/invitation-only panel/)).toBeInTheDocument();
     expect(await kvGet('session.expert')).toBeUndefined();
@@ -455,12 +458,15 @@ describe('inbox and the whole app', () => {
     const a = routes({
       'GET /api/consent/identified': CONSENT,
       'POST /api/invite/redeem': () => ({ sessionToken: 'newtok', mode: 'server', level: 'identified' }),
+      'GET /api/me/profile': { needsSetup: false },
+      'GET /api/pulse': EMPTY_PULSE,
       'GET /api/inbox': emptyInbox({ toAnswer: [card()] }),
     });
     render(<App api={a} />);
     await userEvent.click(await screen.findByLabelText(/Known/));
     await userEvent.click(await screen.findByLabelText(/I have read this/));
     await userEvent.click(screen.getByRole('button', { name: 'Accept and continue' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Questions' }));
     expect(await screen.findByText(/Cholera cases in Chad/)).toBeInTheDocument();
     expect(window.location.hash).toBe('');
     expect(await kvGet('session.expert')).toBe('newtok');
@@ -481,8 +487,9 @@ describe('inbox and the whole app', () => {
 
   it('says so when offline', async () => {
     await kvSet('session.expert', 'tok');
-    const a = routes({ 'GET /api/inbox': emptyInbox() });
+    const a = routes({ 'GET /api/me/profile': { needsSetup: false }, 'GET /api/pulse': EMPTY_PULSE, 'GET /api/inbox': emptyInbox() });
     render(<App api={a} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Questions' }));
     await screen.findByText(/New questions/);
     window.dispatchEvent(new Event('offline'));
     expect(await screen.findByText(/You are offline. You can still answer/)).toBeInTheDocument();

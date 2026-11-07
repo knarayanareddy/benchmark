@@ -8,6 +8,12 @@ import { decodeRecovery } from '../lib/recovery.js';
 import { Onboard } from './Onboard.jsx';
 import { Inbox } from './Inbox.jsx';
 import { MyData } from './MyData.jsx';
+import { Pulse } from './Pulse.jsx';
+import { Risks } from './Risks.jsx';
+import { Profile } from './Profile.jsx';
+import { DemoJoin } from './DemoJoin.jsx';
+import { DemoBanner } from '../DemoBanner.jsx';
+import { getConfig } from '../lib/config.js';
 
 const TOKEN = 'session.expert';
 const MODE = 'session.mode';
@@ -16,7 +22,7 @@ export function readInvite() {
   return new URLSearchParams(window.location.hash.slice(1)).get('invite');
 }
 
-function Landing({ onRestored }) {
+function Landing({ onRestored, demo, api, deviceKeys, onDone }) {
   const [code, setCode] = useState('');
   const [msg, setMsg] = useState(/** @type {{ kind: string, text: string } | null} */ (null));
   async function restore() {
@@ -29,6 +35,7 @@ function Landing({ onRestored }) {
       <h2>Ground Truth</h2>
       <p className="page-sub">You help sharpen risk analysis by saying how likely you think an event is, in your own words and numbers, and by telling the analysts when a question is badly framed. You choose how identifiable you are, and you can erase everything.</p>
       <p>This is an invitation-only panel. Open the personal link you were sent to take part. If your link has expired, ask your coordinator for a new one.</p>
+      {demo && <DemoJoin api={api} deviceKeys={deviceKeys} onDone={onDone} />}
       <details>
         <summary className="muted">I chose a device-held key and I am on a new phone</summary>
         <label htmlFor="rc">Recovery code</label>
@@ -43,7 +50,8 @@ function Landing({ onRestored }) {
 /** @param {{ api?: import('../lib/api.js').Api, deviceKeys?: boolean }} props */
 export function App({ api: injected, deviceKeys = true }) {
   const api = useMemo(() => injected || createApi(TOKEN), [injected]);
-  const [view, setView] = useState('loading'); // loading landing onboard inbox data
+  const [view, setView] = useState('loading'); // loading landing onboard setup pulse inbox risks data
+  const [config, setConfig] = useState({ demo: false });
   const [mode, setMode] = useState(/** @type {'server' | 'device'} */ ('server'));
   const [invite, setInvite] = useState(/** @type {string | null} */ (readInvite()));
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -51,6 +59,16 @@ export function App({ api: injected, deviceKeys = true }) {
   const [tick, setTick] = useState(0);
 
   const refreshQueued = useCallback(async () => setQueued((await pending()).length), []);
+
+  /** Where a signed-in person lands: the profile form the first time, Pulse after that. A failed check never blocks them. */
+  const enter = useCallback(async () => {
+    try {
+      const p = await api('GET', '/api/me/profile');
+      setView(p && p.needsSetup ? 'setup' : 'pulse');
+    } catch { setView('pulse'); }
+  }, [api]);
+
+  useEffect(() => { getConfig().then(setConfig).catch(() => {}); }, []);
 
   const sync = useCallback(async () => {
     const m = (await kvGet(MODE)) || 'server';
@@ -63,10 +81,10 @@ export function App({ api: injected, deviceKeys = true }) {
     (async () => {
       setMode(/** @type {'server' | 'device'} */ ((await kvGet(MODE)) || 'server'));
       if (invite) { setView('onboard'); return; }
-      setView((await kvGet(TOKEN)) ? 'inbox' : 'landing');
+      if (await kvGet(TOKEN)) await enter(); else setView('landing');
       refreshQueued();
     })();
-  }, [invite, refreshQueued]);
+  }, [invite, refreshQueued, enter]);
 
   useEffect(() => {
     const up = () => { setOnline(true); sync(); };
@@ -79,7 +97,7 @@ export function App({ api: injected, deviceKeys = true }) {
     await kvSet(TOKEN, token); await kvSet(MODE, m || 'server');
     setMode(/** @type {'server' | 'device'} */ (m || 'server')); setInvite(null);
     window.history.replaceState(null, '', window.location.pathname);
-    setView('inbox');
+    await enter();
   }
   const expired = useCallback(async () => { await kvDel(TOKEN); setView('landing'); }, []);
   const out = async () => { await kvDel(TOKEN); await kvDel(MODE); setView('landing'); };
@@ -88,22 +106,28 @@ export function App({ api: injected, deviceKeys = true }) {
     <>
       <header>
         <h1>Ground Truth</h1>
-        {(view === 'inbox' || view === 'data') && (
+        {(view === 'pulse' || view === 'inbox' || view === 'risks' || view === 'data') && (
           <nav aria-label="Main">
-            <button type="button" className="secondary" onClick={() => setView('inbox')}>Questions</button>
-            <button type="button" className="secondary" onClick={() => setView('data')}>My data</button>
+            <button type="button" className="secondary" aria-current={view === 'pulse' ? 'page' : undefined} onClick={() => setView('pulse')}>Pulse</button>
+            <button type="button" className="secondary" aria-current={view === 'inbox' ? 'page' : undefined} onClick={() => setView('inbox')}>Questions</button>
+            <button type="button" className="secondary" aria-current={view === 'risks' ? 'page' : undefined} onClick={() => setView('risks')}>Risks</button>
+            <button type="button" className="secondary" aria-current={view === 'data' ? 'page' : undefined} onClick={() => setView('data')}>My data</button>
             <button type="button" className="secondary" onClick={out}>Sign out</button>
           </nav>
         )}
       </header>
+      <DemoBanner />
       {!online && <div className="banner" role="status">You are offline. You can still answer; answers are sent when you reconnect.</div>}
       {online && queued > 0 && <div className="banner" role="status">{queued} answer{queued === 1 ? '' : 's'} waiting to send. <button type="button" className="secondary" onClick={sync}>Send now</button></div>}
       <main>
         {view === 'loading' && <p>Loading…</p>}
-        {view === 'landing' && <Landing onRestored={() => hasDeviceSecret()} />}
+        {view === 'landing' && <Landing onRestored={() => hasDeviceSecret()} demo={config.demo} api={api} deviceKeys={deviceKeys} onDone={signedIn} />}
         {view === 'onboard' && invite && <Onboard api={api} invite={invite} deviceKeys={deviceKeys} onDone={signedIn} />}
+        {view === 'setup' && <Profile api={api} setup onSaved={() => setView('pulse')} />}
+        {view === 'pulse' && <Pulse api={api} mode={mode} onExpired={expired} onOpenQuestions={() => setView('inbox')} refreshKey={tick} />}
         {view === 'inbox' && <Inbox api={api} mode={mode} onExpired={expired} refreshKey={tick} />}
-        {view === 'data' && <MyData api={api} mode={mode} onErased={out} />}
+        {view === 'risks' && <Risks api={api} onExpired={expired} />}
+        {view === 'data' && <><Profile api={api} /><MyData api={api} mode={mode} onErased={out} /></>}
       </main>
     </>
   );

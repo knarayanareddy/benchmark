@@ -1,6 +1,6 @@
 # Deploying the service
 
-**Status: written, not run.** Docker was not available where this was developed, so the `Dockerfile` and `deploy/` files have never been built or executed. What *was* run: the service against a real Postgres wire protocol (the `pg` client), the migration SQL and role grants on a Postgres engine, and the pages in a browser against the Node process. Treat the container files as a starting point to test, not a tested artefact.
+**Status: written, not run.** Docker was not available where this was developed (no daemon), so the `Dockerfile` and `deploy/` files have never been built or executed. What *was* run: the service against a real Postgres wire protocol (the `pg` client), the migration SQL and role grants on a Postgres engine, and the pages in a browser against the Node process. Treat the container files as a starting point to test, not a tested artefact.
 
 ## What you need
 
@@ -31,6 +31,12 @@ Forward-only. There is no `down`: a destructive change ships in two releases, **
 | Device-held anonymous keys | `node packages/service/bin/blind-keygen.mjs > blind-key.pem`, set `BENCHMARK_BLIND_KEY_FILE` | the option is not offered |
 | Two-moderator safety override | `node packages/service/bin/breakglass-keygen.mjs`, give the service only the **public** key (`BENCHMARK_BREAKGLASS_PUBLIC_KEY_FILE`), keep the private key offline with the moderators who may approve | there is no override, and the consent text says so |
 | Sensitive-country list for publication credit | `BENCHMARK_SENSITIVE_COUNTRIES="TCD,SDN,..."` (ISO 3-letter codes) | a conservative default list applies; naming in those countries needs an extra acknowledgement |
+| Risk browser data | `BENCHMARK_RADAR_FILE=/path/to/risk-radar.json` (the organisers' export as JSON) | the service reads `data/risk-radar.json`, which the image also contains; if that file is missing the browser is empty and the service still starts, with a warning |
+| Demo mode | `BENCHMARK_DEMO=1` (see the warning below) | off: no try-the-demo entry, no demo accounts, no demo questions, no demo credentials |
+
+**Demo mode must never run on a real pilot database, and never on a public URL that real experts use.** With `BENCHMARK_DEMO=1` the service seeds a synthetic panel and demo questions into whatever database it is given and lets anyone open an account without an invite. It also registers two moderator credentials for the showcase: random per boot (or exactly two values in `BENCHMARK_DEMO_STAFF_CREDENTIALS`), printed to the server console only and never served over HTTP. They work only when OIDC is not configured (`OIDC_ISSUER` unset). Anyone who can read the console or the log can sign in as a moderator, so keep that log private. With `DATABASE_URL` set the service refuses to start unless `BENCHMARK_DEMO_ALLOW_DATABASE=1` is also set. Demo data is labelled, but only the second-look analysis skips it: it still flows through released aggregates (`docs/05-service-and-privacy.md`), which is why a demo deployment must not share a database with a pilot.
+
+**The risk radar is copied into the container image.** The `Dockerfile` copies `data/risk-radar.json` (the organisers' export, already in the repository) to `/app/data/`, and `.dockerignore` re-includes that one file while excluding the rest of `data/`. The compose file needs no radar mount. To use a different export, set `BENCHMARK_RADAR_FILE` to a path inside the container and mount that file there (for example a read-only bind mount or a Docker secret). The service never serves the file itself. The image has not been built, so the copy is untested.
 
 Who maintains the sensitive-country list, who moderates the roundtable, and who is the second reviewer of a publication are decisions for ACAPS, not settings (`docs/09-roundtable-and-credit.md`).
 
@@ -56,6 +62,8 @@ Both must be at least 16 characters and different from each other; the service r
 ## Before real experts are invited
 
 - [ ] Run the migration and the service as above, and read `docs/05-service-and-privacy.md`.
+- [ ] `BENCHMARK_DEMO` is unset, and the start-up log shows no "DEMO MODE" line.
+- [ ] The risk radar is loaded: the start-up log has no "no radar loaded" warning, and `GET /api/risks` returns risks.
 - [ ] Sign in as staff through your real identity provider (this path has only met a fake one).
 - [ ] Test backup and restore of the database, and store the secrets (and the blind key) separately from it.
 - [ ] Have a cryptographer review `packages/core/src/blind.js` before offering device-held keys, or leave `BENCHMARK_BLIND_KEY` unset.
