@@ -24,8 +24,10 @@ function Landing({ onRestored }) {
     catch (e) { setMsg({ kind: 'err', text: e instanceof Error ? e.message : String(e) }); }
   }
   return (
-    <section>
+    <section className="hero">
+      <p className="eyebrow">Invitation-only expert panel</p>
       <h2>Ground Truth</h2>
+      <p className="page-sub">You help sharpen risk analysis by saying how likely you think an event is, in your own words and numbers, and by telling the analysts when a question is badly framed. You choose how identifiable you are, and you can erase everything.</p>
       <p>This is an invitation-only panel. Open the personal link you were sent to take part. If your link has expired, ask your coordinator for a new one.</p>
       <details>
         <summary className="muted">I chose a device-held key and I am on a new phone</summary>

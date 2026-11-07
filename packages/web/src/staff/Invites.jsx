@@ -40,7 +40,7 @@ export function Invites({ api, me }) {
         <h2>Experts</h2>
         <p className="muted">A returning expert (new phone, expired session) gets a fresh link. Their level and consent do not change.</p>
         {experts.data && (experts.data.length
-          ? <table><thead><tr><th>Expert</th><th>Countries</th><th /></tr></thead><tbody>
+          ? <table className="stack"><thead><tr><th>Expert</th><th>Countries</th><th /></tr></thead><tbody>
             {experts.data.map((x) => (
               <tr key={x.id}><td>{x.name || x.id}{!x.joined && <span className="tag">not joined yet</span>}</td><td>{x.countries.join(', ')}</td>
                 <td>{x.joined && <button type="button" className="secondary" onClick={() => reinvite(x.id)}>New link</button>}</td></tr>

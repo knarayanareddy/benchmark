@@ -7,14 +7,25 @@ import { anonymous } from '../lib/send.js';
 import { SecondLook } from './SecondLook.jsx';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
+/** Plain words for the expert's own number, so a slider position means something. Never a reference to anyone else's view. @param {number} p */
+function verbal(p) {
+  if (p < 8) return 'Almost certainly not';
+  if (p < 25) return 'Unlikely';
+  if (p < 45) return 'Somewhat unlikely';
+  if (p < 56) return 'A toss-up';
+  if (p < 75) return 'Somewhat likely';
+  if (p < 92) return 'Likely';
+  return 'Almost certain';
+}
+
 const KINDS = [
   ['two_risks', 'This is really two questions'], ['window', 'The time window is wrong'],
   ['already_happening', 'This has already happened'], ['intent_not_condition', 'This is about intent, not something observable'],
 ];
 
 function describeRelease(r) {
-  if (!r || r.suppressed) return <p className="muted">The panel result is not published yet.</p>;
-  return <p>Panel ({r.n} experts): {pct(r.estimate)}, range {pct(r.lo)}–{pct(r.hi)}.</p>;
+  if (!r || r.suppressed) return <p className="panel-line muted">The panel result is not published yet.</p>;
+  return <p className="panel-line">Panel ({r.n} experts): {pct(r.estimate)}, range {pct(r.lo)}–{pct(r.hi)}.</p>;
 }
 
 function Objection({ api, card }) {
@@ -32,7 +43,7 @@ function Objection({ api, card }) {
   }
   return (
     <div>
-      <div className="row"><button type="button" className="secondary" onClick={() => setOpen(!open)}>Something is wrong with this question</button></div>
+      <div className="row"><button type="button" className="secondary link" onClick={() => setOpen(!open)}>Something is wrong with this question</button></div>
       {open && (
         <div>
           <label htmlFor={`k-${card.id}`}>What is wrong?</label>
@@ -116,28 +127,44 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
       ? <p className="muted">Loading…</p>
       : <div className="row"><button type="button" className="secondary" onClick={openLook}>Look at the background first (optional)</button></div>);
   return (
-    <div className="card">
+    <div className="card question">
+      <div className="pills">
+        {card.country && <span className="pill teal">{card.country}</span>}
+        {card.window && <span className="pill">Resolves by {card.window.to}</span>}
+        {revise && <span className="pill indigo">Round 2 · revision</span>}
+      </div>
       <h3>{card.statement}</h3>
-      <p className="muted">{card.country}{card.window ? ` · resolves by ${card.window.to}` : ''}{revise ? ' · round 2' : ''}</p>
       {revise
         ? <>{describeRelease(card.release)}{first != null && <p className="muted">Your first answer was {pct(first)}. You may revise it.</p>}</>
-        : <p className="muted">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
+        : <p className="callout">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
       {blocked ? <div className="msg warn">{blocked}</div> : (
         <>
           {lookBlock}
           {lookError && <div className="msg err" role="alert">{lookError}</div>}
-          <output className="big" htmlFor={`s-${card.id}`}>{valid ? `${value}%` : '—'}</output>
-          <input type="range" id={`s-${card.id}`} min={1} max={99} step={1} value={value ?? 50} disabled={done}
-            className={value == null ? 'untouched' : undefined}
-            aria-label="Your probability that this happens"
-            onChange={(e) => setValue(Number(e.target.value))}
-            // A tap exactly on the resting thumb fires no change event, so a pointer release counts as choosing it.
-            // Keys do not need this: every arrow, Home, End and Page key moves the thumb and fires a change.
-            // (A key-up handler would record 50 as an answer just from tabbing into the slider.)
-            onPointerUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }} />
-          <label htmlFor={`n-${card.id}`} className="plain">Or type it (1–99)</label>
-          <input type="number" id={`n-${card.id}`} min={1} max={99} step={1} inputMode="numeric" disabled={done}
-            value={value ?? ''} onChange={(e) => setValue(e.target.value === '' ? null : Number(e.target.value))} />
+          <div className="estimate">
+            <div className="estimate-head">
+              <span className="what">Your estimate</span>
+              <div className="readout-wrap">
+                <output className={`big${valid ? '' : ' empty'}`} htmlFor={`s-${card.id}`}>{valid ? `${value}%` : '—'}</output>
+                <div className="verbal">{valid ? verbal(/** @type {number} */ (value)) : 'Move the slider to answer'}</div>
+              </div>
+            </div>
+            <input type="range" id={`s-${card.id}`} min={1} max={99} step={1} value={value ?? 50} disabled={done}
+              className={value == null ? 'untouched' : undefined}
+              style={/** @type {any} */ ({ '--pct': `${((value ?? 50) - 1) / 98 * 100}%` })}
+              aria-label="Your probability that this happens"
+              onChange={(e) => setValue(Number(e.target.value))}
+              // A tap exactly on the resting thumb fires no change event, so a pointer release counts as choosing it.
+              // Keys do not need this: every arrow, Home, End and Page key moves the thumb and fires a change.
+              // (A key-up handler would record 50 as an answer just from tabbing into the slider.)
+              onPointerUp={(e) => { if (value == null) setValue(Number(e.currentTarget.value)); }} />
+            <div className="scale"><span>Unlikely</span><span>Toss-up</span><span>Likely</span></div>
+            <div className="typed">
+              <label htmlFor={`n-${card.id}`} className="plain">Or type it (1–99)</label>
+              <input type="number" id={`n-${card.id}`} min={1} max={99} step={1} inputMode="numeric" disabled={done}
+                value={value ?? ''} onChange={(e) => setValue(e.target.value === '' ? null : Number(e.target.value))} />
+            </div>
+          </div>
           {value != null && !valid && <div className="msg warn" role="alert">Use a whole number from 1 to 99.</div>}
           <div className="row">
             {done ? <button type="button" className="secondary" onClick={onNext}>Next question</button>

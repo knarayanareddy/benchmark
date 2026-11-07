@@ -83,8 +83,8 @@ function Row({ api, c, reload }) {
   return (
     <tr>
       <td><strong>{c.id}</strong><br />{c.statement}</td>
-      <td><span className="tag">{c.status}</span><span className="tag">round {c.round}</span>{c.hasSecondLook && <span className="tag">background set</span>}<br />{c.responses} {c.responses === 1 ? 'answer' : 'answers'}</td>
-      <td>
+      <td className="state"><span className={`tag ${c.status === 'open' ? 'teal' : c.status === 'closed' ? 'amber' : ''}`}>{c.status}</span><span className="tag">round {c.round}</span>{c.hasSecondLook && <span className="tag indigo">background set</span>}<br />{c.responses} {c.responses === 1 ? 'answer' : 'answers'}</td>
+      <td className="actions">
         {c.status === 'open' && <button type="button" className="secondary" onClick={() => act(() => api('POST', `/api/staff/cards/${c.id}/close`))}>Close round</button>}
         {c.status === 'closed' && c.round === 1 && <button type="button" className="secondary" onClick={() => act(() => api('POST', `/api/staff/cards/${c.id}/round2`))}>Open round 2</button>}
         {['open', 'closed'].includes(c.status) && <button type="button" className="secondary" onClick={() => setResolve(!resolve)}>Resolve</button>}
@@ -131,22 +131,24 @@ export function Cards({ api }) {
         <h2>Cards</h2>
         {error && <div className="msg err" role="alert">{error}</div>}
         {data && (data.length
-          ? <table><thead><tr><th>Card</th><th>State</th><th>Actions</th></tr></thead><tbody>{data.map((c) => <Row key={c.id} api={api} c={c} reload={reload} />)}</tbody></table>
+          ? <table className="stack"><thead><tr><th>Card</th><th>State</th><th>Actions</th></tr></thead><tbody>{data.map((c) => <Row key={c.id} api={api} c={c} reload={reload} />)}</tbody></table>
           : <p className="muted">No cards yet.</p>)}
       </section>
       <section>
         <h2>Author a card</h2>
         <p className="muted">A card opens only with real dates, a written objective, an external source and a named resolver, fixed now and never at resolution.</p>
-        <label htmlFor="statement">Statement</label><textarea id="statement" value={f.statement} onChange={set('statement')} />
-        <label htmlFor="country">Country (ISO code)</label><input id="country" type="text" value={f.country} onChange={set('country')} />
-        <label htmlFor="region">Region (optional)</label><input id="region" type="text" value={f.region} onChange={set('region')} />
-        <label htmlFor="theme">Theme (optional)</label><input id="theme" type="text" value={f.theme} onChange={set('theme')} />
-        <label htmlFor="from">Window starts</label><input id="from" type="date" value={f.from} onChange={set('from')} />
-        <label htmlFor="to">Window ends</label><input id="to" type="date" value={f.to} onChange={set('to')} />
-        <label htmlFor="objective">Objective: what exactly counts as “yes”?</label><textarea id="objective" value={f.objective} onChange={set('objective')} />
-        <label htmlFor="source">Resolution source</label><select id="source" value={f.source} onChange={set('source')}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</select>
-        <label htmlFor="resolver">Named resolver</label><input id="resolver" type="text" value={f.resolver} onChange={set('resolver')} />
-        <label htmlFor="prob">ACAPS’s own rating of this risk (kept for scoring; never shown to experts before they answer)</label><select id="prob" value={f.probability} onChange={set('probability')}>{BANDS.map((s) => <option key={s}>{s}</option>)}</select>
+        <div className="form-grid">
+          <div className="field wide"><label htmlFor="statement">Statement</label><textarea id="statement" value={f.statement} onChange={set('statement')} /></div>
+          <div className="field"><label htmlFor="country">Country (ISO code)</label><input id="country" type="text" value={f.country} onChange={set('country')} /></div>
+          <div className="field"><label htmlFor="region">Region (optional)</label><input id="region" type="text" value={f.region} onChange={set('region')} /></div>
+          <div className="field"><label htmlFor="theme">Theme (optional)</label><input id="theme" type="text" value={f.theme} onChange={set('theme')} /></div>
+          <div className="field"><label htmlFor="source">Resolution source</label><select id="source" value={f.source} onChange={set('source')}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div className="field"><label htmlFor="from">Window starts</label><input id="from" type="date" value={f.from} onChange={set('from')} /></div>
+          <div className="field"><label htmlFor="to">Window ends</label><input id="to" type="date" value={f.to} onChange={set('to')} /></div>
+          <div className="field wide"><label htmlFor="objective">Objective: what exactly counts as “yes”?</label><textarea id="objective" value={f.objective} onChange={set('objective')} /></div>
+          <div className="field"><label htmlFor="resolver">Named resolver</label><input id="resolver" type="text" value={f.resolver} onChange={set('resolver')} /></div>
+          <div className="field"><label htmlFor="prob">ACAPS’s own rating of this risk (kept for scoring; never shown to experts before they answer)</label><select id="prob" value={f.probability} onChange={set('probability')}>{BANDS.map((s) => <option key={s}>{s}</option>)}</select></div>
+        </div>
         <div className="row"><button type="button" onClick={create}>Create card</button></div>
         {msg && <div className={`msg ${msg.kind}`} role={msg.kind === 'err' ? 'alert' : 'status'}>{msg.text}</div>}
       </section>

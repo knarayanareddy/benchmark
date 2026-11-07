@@ -49,6 +49,8 @@ export function Inbox({ api, mode, onExpired, refreshKey = 0 }) {
   const ack = async (id) => { await api('DELETE', `/api/me/notices/${encodeURIComponent(id)}`); load(); };
   return (
     <>
+      <h1 className="page-title">Your questions</h1>
+      <p className="page-sub">Each one takes about a minute and a half. Answer from your own knowledge first; there is no right way to feel about a number.</p>
       {error && <div className="msg warn" role="status">{error}</div>}
       {box.notices?.length > 0 && (
         <section aria-label="Notices">

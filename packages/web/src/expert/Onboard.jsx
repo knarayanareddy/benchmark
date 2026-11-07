@@ -40,8 +40,14 @@ export function Onboard({ api, invite, deviceKeys, onDone }) {
   }
 
   const ready = consent && accepted && (!device || saved);
+  // Where the person is, shown as three steps. Purely a picture of the state above; nothing gates on it.
+  const stepNow = !consent ? 1 : ready ? 3 : 2;
+  const STEPS = ['Choose how you appear', 'Read what it means', 'Confirm'];
   return (
     <section>
+      <ol className="steps" aria-label="Progress">
+        {STEPS.map((s, i) => <li key={s} className={i + 1 === stepNow ? 'now' : i + 1 < stepNow ? 'done' : ''} aria-current={i + 1 === stepNow ? 'step' : undefined}>{i + 1}. {s}</li>)}
+      </ol>
       <h2>Welcome</h2>
       <p>You can answer a question in about ninety seconds. First, choose how your name is handled. You can erase everything later.</p>
       <fieldset style={{ border: 0, padding: 0 }}>
@@ -63,7 +69,7 @@ export function Onboard({ api, invite, deviceKeys, onDone }) {
         </label>
       )}
 
-      {consent && <pre className="consent">{consent.text}</pre>}
+      {consent && <><h5>What this means for you</h5><pre className="consent">{consent.text}</pre></>}
 
       {device && recovery && (
         <div className="msg warn">
