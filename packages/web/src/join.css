@@ -1,0 +1,14 @@
+/* The Join the circle wizard. The look of .choice, .steps, .consent, .recovery and .msg comes from styles.css. */
+.join-step:focus { outline: 2px solid var(--teal-700); outline-offset: 4px; border-radius: .25rem; }
+.join .field-label { font-weight: 600; margin: .9rem 0 .3rem; }
+.join .callout { margin-top: 0; }
+.join-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem; margin-top: 1.2rem; }
+.join .msg ul { margin: 0; padding-left: 1.2rem; }
+.choice.nested { margin-left: 1.5rem; }
+.audience { background: var(--stone-50); border: 1px solid var(--stone-200); border-radius: .9rem; padding: .9rem 1rem; margin: .9rem 0; }
+.audience h4 { margin: 0 0 .5rem; }
+.audience ul { list-style: none; margin: 0 0 .6rem; padding: 0; }
+.audience li { margin: .35rem 0; font-size: .92rem; color: var(--ink-2); }
+.summary { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1rem; margin: .9rem 0; font-size: .92rem; }
+.summary dt { color: var(--ink-3); }
+.summary dd { margin: 0; color: var(--ink); }

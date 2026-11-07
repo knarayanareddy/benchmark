@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
-import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { spawn, execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { BACKENDS, SECRETS, worldFor, CARD, many } from './helpers.js';
@@ -307,18 +308,37 @@ for (const backend of BACKENDS) {
     const h = await boot(w);
     try {
       assert.equal((await h.call('POST', '/api/demo/join', { body: joinInput() })).status, 404);
-      assert.deepEqual((await h.call('GET', '/api/config')).json, { demo: false });
+      assert.deepEqual((await h.call('GET', '/api/config')).json, { demo: false, deviceKeys: false, breakGlass: false });
     } finally { await h.close(); }
   });
 
-  baseTest(`[${backend}] HTTP: with demo on, the join route works and /api/config reports only the demo flag`, async () => {
+  baseTest(`[${backend}] HTTP: /api/config answers exactly three booleans, each taken from its own config flag, and no key material`, async () => {
+    const w = await worldFor(backend);
+    for (const config of [
+      { demo: false, deviceKeys: true, breakGlass: false },
+      { demo: false, deviceKeys: false, breakGlass: true },
+      { demo: true, deviceKeys: true, breakGlass: true },
+      {},
+    ]) {
+      const h = await boot(w, { config });
+      try {
+        const res = await h.call('GET', '/api/config');
+        assert.equal(res.status, 200);
+        assert.deepEqual(Object.keys(res.json).sort(), ['breakGlass', 'demo', 'deviceKeys']);
+        assert.deepEqual(res.json, { demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass) });
+        assert.doesNotMatch(JSON.stringify(res.json), /BEGIN|PRIVATE|MII/);
+      } finally { await h.close(); }
+    }
+  });
+
+  baseTest(`[${backend}] HTTP: with demo on, the join route works and /api/config reports only the three flags`, async () => {
     const w = await worldFor(backend, { demo: true });
     await w.svc.seedDemo();
     const h = await boot(w, { config: { demo: true } });
     try {
       const cfg = await h.call('GET', '/api/config');
-      assert.deepEqual(Object.keys(cfg.json), ['demo']);
-      assert.deepEqual(cfg.json, { demo: true });
+      assert.deepEqual(Object.keys(cfg.json).sort(), ['breakGlass', 'demo', 'deviceKeys']);
+      assert.deepEqual(cfg.json, { demo: true, deviceKeys: false, breakGlass: false });
       assert.doesNotMatch(JSON.stringify(cfg.json), /demo-moderator|credential|password|demo-[A-Za-z0-9_-]{8,}/i);
       const bad = await h.call('POST', '/api/demo/join', { body: joinInput({ consentVersion: 'stale' }) });
       assert.equal(bad.status, 400);
@@ -383,7 +403,7 @@ baseTest('[memory] serve.mjs in demo mode prints two random staff credentials th
     assert.notEqual(printed[0], printed[1]);
     const base = `http://127.0.0.1:${port}`;
     const cfg = await (await fetch(`${base}/api/config`)).text();
-    assert.deepEqual(JSON.parse(cfg), { demo: true });
+    assert.deepEqual(JSON.parse(cfg), { demo: true, deviceKeys: false, breakGlass: false });
     for (const c of printed) assert.ok(!cfg.includes(c));
     const signIn = (credential) => fetch(`${base}/api/staff/session`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ credential }),
@@ -392,6 +412,45 @@ baseTest('[memory] serve.mjs in demo mode prints two random staff credentials th
     assert.notEqual((await signIn('demo-moderator-1')).status, 200, 'the old fixed credential does not');
   } finally {
     child.kill();
+  }
+});
+
+// What serve.mjs tells browsers about the keys it was given: booleans, never the keys themselves.
+const KEYGEN = fileURLToPath(new URL('../bin/blind-keygen.mjs', import.meta.url));
+/** serve.mjs in memory mode with `extra` env; resolves once it is listening. */
+async function serveWith(extra) {
+  const port = await freePort();
+  const child = spawn(process.execPath, [SERVE], {
+    env: childEnv({ BENCHMARK_ALLOW_HTTP: '1', PORT: String(port), BENCHMARK_STATIC_DIR: tmpdir(), BENCHMARK_BALLOT_SECRET: SECRETS.ballot, BENCHMARK_ALIAS_SECRET: SECRETS.alias, ...extra }),
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let out = '';
+  child.stdout.on('data', (d) => { out += d; });
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`serve.mjs did not start: ${out}`)), 20000);
+    child.stdout.on('data', () => { if (out.includes('listening on')) { clearTimeout(timer); resolve(); } });
+    child.on('exit', (code) => { clearTimeout(timer); reject(new Error(`serve.mjs exited with ${code}`)); });
+  });
+  return { base: `http://127.0.0.1:${port}`, stop: () => child.kill() };
+}
+
+baseTest('[memory] serve.mjs reports deviceKeys from BENCHMARK_BLIND_KEY_FILE and breakGlass from the break-glass public key, as booleans only', async () => {
+  const dir = fs.mkdtempSync(path.join(tmpdir(), 'config-'));
+  const blindFile = path.join(dir, 'blind.pem');
+  fs.writeFileSync(blindFile, execFileSync(process.execPath, [KEYGEN], { stdio: ['ignore', 'pipe', 'ignore'] }));
+  const breakGlassPem = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ type: 'spki', format: 'pem' });
+  const servers = [];
+  try {
+    const none = await serveWith({}); servers.push(none);
+    const blind = await serveWith({ BENCHMARK_BLIND_KEY_FILE: blindFile }); servers.push(blind);
+    const both = await serveWith({ BENCHMARK_BLIND_KEY_FILE: blindFile, BENCHMARK_BREAKGLASS_PUBLIC_KEY: breakGlassPem }); servers.push(both);
+    const cfg = async (s) => (await fetch(`${s.base}/api/config`)).text();
+    assert.deepEqual(JSON.parse(await cfg(none)), { demo: false, deviceKeys: false, breakGlass: false });
+    assert.deepEqual(JSON.parse(await cfg(blind)), { demo: false, deviceKeys: true, breakGlass: false });
+    assert.deepEqual(JSON.parse(await cfg(both)), { demo: false, deviceKeys: true, breakGlass: true });
+    for (const s of servers) assert.doesNotMatch(await cfg(s), /BEGIN|PRIVATE|MII/);
+  } finally {
+    for (const s of servers) s.stop();
   }
 });
 

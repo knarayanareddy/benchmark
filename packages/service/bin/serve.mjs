@@ -141,7 +141,8 @@ const verifyStaff = async (req, body) =>
   oidc ? null : staff.get(hashToken(String(body.credential || ''))) || null;
 
 createServer({
-  service, oidc, verifyStaff, config: { demo },
+  service, oidc, verifyStaff,
+  config: { demo, deviceKeys: Boolean(read('BENCHMARK_BLIND_KEY')), breakGlass: Boolean(read('BENCHMARK_BREAKGLASS_PUBLIC_KEY')) },
   ready: async () => { await stores.answers.cards.get('__ready__'); await stores.roster.experts.get('__ready__'); },
   requireHttps: env.BENCHMARK_ALLOW_HTTP !== '1',
   trustProxy: env.BENCHMARK_TRUST_PROXY === '1',

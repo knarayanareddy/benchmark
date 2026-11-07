@@ -1,101 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { resetConfigCache } from '../lib/config.js';
+import { render, screen, waitFor, fireEvent, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from './App.jsx';
-import { Onboard } from './Onboard.jsx';
 import { CardView } from './CardView.jsx';
 import { Inbox } from './Inbox.jsx';
 import { MyData } from './MyData.jsx';
 import { routes, fail, blindServer, card, emptyInbox, json } from '../test-helpers.js';
 import { kvGet, kvSet } from '../lib/kv.js';
 import { getSecret, hasDeviceSecret, createSecret, obtainBallot, cachedBallot } from '../lib/device.js';
-import { decodeRecovery } from '../lib/recovery.js';
 import { pending } from '../lib/queue.js';
 
 /** What the Pulse screen needs to render, with nothing asked of the person. */
 const EMPTY_PULSE = { week: { from: '2026-11-01', to: '2026-11-08' }, weeklyCap: 3, minMatch: 30, asks: [], radar: [], outside: 0, waiting: { revise: 0, discussion: 0, offers: 0 }, deviceMode: false };
 
-const CONSENT = { version: '2026-11-v2', level: 'x', text: 'Consent 2026-11-v2\nResidual risk: something' };
-
 beforeEach(() => { window.history.replaceState(null, '', '/'); });
-
-describe('onboarding', () => {
-  const api = () => routes({
-    'GET /api/consent/pseudonymous': { ...CONSENT, text: 'PSEUDO TEXT' },
-    'GET /api/consent/anonymous': { ...CONSENT, text: 'ANON TEXT' },
-    'POST /api/invite/redeem': () => ({ sessionToken: 'tok', mode: 'server', level: 'pseudonymous' }),
-  });
-
-  it('shows the exact consent text, and will not continue until it is accepted', async () => {
-    const a = api(); const done = vi.fn();
-    render(<Onboard api={a} invite="inv" deviceKeys onDone={done} />);
-    const go = screen.getByRole('button', { name: 'Accept and continue' });
-    expect(go).toBeDisabled();
-    await userEvent.click(screen.getByLabelText(/Pseudonymous/));
-    expect(await screen.findByText('PSEUDO TEXT')).toBeInTheDocument();
-    expect(go).toBeDisabled();
-    await userEvent.click(screen.getByLabelText(/I have read this/));
-    expect(go).toBeEnabled();
-    await userEvent.click(go);
-    await waitFor(() => expect(done).toHaveBeenCalledWith({ token: 'tok', mode: 'server', level: 'pseudonymous' }));
-    expect(a).toHaveBeenCalledWith('POST', '/api/invite/redeem', { token: 'inv', level: 'pseudonymous', consentVersion: '2026-11-v2', mode: undefined });
-  });
-
-  it('offers the device-held key only to anonymous experts, and only if the service has it', async () => {
-    const { rerender } = render(<Onboard api={api()} invite="i" deviceKeys onDone={() => {}} />);
-    expect(screen.queryByLabelText(/Keep my key on this device only/)).toBeNull();
-    await userEvent.click(screen.getByLabelText(/^Anonymous/));
-    expect(await screen.findByLabelText(/Keep my key on this device only/)).toBeInTheDocument();
-    rerender(<Onboard api={api()} invite="i" deviceKeys={false} onDone={() => {}} />);
-    expect(screen.queryByLabelText(/Keep my key on this device only/)).toBeNull();
-  });
-
-  it('a device-held key creates a secret, shows its recovery code, and needs it saved before continuing', async () => {
-    const a = routes({
-      'GET /api/consent/anonymous': { ...CONSENT, text: 'ANON TEXT' },
-      'GET /api/consent/anonymous?mode=device': { ...CONSENT, text: 'DEVICE TEXT' },
-      'POST /api/invite/redeem': () => ({ sessionToken: 'tok', mode: 'device', level: 'anonymous' }),
-    });
-    const done = vi.fn();
-    render(<Onboard api={a} invite="inv" deviceKeys onDone={done} />);
-    await userEvent.click(screen.getByLabelText(/^Anonymous/));
-    await userEvent.click(await screen.findByLabelText(/Keep my key on this device only/));
-    expect(await screen.findByText('DEVICE TEXT')).toBeInTheDocument();
-    const code = (await screen.findByTestId('recovery')).textContent;
-    expect(code).toMatch(/^([0-9A-Z]{4}-){13}[0-9A-Z]{2}$/);
-    expect(Buffer.from(decodeRecovery(code))).toEqual(Buffer.from(await getSecret()));
-    const go = screen.getByRole('button', { name: 'Accept and continue' });
-    await userEvent.click(screen.getByLabelText(/I have read this/));
-    expect(go).toBeDisabled();
-    await userEvent.click(screen.getByLabelText(/I have saved my recovery code/));
-    expect(go).toBeEnabled();
-    await userEvent.click(go);
-    await waitFor(() => expect(done).toHaveBeenCalled());
-    expect(a).toHaveBeenCalledWith('POST', '/api/invite/redeem', expect.objectContaining({ mode: 'device' }));
-    expect(JSON.stringify(a.mock.calls)).not.toContain(code);
-  });
-
-  it('switching the device key off removes the secret it had made', async () => {
-    const a = routes({ 'GET /api/consent/anonymous': CONSENT, 'GET /api/consent/anonymous?mode=device': CONSENT });
-    render(<Onboard api={a} invite="inv" deviceKeys onDone={() => {}} />);
-    await userEvent.click(screen.getByLabelText(/^Anonymous/));
-    const box = await screen.findByLabelText(/Keep my key on this device only/);
-    await userEvent.click(box);
-    await screen.findByTestId('recovery');
-    expect(await hasDeviceSecret()).toBe(true);
-    await userEvent.click(box);
-    await waitFor(() => expect(screen.queryByTestId('recovery')).toBeNull());
-  });
-
-  it('shows the service refusing the invite', async () => {
-    const a = routes({ 'GET /api/consent/identified': CONSENT, 'POST /api/invite/redeem': fail(401, 'invite already used') });
-    render(<Onboard api={a} invite="inv" deviceKeys onDone={() => {}} />);
-    await userEvent.click(screen.getByLabelText(/Known/));
-    await userEvent.click(await screen.findByLabelText(/I have read this/));
-    await userEvent.click(screen.getByRole('button', { name: 'Accept and continue' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('invite already used');
-  });
-});
 
 describe('answering', () => {
   const slider = () => screen.getByRole('slider', { name: /probability/i });
@@ -453,23 +372,46 @@ describe('inbox and the whole app', () => {
     expect(Buffer.from(await getSecret())).toEqual(Buffer.from(secret));
   });
 
-  it('an invite link in the address starts onboarding, signs in, and clears the link from the address bar', async () => {
+  it('an invite link in the address starts onboarding, signs in, saves the profile with the new session, and clears the link from the address bar', async () => {
     window.history.replaceState(null, '', '/#invite=abc');
     const a = routes({
-      'GET /api/consent/identified': CONSENT,
+      'GET /api/consent/identified': { version: '2026-11-v3', text: 'Consent 2026-11-v3 - Known' },
       'POST /api/invite/redeem': () => ({ sessionToken: 'newtok', mode: 'server', level: 'identified' }),
       'GET /api/me/profile': { needsSetup: false },
       'GET /api/pulse': EMPTY_PULSE,
       'GET /api/inbox': emptyInbox({ toAnswer: [card()] }),
     });
-    render(<App api={a} />);
-    await userEvent.click(await screen.findByLabelText(/Known/));
-    await userEvent.click(await screen.findByLabelText(/I have read this/));
-    await userEvent.click(screen.getByRole('button', { name: 'Accept and continue' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Questions' }));
-    expect(await screen.findByText(/Cholera cases in Chad/)).toBeInTheDocument();
-    expect(window.location.hash).toBe('');
-    expect(await kvGet('session.expert')).toBe('newtok');
+    const fetched = vi.fn(async () => json({}));
+    vi.stubGlobal('fetch', fetched);
+    try {
+      render(<App api={a} />);
+      expect(await screen.findByText('Your invitation was recognised.')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+      await userEvent.type(screen.getByLabelText('Search countries'), 'Chad');
+      await userEvent.click(screen.getByRole('button', { name: 'Chad' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+      await userEvent.click(await screen.findByRole('radio', { name: /^Known/ }));
+      await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+      await userEvent.click(await screen.findByLabelText(/I have read this/));
+      await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
+      await userEvent.click(await screen.findByRole('button', { name: 'Questions' }));
+      expect(await screen.findByText(/Cholera cases in Chad/)).toBeInTheDocument();
+      expect(window.location.hash).toBe('');
+      expect(await kvGet('session.expert')).toBe('newtok');
+      expect(fetched).toHaveBeenCalledWith('/api/me/profile', expect.objectContaining({
+        method: 'PUT',
+        headers: expect.objectContaining({ authorization: 'Bearer newtok' }),
+      }));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('the landing offers an invitation, which opens the wizard at the invitation step', async () => {
+    render(<App api={routes({})} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'I have an invitation' }));
+    expect(await screen.findByLabelText('Paste your invitation link or code')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Your invitation' })).toBeInTheDocument();
   });
 
   it('answers queued offline are sent when the connection returns', async () => {
@@ -493,5 +435,82 @@ describe('inbox and the whole app', () => {
     await screen.findByText(/New questions/);
     window.dispatchEvent(new Event('offline'));
     expect(await screen.findByText(/You are offline. You can still answer/)).toBeInTheDocument();
+  });
+});
+
+describe('the wizard follows what the deployment offers', () => {
+  const CONSENTS = {
+    'GET /api/consent/anonymous': { version: '2026-11-v3', text: 'ANON TEXT' },
+    'GET /api/consent/anonymous?mode=device': { version: '2026-11-v3', text: 'DEVICE TEXT' },
+  };
+  const DEVICE_OPTION = /Keep my key on this device only/;
+
+  beforeEach(() => { resetConfigCache(); window.history.replaceState(null, '', '/#invite=abc'); });
+  afterEach(() => { vi.unstubAllGlobals(); resetConfigCache(); });
+
+  /** The config route answers `flags`; any other network request fails. */
+  function serveConfig(flags) {
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      if (url === '/api/config') return json(flags);
+      throw new TypeError('no network in this test');
+    }));
+  }
+
+  /** From the recognised invitation, through the expertise step, to the Anonymous card. The app must be rendered. */
+  async function reachAnonymous() {
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await userEvent.type(screen.getByLabelText('Search countries'), 'Chad');
+    await userEvent.click(screen.getByRole('button', { name: 'Chad' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await userEvent.click(await screen.findByRole('radio', { name: /^Anonymous/ }));
+  }
+
+  it('offers the device-held key only when the server has a blind-signing key', async () => {
+    serveConfig({ demo: false, deviceKeys: false, breakGlass: false });
+    const { unmount } = render(<App api={routes(CONSENTS)} />);
+    await reachAnonymous();
+    expect(screen.queryByLabelText(DEVICE_OPTION)).toBeNull();
+    unmount();
+
+    resetConfigCache();
+    serveConfig({ demo: false, deviceKeys: true, breakGlass: false });
+    render(<App api={routes(CONSENTS)} />);
+    await reachAnonymous();
+    expect(await screen.findByLabelText(DEVICE_OPTION)).toBeInTheDocument();
+  });
+
+  it('shows Loading, and no invitation step, until the config has arrived', async () => {
+    let answer = /** @type {(r: Response) => void} */ (() => {});
+    vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => { answer = resolve; })));
+    render(<App api={routes(CONSENTS)} />);
+    await waitFor(() => expect(screen.getByText('Loading…')).toBeInTheDocument());
+    expect(screen.queryByText('Your invitation was recognised.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
+    await act(async () => { answer(json({ demo: false, deviceKeys: true, breakGlass: false })); });
+    expect(await screen.findByText('Your invitation was recognised.')).toBeInTheDocument();
+  });
+
+  it('a failed config request hides the device-held key (fail closed)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('down'); }));
+    render(<App api={routes(CONSENTS)} />);
+    await reachAnonymous();
+    expect(screen.queryByLabelText(DEVICE_OPTION)).toBeNull();
+  });
+
+  it('the anonymous safety line says two moderators can open it only when the override key is configured', async () => {
+    serveConfig({ demo: false, deviceKeys: false, breakGlass: false });
+    const { unmount } = render(<App api={routes(CONSENTS)} />);
+    await reachAnonymous();
+    let panel = await screen.findByRole('region', { name: 'What each audience sees' });
+    expect(panel).toHaveTextContent('Nobody at ACAPS can open an anonymous objection back to you.');
+    expect(panel).not.toHaveTextContent(/two moderators/);
+    unmount();
+
+    resetConfigCache();
+    serveConfig({ demo: false, deviceKeys: false, breakGlass: true });
+    render(<App api={routes(CONSENTS)} />);
+    await reachAnonymous();
+    panel = await screen.findByRole('region', { name: 'What each audience sees' });
+    expect(panel).toHaveTextContent('two moderators together can open the sealed note');
   });
 });

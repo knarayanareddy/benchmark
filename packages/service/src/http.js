@@ -75,7 +75,7 @@ async function readJson(req, maxBytes) {
 /**
  * @typedef {{ login: () => Promise<string>, callback: (q: { code: string | null, state: string | null }) => Promise<{ id: string, role: string }> }} Oidc
  * @typedef {{
- *   config?: { demo?: boolean },
+ *   config?: { demo?: boolean, deviceKeys?: boolean, breakGlass?: boolean },
  *   service: any, oidc?: Oidc | null, staticDir?: string | null, ready?: () => Promise<void>,
  *   verifyStaff?: (req: any, body: any) => Promise<{ id: string, role: string } | null>,
  *   limits?: Record<string, number>, requireHttps?: boolean, trustProxy?: boolean, now?: () => number
@@ -87,7 +87,7 @@ export function createHandler({
   service,
   oidc = null,
   staticDir = null,
-  config = {},
+  config = { demo: false, deviceKeys: false, breakGlass: false },
   ready = async () => {},
   verifyStaff = async () => null,
   limits = {},
@@ -197,8 +197,8 @@ export function createHandler({
     ['GET', /^\/api\/staff\/links$/, async (req) => service.listLinks(await actorOf(req))],
     ['POST', /^\/api\/staff\/links$/, async (req, m, b) => service.createLink(await actorOf(req), { fromCardId: b.fromCardId, toCardId: b.toCardId, mechanism: b.mechanism, rival: b.rival })],
     ['DELETE', /^\/api\/staff\/links\/([^/]+)$/, async (req, m) => service.removeLink(await actorOf(req), m[1])],
-    // Public: whether this is a showcase deployment. Nothing personal.
-    ['GET', /^\/api\/config$/, async () => ({ demo: Boolean(config.demo) })],
+    // Public: what this deployment offers. Booleans only: no keys, no credentials, nothing personal.
+    ['GET', /^\/api\/config$/, async () => ({ demo: Boolean(config.demo), deviceKeys: Boolean(config.deviceKeys), breakGlass: Boolean(config.breakGlass) })],
     // Demo mode only: an account from the profile the person typed. No invite, no login.
     ['POST', /^\/api\/demo\/join$/, async (req, m, b) => {
       if (!service.demoJoin) throw new NotFoundError('no such route');

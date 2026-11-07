@@ -5,13 +5,12 @@ import { flush, pending } from '../lib/queue.js';
 import { sendEstimate } from '../lib/send.js';
 import { setSecret, hasDeviceSecret } from '../lib/device.js';
 import { decodeRecovery } from '../lib/recovery.js';
-import { Onboard } from './Onboard.jsx';
+import { Join } from './Join.jsx';
 import { Inbox } from './Inbox.jsx';
 import { MyData } from './MyData.jsx';
 import { Pulse } from './Pulse.jsx';
 import { Risks } from './Risks.jsx';
 import { Profile } from './Profile.jsx';
-import { DemoJoin } from './DemoJoin.jsx';
 import { DemoBanner } from '../DemoBanner.jsx';
 import { getConfig } from '../lib/config.js';
 
@@ -22,7 +21,7 @@ export function readInvite() {
   return new URLSearchParams(window.location.hash.slice(1)).get('invite');
 }
 
-function Landing({ onRestored, demo, api, deviceKeys, onDone }) {
+function Landing({ onRestored, demo, onJoin, onDemo }) {
   const [code, setCode] = useState('');
   const [msg, setMsg] = useState(/** @type {{ kind: string, text: string } | null} */ (null));
   async function restore() {
@@ -35,7 +34,10 @@ function Landing({ onRestored, demo, api, deviceKeys, onDone }) {
       <h2>Ground Truth</h2>
       <p className="page-sub">You help sharpen risk analysis by saying how likely you think an event is, in your own words and numbers, and by telling the analysts when a question is badly framed. You choose how identifiable you are, and you can erase everything.</p>
       <p>This is an invitation-only panel. Open the personal link you were sent to take part. If your link has expired, ask your coordinator for a new one.</p>
-      {demo && <DemoJoin api={api} deviceKeys={deviceKeys} onDone={onDone} />}
+      <div className="row">
+        <button type="button" onClick={onJoin}>I have an invitation</button>
+        {demo && <button type="button" className="secondary" onClick={onDemo}>Join the demo</button>}
+      </div>
       <details>
         <summary className="muted">I chose a device-held key and I am on a new phone</summary>
         <label htmlFor="rc">Recovery code</label>
@@ -50,8 +52,8 @@ function Landing({ onRestored, demo, api, deviceKeys, onDone }) {
 /** @param {{ api?: import('../lib/api.js').Api, deviceKeys?: boolean }} props */
 export function App({ api: injected, deviceKeys = true }) {
   const api = useMemo(() => injected || createApi(TOKEN), [injected]);
-  const [view, setView] = useState('loading'); // loading landing onboard setup pulse inbox risks data
-  const [config, setConfig] = useState({ demo: false });
+  const [view, setView] = useState('loading'); // loading landing onboard demo setup pulse inbox risks data
+  const [config, setConfig] = useState(/** @type {import('../lib/config.js').Config | null} */ (null));
   const [mode, setMode] = useState(/** @type {'server' | 'device'} */ ('server'));
   const [invite, setInvite] = useState(/** @type {string | null} */ (readInvite()));
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -68,7 +70,7 @@ export function App({ api: injected, deviceKeys = true }) {
     } catch { setView('pulse'); }
   }, [api]);
 
-  useEffect(() => { getConfig().then(setConfig).catch(() => {}); }, []);
+  useEffect(() => { getConfig().then(setConfig); }, []);
 
   const sync = useCallback(async () => {
     const m = (await kvGet(MODE)) || 'server';
@@ -121,8 +123,10 @@ export function App({ api: injected, deviceKeys = true }) {
       {online && queued > 0 && <div className="banner" role="status">{queued} answer{queued === 1 ? '' : 's'} waiting to send. <button type="button" className="secondary" onClick={sync}>Send now</button></div>}
       <main>
         {view === 'loading' && <p>Loading…</p>}
-        {view === 'landing' && <Landing onRestored={() => hasDeviceSecret()} demo={config.demo} api={api} deviceKeys={deviceKeys} onDone={signedIn} />}
-        {view === 'onboard' && invite && <Onboard api={api} invite={invite} deviceKeys={deviceKeys} onDone={signedIn} />}
+        {view === 'landing' && <Landing onRestored={() => hasDeviceSecret()} demo={config?.demo === true} onJoin={() => setView('onboard')} onDemo={() => setView('demo')} />}
+        {(view === 'onboard' || view === 'demo') && !config && <p>Loading…</p>}
+        {view === 'onboard' && config && <Join api={api} invite={invite} demo={false} deviceKeys={deviceKeys && config.deviceKeys} breakGlass={config.breakGlass} onDone={signedIn} onCancel={() => setView('landing')} />}
+        {view === 'demo' && config && <Join api={api} invite={null} demo deviceKeys={deviceKeys && config.deviceKeys} breakGlass={config.breakGlass} onDone={signedIn} onCancel={() => setView('landing')} />}
         {view === 'setup' && <Profile api={api} setup onSaved={() => setView('pulse')} />}
         {view === 'pulse' && <Pulse api={api} mode={mode} onExpired={expired} onOpenQuestions={() => setView('inbox')} refreshKey={tick} />}
         {view === 'inbox' && <Inbox api={api} mode={mode} onExpired={expired} refreshKey={tick} />}

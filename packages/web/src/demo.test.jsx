@@ -1,20 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getConfig, resetConfigCache } from './lib/config.js';
 import { DemoBanner } from './DemoBanner.jsx';
-import { DemoJoin } from './expert/DemoJoin.jsx';
+import { Join } from './expert/Join.jsx';
 import { routes, fail, json } from './test-helpers.js';
-import { getSecret } from './lib/device.js';
+import { getSecret, hasDeviceSecret } from './lib/device.js';
 import { decodeRecovery } from './lib/recovery.js';
 
-const CONFIG = { demo: true };
-const OFF = { demo: false };
-const CONSENT = { version: '2026-11-v2', text: 'CONSENT TEXT' };
+const CONFIG = { demo: true, deviceKeys: false, breakGlass: false };
+const OFF = { demo: false, deviceKeys: false, breakGlass: false };
+const VERSION = '2026-11-v3';
+const CONSENT = { version: VERSION, text: 'CONSENT TEXT' };
 const CONSENTS = {
   'GET /api/consent/pseudonymous': CONSENT,
   'GET /api/consent/anonymous': CONSENT,
-  'GET /api/consent/anonymous?mode=device': { version: '2026-11-v2', text: 'DEVICE CONSENT' },
+  'GET /api/consent/anonymous?mode=device': { version: VERSION, text: 'DEVICE CONSENT' },
 };
 
 beforeEach(() => resetConfigCache());
@@ -39,9 +40,29 @@ describe('getConfig', () => {
     expect(f).toHaveBeenCalledWith('/api/config');
   });
 
-  it('keeps only the demo flag, even if the server sent anything else', async () => {
-    stubFetch(async () => json({ demo: true, demoStaff: ['demo-secret-credential'] }));
-    expect(await getConfig()).toEqual(CONFIG);
+  it('keeps only the three flags, even if the server sent anything else', async () => {
+    stubFetch(async () => json({ demo: true, deviceKeys: false, breakGlass: false, demoStaff: ['demo-secret-credential'] }));
+    const cfg = await getConfig();
+    expect(cfg).toEqual(CONFIG);
+    expect(Object.keys(cfg).sort()).toEqual(['breakGlass', 'demo', 'deviceKeys']);
+  });
+
+  it('passes deviceKeys and breakGlass through when the server says true', async () => {
+    stubFetch(async () => json({ demo: false, deviceKeys: true, breakGlass: true }));
+    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: true });
+  });
+
+  it('counts any non-boolean or missing flag as off, so only a literal true turns a flag on', async () => {
+    stubFetch(async () => json({ demo: 'yes', deviceKeys: 1, breakGlass: 'true' }));
+    expect(await getConfig()).toEqual(OFF);
+    resetConfigCache();
+    stubFetch(async () => json({ deviceKeys: true }));
+    expect(await getConfig()).toEqual({ demo: false, deviceKeys: true, breakGlass: false });
+  });
+
+  it('fails closed on a malformed body: every flag off, device-held key and override not offered', async () => {
+    stubFetch(async () => new Response('not json', { status: 200 }));
+    expect(await getConfig()).toEqual(OFF);
   });
 
   it('falls back to not-demo when the request fails', async () => {
@@ -51,6 +72,13 @@ describe('getConfig', () => {
 
   it('falls back to not-demo on an error status', async () => {
     stubFetch(async () => json({ error: 'boom' }, 500));
+    expect(await getConfig()).toEqual(OFF);
+  });
+
+  it('a failed request turns deviceKeys and breakGlass off too, and returns a fresh object each time', async () => {
+    stubFetch(async () => { throw new TypeError('network down'); });
+    const a = await getConfig();
+    a.deviceKeys = true;
     expect(await getConfig()).toEqual(OFF);
   });
 
@@ -92,52 +120,72 @@ describe('DemoBanner', () => {
   });
 });
 
-describe('DemoJoin', () => {
-  /** Chooses a level, reads and accepts the consent, and gives a country. */
-  async function fillAndAccept(level = /^Pseudonymous/, country = 'tcd') {
-    await userEvent.type(screen.getByLabelText('Your name'), '  Ana  ');
-    await userEvent.click(screen.getByLabelText(level));
-    await screen.findByText('CONSENT TEXT');
-    await userEvent.click(screen.getByLabelText(/I have read this/));
-    await userEvent.type(screen.getByLabelText('Countries you cover'), country);
+describe('Join in demo mode', () => {
+  /** Demo starts at the expertise step: name, then one country. */
+  async function fillExpertise(name = '  Ana  ', country = 'Chad') {
+    await userEvent.type(screen.getByLabelText('Your name'), name);
+    await userEvent.type(screen.getByLabelText('Search countries'), country);
+    await userEvent.click(screen.getByRole('button', { name: country }));
+    await userEvent.clear(screen.getByLabelText('Search countries'));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
   }
 
-  it('warns that the account is real and the rest is made up, and cannot submit until consent is ticked and a country is given', async () => {
-    const a = routes({ ...CONSENTS, 'POST /api/demo/join': () => ({ sessionToken: 'tok', expertId: 'e1', level: 'pseudonymous', mode: 'server' }) });
-    const done = vi.fn();
-    render(<DemoJoin api={a} deviceKeys onDone={done} />);
-    expect(screen.getByText('Try the demo')).toBeInTheDocument();
+  /** Chooses a level and ticks the box on the confirmation step. */
+  async function chooseAndAccept(level = /^Pseudonymous/) {
+    await userEvent.click(await screen.findByLabelText(level));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await screen.findByText(/CONSENT TEXT|DEVICE CONSENT/);
+    await userEvent.click(screen.getByLabelText(/I have read this/));
+  }
+
+  it('starts at the expertise step with the first pill done, warns that the account is real, and has no minimum-match or region control', () => {
+    render(<Join api={routes(CONSENTS)} invite={null} demo deviceKeys onDone={vi.fn()} onCancel={vi.fn()} />);
+    const pills = within(screen.getByRole('list', { name: 'Progress' })).getAllByRole('listitem');
+    expect(pills).toHaveLength(4);
+    expect(pills[0]).toHaveTextContent(/Invitation, completed/);
+    expect(pills[1]).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('heading', { name: 'Your expertise' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your invitation' })).toBeNull();
+    expect(screen.queryByLabelText('Paste your invitation link or code')).toBeNull();
     expect(screen.queryByLabelText(/Minimum match/)).toBeNull();
     expect(screen.queryByLabelText('Sahel & West/Central Africa')).toBeNull();
     expect(screen.getByText(/This is a demo deployment. Your account is real here, but the questions and the other experts are made up./)).toBeInTheDocument();
-    const go = screen.getByRole('button', { name: 'Join the demo' });
-    expect(go).toBeDisabled();
-    await userEvent.type(screen.getByLabelText('Your name'), 'Ana');
-    await userEvent.click(screen.getByLabelText(/Pseudonymous/));
+  });
+
+  it('cannot go on without a name and a country, and cannot join until consent is ticked', async () => {
+    const a = routes({ ...CONSENTS, 'POST /api/demo/join': () => ({ sessionToken: 'tok', expertId: 'e1', level: 'pseudonymous', mode: 'server' }) });
+    const done = vi.fn();
+    render(<Join api={a} invite={null} demo deviceKeys onDone={done} onCancel={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Enter your name, up to 80 characters.');
+    expect(alert).toHaveTextContent('Choose at least one country.');
+    await fillExpertise();
+    await userEvent.click(await screen.findByLabelText(/^Pseudonymous/));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
     await screen.findByText('CONSENT TEXT');
-    expect(go).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tick the box to confirm you have read this and choose this level.');
+    expect(a).not.toHaveBeenCalledWith('POST', '/api/demo/join', expect.anything());
+    expect(done).not.toHaveBeenCalled();
     await userEvent.click(screen.getByLabelText(/I have read this/));
-    expect(go).toBeDisabled();
-    await userEvent.type(screen.getByLabelText('Countries you cover'), 'TCD');
-    expect(go).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
+    await waitFor(() => expect(done).toHaveBeenCalledWith({ token: 'tok', mode: 'server', level: 'pseudonymous' }));
   });
 
   it('posts the exact body in server mode, and passes the session on', async () => {
     const a = routes({ ...CONSENTS, 'POST /api/demo/join': () => ({ sessionToken: 'tok', expertId: 'e1', level: 'pseudonymous', mode: 'server' }) });
     const done = vi.fn();
-    render(<DemoJoin api={a} deviceKeys onDone={done} />);
-    await userEvent.type(screen.getByLabelText('Your name'), '  Ana  ');
-    await userEvent.click(screen.getByLabelText(/Pseudonymous/));
-    await screen.findByText('CONSENT TEXT');
-    await userEvent.click(screen.getByLabelText(/I have read this/));
-    await userEvent.type(screen.getByLabelText('Countries you cover'), 'tcd');
-    await userEvent.click(screen.getByRole('button', { name: 'Join the demo' }));
+    render(<Join api={a} invite={null} demo deviceKeys onDone={done} onCancel={vi.fn()} />);
+    await fillExpertise('  Ana  ', 'Chad');
+    await chooseAndAccept();
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
     await waitFor(() => expect(done).toHaveBeenCalledWith({ token: 'tok', mode: 'server', level: 'pseudonymous' }));
     expect(a).toHaveBeenCalledWith('POST', '/api/demo/join', {
       name: 'Ana',
       level: 'pseudonymous',
       mode: 'server',
-      consentVersion: '2026-11-v2',
+      consentVersion: VERSION,
       profile: { organisation: null, roleType: null, countries: ['TCD'], themes: [], weeklyCap: 3 },
     });
   });
@@ -145,39 +193,53 @@ describe('DemoJoin', () => {
   it('with a device-held key, makes a secret, shows the recovery code, needs it saved, and posts mode device without the code', async () => {
     const a = routes({ ...CONSENTS, 'POST /api/demo/join': () => ({ sessionToken: 'tok', expertId: 'e1', level: 'anonymous', mode: 'device' }) });
     const done = vi.fn();
-    render(<DemoJoin api={a} deviceKeys onDone={done} />);
-    await userEvent.type(screen.getByLabelText('Your name'), 'Ana');
-    await userEvent.click(screen.getByLabelText(/^Anonymous/));
+    render(<Join api={a} invite={null} demo deviceKeys onDone={done} onCancel={vi.fn()} />);
+    await fillExpertise('Ana', 'Sudan');
+    await userEvent.click(await screen.findByLabelText(/^Anonymous/));
     await userEvent.click(await screen.findByLabelText(/Keep my key on this device only/));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(await screen.findByText('DEVICE CONSENT')).toBeInTheDocument();
     const code = (await screen.findByTestId('recovery')).textContent;
     expect(Buffer.from(decodeRecovery(code))).toEqual(Buffer.from(await getSecret()));
-    const go = screen.getByRole('button', { name: 'Join the demo' });
     await userEvent.click(screen.getByLabelText(/I have read this/));
-    await userEvent.type(screen.getByLabelText('Countries you cover'), 'SDN');
-    expect(go).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Save your recovery code before using a device-held key.');
+    expect(done).not.toHaveBeenCalled();
     await userEvent.click(screen.getByLabelText(/I have saved my recovery code/));
-    expect(go).toBeEnabled();
-    await userEvent.click(go);
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
     await waitFor(() => expect(done).toHaveBeenCalledWith({ token: 'tok', mode: 'device', level: 'anonymous' }));
-    expect(a).toHaveBeenCalledWith('POST', '/api/demo/join', expect.objectContaining({ name: 'Ana', level: 'anonymous', mode: 'device', consentVersion: '2026-11-v2' }));
+    expect(a).toHaveBeenCalledWith('POST', '/api/demo/join', expect.objectContaining({ name: 'Ana', level: 'anonymous', mode: 'device', consentVersion: VERSION }));
     expect(JSON.stringify(a.mock.calls)).not.toContain(code);
   });
 
   it('offers the device-held key only when the service has it', async () => {
-    render(<DemoJoin api={routes(CONSENTS)} deviceKeys={false} onDone={() => {}} />);
-    await userEvent.click(screen.getByLabelText(/^Anonymous/));
-    await screen.findByText('CONSENT TEXT');
+    render(<Join api={routes(CONSENTS)} invite={null} demo deviceKeys={false} onDone={vi.fn()} onCancel={vi.fn()} />);
+    await fillExpertise('Ana', 'Chad');
+    await userEvent.click(await screen.findByLabelText(/^Anonymous/));
+    await screen.findByRole('region', { name: 'What each audience sees' });
     expect(screen.queryByLabelText(/Keep my key on this device only/)).toBeNull();
+  });
+
+  it('the example fills the form and is labelled as an example, and the name stays editable', async () => {
+    render(<Join api={routes(CONSENTS)} invite={null} demo deviceKeys onDone={vi.fn()} onCancel={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Fill with an example' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Example profile, change anything you like.');
+    expect(screen.getByLabelText('Your name')).toHaveValue('Example expert');
+    expect(screen.getByLabelText('Search countries').closest('.country-picker')).toHaveTextContent('2 of 6 chosen');
+    await userEvent.clear(screen.getByLabelText('Your name'));
+    await userEvent.type(screen.getByLabelText('Your name'), 'Ana');
+    expect(screen.getByLabelText('Your name')).toHaveValue('Ana');
   });
 
   it('shows the server refusal and does not continue', async () => {
     const a = routes({ ...CONSENTS, 'POST /api/demo/join': fail(409, 'the demo is full: 300 accounts have joined') });
     const done = vi.fn();
-    render(<DemoJoin api={a} deviceKeys onDone={done} />);
-    await fillAndAccept();
-    await userEvent.click(screen.getByRole('button', { name: 'Join the demo' }));
+    render(<Join api={a} invite={null} demo deviceKeys onDone={done} onCancel={vi.fn()} />);
+    await fillExpertise('Ana', 'Chad');
+    await chooseAndAccept();
+    await userEvent.click(screen.getByRole('button', { name: 'Join the circle' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('the demo is full: 300 accounts have joined');
     expect(done).not.toHaveBeenCalled();
+    expect(await hasDeviceSecret()).toBe(false);
   });
 });
