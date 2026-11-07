@@ -18,8 +18,10 @@ import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
 import { LEVELS } from '../../core/src/anonymity.js';
 import { compose, LOOP_KIND } from '../../shared/loop.js';
 
+const TEST_SALT = 'test-deployment-salt-not-for-prod';
+
 test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatch() at weekly cap', () => {
-  const d0 = newDissent({
+  const d0 = newDissent({ salt: TEST_SALT,
     cardId: 'R1043',
     expert: 'e_8f21',
     country: 'TCD',
@@ -68,7 +70,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 
   // SPLIT with 2 child cards matches compose(LOOP_KIND.SPLIT, { count: 2, deepLinks })
   const split = act(
-    route(newDissent({ cardId: 'R1043', expert: 'e1', country: 'TCD', kind: KIND.TWO_RISKS })),
+    route(newDissent({ salt: TEST_SALT, cardId: 'R1043', expert: 'e1', country: 'TCD', kind: KIND.TWO_RISKS })),
     ACTION.SPLIT,
     { newCardIds: ['R1043a', 'R1043b'] }
   );
@@ -79,7 +81,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 
   // REWRITE with new title passes title through to compose(LOOP_KIND.REWRITE, { title })
   const rewritten = act(
-    route(newDissent({ cardId: 'R1067', expert: 'e1', country: 'AFG', kind: KIND.WINDOW })),
+    route(newDissent({ salt: TEST_SALT, cardId: 'R1067', expert: 'e1', country: 'AFG', kind: KIND.WINDOW })),
     ACTION.REWRITE,
     { title: 'Armed clashes in Badakhshan exceed 25 ACLED events before 30 June 2027' }
   );
@@ -92,7 +94,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
   // RETIRE and RESOLVE_EARLY match shared/loop.js verbatim
   for (const action of [ACTION.RETIRE, ACTION.RESOLVE_EARLY]) {
     const d = act(
-      route(newDissent({ cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.ALREADY_HAPPENING })),
+      route(newDissent({ salt: TEST_SALT, cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.ALREADY_HAPPENING })),
       action
     );
     assert.equal(notify(d).body, compose(action).body);
@@ -102,7 +104,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 test('dissent IDs use collision-safe UUIDs rather than a restart-prone counter', () => {
   const ids = new Set(
     Array.from({ length: 100 }, () =>
-      newDissent({ cardId: 'R1043', expert: 'e1', kind: KIND.WINDOW }).id
+      newDissent({ salt: TEST_SALT, cardId: 'R1043', expert: 'e1', kind: KIND.WINDOW }).id
     )
   );
   assert.equal(ids.size, 100);
@@ -113,7 +115,7 @@ test('dissent IDs use collision-safe UUIDs rather than a restart-prone counter',
 
 test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit outbound notifications', () => {
   for (const lvl of [LEVELS.ANONYMOUS, 'ANONYMOUS', 'unknown-privacy-mode']) {
-    const anon = newDissent({
+    const anon = newDissent({ salt: TEST_SALT,
       cardId: 'R1043',
       expert: 'e_SECRET_ID',
       name: 'Secret Name',
@@ -140,8 +142,8 @@ test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit o
 });
 
 test('invalid dissent transitions and kinds throw explicit errors, including skipping route() or notify()', () => {
-  assert.throws(() => newDissent({ cardId: 'R1', expert: 'e1', kind: 'bad_kind' }), /unknown dissent kind/);
-  const open = newDissent({ cardId: 'R1', expert: 'e1', kind: KIND.WINDOW });
+  assert.throws(() => newDissent({ salt: TEST_SALT, cardId: 'R1', expert: 'e1', kind: 'bad_kind' }), /unknown dissent kind/);
+  const open = newDissent({ salt: TEST_SALT, cardId: 'R1', expert: 'e1', kind: KIND.WINDOW });
 
   // B6 regression: OPEN -> ACTIONED skipping route() must fail
   assert.throws(
@@ -180,7 +182,7 @@ test('invalid dissent transitions and kinds throw explicit errors, including ski
 });
 
 test('cardLedger() provides an addressless "you said, we did" loop for ANONYMOUS dissenters (B4)', () => {
-  const anon = newDissent({
+  const anon = newDissent({ salt: TEST_SALT,
     cardId: 'R1043',
     expert: 'e_SECRET_99',
     name: 'Hidden Person',
@@ -212,7 +214,7 @@ test('cardLedger() provides an addressless "you said, we did" loop for ANONYMOUS
   assert.ok(!JSON.stringify(entry).includes('Hidden Person'));
 
   const dismissedOnly = close(
-    route(newDissent({ cardId: 'R1043', expert: 'e2', kind: KIND.WINDOW })),
+    route(newDissent({ salt: TEST_SALT, cardId: 'R1043', expert: 'e2', kind: KIND.WINDOW })),
     { reason: 'out_of_scope' }
   );
   const ledger = cardLedger([anonClosed, dismissedOnly], 'R1043');

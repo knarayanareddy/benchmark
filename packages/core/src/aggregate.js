@@ -95,9 +95,11 @@ export const ACAPS_MATRIX = Object.freeze({
   1: Object.freeze({ 1: 'Low', 2: 'Low', 3: 'Low', 4: 'Low', 5: 'Medium' }),
 });
 
+const show = (v) => (typeof v === 'number' ? String(v) : JSON.stringify(v));
+
 function assertProbability(p, label = 'probability') {
   if (typeof p !== 'number' || !Number.isFinite(p) || p < 0 || p > 1) {
-    throw new RangeError(`${label} must be a finite number in [0, 1], got ${JSON.stringify(p)}`);
+    throw new RangeError(`${label} must be a finite number in [0, 1], got ${show(p)}`);
   }
 }
 
@@ -216,7 +218,7 @@ function poolOnce(values, baseWeights, method) {
 export function extremise(p, { d = 1.0 } = {}) {
   assertProbability(p, 'p');
   if (typeof d !== 'number' || !Number.isFinite(d) || d <= 0) {
-    throw new RangeError(`extremise factor d must be a finite number > 0, got ${JSON.stringify(d)}`);
+    throw new RangeError(`extremise factor d must be a finite number > 0, got ${show(d)}`);
   }
   if (d === 1) return p;
   if (p === 0 || p === 1 || p === 0.5) return p;
@@ -237,7 +239,9 @@ export function deduplicateRounds(estimates, opts = {}) {
   if (!Array.isArray(estimates)) {
     throw new TypeError('estimates must be an array');
   }
-  const requireBallotKey = Boolean(opts.requireBallotKey);
+  // Safe by default: an estimate with neither expertId nor ballotToken cannot be
+  // de-duplicated, so it is rejected. Pass `requireBallotKey: false` to opt out.
+  const requireBallotKey = opts.requireBallotKey !== false;
   const byKey = new Map();
   const unkeyed = [];
   let maxRound = 1;
@@ -280,7 +284,7 @@ export function deduplicateRounds(estimates, opts = {}) {
     if (dedupeKey === null) {
       if (requireBallotKey) {
         throw new Error(
-          `estimates[${i}] lacks both expertId and ballotToken (required when requireBallotKey=true)`
+          `estimates[${i}] lacks both expertId and ballotToken (rejected unless requireBallotKey=false is passed explicitly)`
         );
       }
       if (round > 1) {
@@ -563,7 +567,7 @@ export function aggregate(estimates, opts = {}) {
 
   const extremiseD = opts.extremiseD === undefined ? 1.0 : opts.extremiseD;
   if (typeof extremiseD !== 'number' || !Number.isFinite(extremiseD) || extremiseD <= 0) {
-    throw new RangeError(`extremiseD must be a finite number > 0, got ${JSON.stringify(extremiseD)}`);
+    throw new RangeError(`extremiseD must be a finite number > 0, got ${show(extremiseD)}`);
   }
   const suppressExtremiseOnContested =
     opts.suppressExtremiseOnContested === undefined ? true : Boolean(opts.suppressExtremiseOnContested);
@@ -880,7 +884,7 @@ export function dispatchSignals(estimates, opts = {}) {
   const agg = aggregate(estimates, opts);
   if (agg.suppressed) return [];
 
-  const { active } = deduplicateRounds(estimates);
+  const { active } = deduplicateRounds(estimates, { requireBallotKey: opts.requireBallotKey });
   const sorted = active.map((a) => a.p).sort((a, b) => a - b);
   const med = quantileSorted(sorted, 0.5);
   const outlierGap = opts.outlierGap ?? DISPATCH_THRESHOLDS.outlierGap;

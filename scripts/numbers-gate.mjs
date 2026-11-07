@@ -162,7 +162,7 @@ for (const [modLabel, relTest] of TEST_MAP) {
     fail(`missing test file ${relTest} mapped to ${modLabel}`);
     continue;
   }
-  const run = spawnSync(process.execPath, ['--test', full], {
+  const run = spawnSync(process.execPath, ['--test', '--test-reporter=tap', full], {
     cwd: ROOT,
     encoding: 'utf8',
   });

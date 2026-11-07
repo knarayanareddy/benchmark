@@ -591,7 +591,7 @@ test('invalid probabilities, rounds, seed histories, impacts and options throw e
     () => deduplicateRounds([{ expertId: 'e1', p: 0.4, round: 1 }, { expertId: 'e1', p: 0.6, round: 1 }]),
     /duplicate estimate/
   );
-  assert.throws(() => deduplicateRounds([{ p: 0.5, round: 2 }]), /without an expertId/);
+  assert.throws(() => deduplicateRounds([{ p: 0.5, round: 2 }], { requireBallotKey: false }), /without an expertId/);
 
   // Seed history invariants: minSeeds >= 10, labelled items, consistent outcomes, no duplicate IDs
   assert.throws(() => seedWeights({}, ['e1', 'e2'], { minSeeds: 5 }), RangeError);
@@ -863,3 +863,11 @@ test('card-scoped ballotToken deduplicates anonymous Round-1/Round-2 ballots wit
 });
 
 
+
+test('unkeyed estimates are rejected by default; the unsafe mode is explicit opt-in (B-06)', () => {
+  const stuffed = Array.from({ length: 20 }, () => ({ p: 0.95 }));
+  assert.throws(() => aggregate(stuffed), /lacks both expertId and ballotToken/);
+  assert.throws(() => deduplicateRounds(stuffed), /lacks both expertId and ballotToken/);
+  assert.throws(() => dispatchSignals(stuffed), /lacks both expertId and ballotToken/);
+  assert.doesNotThrow(() => deduplicateRounds(stuffed, { requireBallotKey: false }));
+});
