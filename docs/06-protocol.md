@@ -16,7 +16,7 @@ Paired Brier difference, **panel minus ACAPS**, over the same resolved statement
 
 ## Scope and exclusions
 
-- Unit: dated trigger statements under the **28 Active risks**, about **266 per export cycle**.
+- Unit: the **28 Active risks** and the **76 dated triggers under them**: **104 statements** open today. The other 190 of the 266 triggers sit under risks whose outcome is already known, so scoring them would be hindsight.
 - A statement the resolver marks `unobservable` is excluded, never scored as a miss. The count of exclusions is reported.
 - A card that is rewritten or split after opening is retired; its estimates stay scored on the parent and the children start clean (rule R5).
 - Forecasts are clamped to [0.01, 0.99] at submission.
@@ -34,11 +34,11 @@ At the paired SD measured on the 104 historical risks (0.1605, `scripts/measure-
 | Band midpoint (headline) | 0.1605 | 0.0441 | **506** |
 | Ordinal (sensitivity) | 0.1505 | 0.0413 | 445 |
 
-At about 266 statements per cycle, 506 resolved statements need **two cycles at best**, and fewer statements will resolve than are issued. The historical SD is an estimate from a non-random, hindsight-labelled set, so it is a planning figure, not a guarantee. If the first cycle's SD differs, re-plan before looking at any outcome-linked result.
+At 104 open statements, 506 resolved statements need **about five cycles at best** unless ACAPS adds triggers to Active risks, and fewer statements will resolve than are issued. The historical SD is an estimate from a non-random, hindsight-labelled set, so it is a planning figure, not a guarantee. If the first cycle's SD differs, re-plan before looking at any outcome-linked result.
 
 ## Stopping rule **[DECISION]**
 
-Proposed: analyse once, when **506 statements have resolved or two full cycles have closed, whichever is later**. No interim look at outcome-linked scores. Panel statistics already released by the privacy rules do not count as an interim look, because they contain no outcomes. Any change to this rule is dated and appended, not edited.
+Proposed: analyse once, when **506 statements have resolved or five full cycles have closed, whichever is later**. No interim look at outcome-linked scores. Panel statistics already released by the privacy rules do not count as an interim look, because they contain no outcomes. Any change to this rule is dated and appended, not edited.
 
 ## Secondary analyses (descriptive, no claim of significance)
 

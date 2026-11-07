@@ -575,6 +575,11 @@ export function acapsRiskLevel(probOrAggregate, impact) {
  *   3. Mandatory interval ([lo, hi] bootstrap CI + [q25, q75] empirical IQR).
  *   4. Zero internal expert IDs or names in the returned object.
  */
+/**
+ * @param {any[]} estimates
+ * @param {Record<string, any>} [opts]
+ * @returns {Record<string, any>}
+ */
 export function aggregate(estimates, opts = {}) {
   const method = opts.method === undefined ? DEFAULT_METHOD : opts.method;
   if (!Object.values(METHODS).includes(method)) {
@@ -621,6 +626,7 @@ export function aggregate(estimates, opts = {}) {
 
   // Fail closed when panel size is too small to hide individual positions.
   if (n < effectiveMin) {
+    /** @type {Record<string, any>} */
     const suppressedResult = {
       suppressed: true,
       estimate: null,
@@ -728,6 +734,7 @@ export function aggregate(estimates, opts = {}) {
     hi = Math.max(estimate, quantileSorted(boot, 1 - alpha / 2));
   }
 
+  /** @type {Record<string, any>} */
   const out = {
     suppressed: false,
     estimate,
@@ -780,6 +787,11 @@ export function aggregate(estimates, opts = {}) {
  *      withholds all interim statistics until `closed: true`; `batch` pins
  *      `previousSnapshot` until `>= MIN_COHORT_STEP` (`3`) new respondents arrive
  *      and masks `min`/`max`/`spread` while open.
+ */
+/**
+ * @param {any[]} estimates
+ * @param {Record<string, any>} [opts]
+ * @returns {Record<string, any>}
  */
 export function releaseAggregate(estimates, opts = {}) {
   const policy = opts.policy === undefined ? RELEASE_POLICIES.ON_CLOSE : opts.policy;

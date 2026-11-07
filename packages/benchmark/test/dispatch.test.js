@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dispatch, TYPES, matches, health } from '../../core/src/dispatch.js';
+import { dispatch, TYPES, matches, health } from '@benchmark/core/dispatch';
 
 const card = { region: 'ML', theme: 'food' };
 

@@ -23,8 +23,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { LADDER } from '../packages/core/src/scoring.js';
-import { gate, evaluateObservable } from '../packages/core/src/gate.js';
+import { LADDER } from '@benchmark/core/scoring';
+import { gate, evaluateObservable } from '@benchmark/core/gate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -117,6 +117,7 @@ const counts = {
   active: blocks.filter((b) => b.status === 'Active').length,
   triggers: allTriggers.length,
   scoredTriggers: scoredTriggers.length,
+  activeTriggers: blocks.filter((b) => b.status === 'Active').reduce((n, b) => n + (b.triggerList || []).length, 0),
   unwrittenObjective: scoredTriggers.filter((t) => !t.objective).length,
   noTriggers: blocks.filter((b) => (b.triggerCount ?? 0) === 0).length,
   noProbability: blocks.filter((b) => !b.probability).length,
@@ -130,6 +131,7 @@ const EXPECT = {
   active: 28,
   triggers: 266,
   scoredTriggers: 139,
+  activeTriggers: 76,
   unwrittenObjective: 101,
   noTriggers: 31,
   noProbability: 11,
@@ -155,6 +157,12 @@ const TEST_MAP = [
   ['packages/core/src/hmac.js', 'packages/benchmark/test/hmac.test.js'],
   ['packages/service/src/service.js', 'packages/service/test/flow.test.js'],
   ['packages/service/src/http.js', 'packages/service/test/http.test.js'],
+  ['packages/service/src/oidc.js', 'packages/service/test/oidc.test.js'],
+  ['packages/core/src/stats.js', 'packages/benchmark/test/stats.test.js'],
+  ['packages/core/src/csv.js', 'packages/benchmark/test/csv.test.js'],
+  ['packages/core/src/authoring.js', 'packages/benchmark/test/authoring.test.js'],
+  ['packages/service/public/', 'packages/service/test/ui.test.js'],
+  ['packages/service/db/schema.sql', 'packages/service/test/schema.test.js'],
   ['packages/benchmark/src/dissent.js', 'packages/benchmark/test/dissent.test.js'],
 ];
 

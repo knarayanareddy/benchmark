@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { sha256, hmacSha256Hex, toHex } from '../../core/src/hmac.js';
+import { sha256, hmacSha256Hex, toHex } from '@benchmark/core/hmac';
 
 test('sha256 matches node:crypto across block-boundary lengths', () => {
   for (const len of [0, 1, 55, 56, 63, 64, 65, 119, 120, 128, 1000]) {

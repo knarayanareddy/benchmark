@@ -131,3 +131,47 @@ test('requireHttps rejects plain requests unless a proxy says they were https', 
     assert.equal((await w.call('GET', '/api/public/cards/x', { headers: { 'x-forwarded-proto': 'https' } })).status, 404);
   } finally { await w.close(); }
 });
+
+test('consent text is served so the screen and the record cannot drift; staff can list cards', async () => {
+  const w = await boot({ limits: { writesPerMinute: 10000, burstWrites: 10000 } });
+  try {
+    const c = await w.call('GET', '/api/consent/anonymous');
+    assert.equal(c.status, 200);
+    assert.equal(c.json.version, CONSENT_VERSION);
+    assert.match(c.json.text, /Residual risk: .*server access/);
+    assert.equal((await w.call('GET', '/api/consent/everyone')).status, 404);
+    const staff = (await w.call('POST', '/api/staff/session', { body: { credential: 'mod-ok' } })).json.sessionToken;
+    await w.call('POST', '/api/staff/cards', { token: staff, body: CARD });
+    const list = (await w.call('GET', '/api/staff/cards', { token: staff })).json;
+    assert.equal(list.length, 1);
+    assert.equal(list[0].responses, 0);
+    assert.ok(!('seedP' in list[0]) && !JSON.stringify(list).includes('respondent'));
+    assert.equal((await w.call('GET', '/api/staff/cards')).status, 401);
+  } finally { await w.close(); }
+});
+
+test('a mistyped country is refused instead of creating a card nobody can see', async () => {
+  const w = await boot({ limits: { writesPerMinute: 10000, burstWrites: 10000 } });
+  try {
+    const staff = (await w.call('POST', '/api/staff/session', { body: { credential: 'mod-ok' } })).json.sessionToken;
+    const bad = await w.call('POST', '/api/staff/cards', { token: staff, body: { ...CARD, country: 'TCTCD' } });
+    assert.equal(bad.status, 400);
+    assert.match(bad.json.error, /ISO 3-letter/);
+    assert.equal((await w.call('POST', '/api/staff/cards', { token: staff, body: { ...CARD, country: 'tcd' } })).json.card.country, 'TCD', 'lower case is normalised');
+    const inv = await w.call('POST', '/api/staff/invites', { token: staff, body: { declaration: { countries: ['Chad'] } } });
+    assert.equal(inv.status, 400);
+  } finally { await w.close(); }
+});
+
+test('health probes answer over plain http, skip the rate limit, and readiness reflects the database', async () => {
+  let up = true;
+  const w = await boot({ requireHttps: true, limits: { readsPerMinute: 1 }, ready: async () => { if (!up) throw new Error('db down'); } });
+  try {
+    for (let i = 0; i < 5; i++) assert.equal((await w.call('GET', '/healthz')).status, 200);
+    assert.equal((await w.call('GET', '/readyz')).status, 200);
+    up = false;
+    const r = await w.call('GET', '/readyz');
+    assert.equal(r.status, 503);
+    assert.ok(!JSON.stringify(r.json).includes('db down'), 'no internals in the probe response');
+  } finally { await w.close(); }
+});

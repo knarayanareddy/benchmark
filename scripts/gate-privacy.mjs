@@ -17,7 +17,7 @@ const FORBIDDEN = [
   { re: /\bnavigator\.sendBeacon\(/, why: 'bypasses the validated write path' },
 ];
 
-let problems = [];
+const problems = [];
 const walk = (dir) => {
   if (!fs.existsSync(dir)) return;
   for (const f of fs.readdirSync(dir, { withFileTypes: true })) {

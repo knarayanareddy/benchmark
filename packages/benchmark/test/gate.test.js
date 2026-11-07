@@ -6,7 +6,7 @@ import {
   gate,
   decontaminate,
   evaluateObservable,
-} from '../../core/src/gate.js';
+} from '@benchmark/core/gate';
 
 const win = { from: '2026-11-01', to: '2027-04-30' };
 

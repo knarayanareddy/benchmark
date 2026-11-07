@@ -35,9 +35,9 @@ export function matches(card, declaration = {}, { all = false } = {}) {
 }
 
 /**
- * @param {object[]} candidates [{type, card, expert, severity}]
+ * @param {Array<Record<string, any>>} candidates [{type, card, expert, severity}]
  * @param {{perWeek:number}} cap
- * @param {object[]} history  notifications already sent this week
+ * @param {Array<Record<string, any>>} history  notifications already sent this week
  */
 export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
   const perWeek = typeof cap === 'number' ? cap : cap.perWeek;

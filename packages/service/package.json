@@ -1,0 +1,20 @@
+{
+  "name": "@benchmark/service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The service layer: stores (memory and Postgres), invites, roles, release ledger, HTTP API, OIDC staff sign-in, and the static pages.",
+  "license": "MIT",
+  "exports": {
+    "./*": "./src/*.js"
+  },
+  "bin": {
+    "benchmark-serve": "./bin/serve.mjs",
+    "benchmark-migrate": "./bin/migrate.mjs"
+  },
+  "dependencies": {
+    "@benchmark/core": "*",
+    "@benchmark/domain": "*",
+    "pg": "^8.23.1"
+  }
+}

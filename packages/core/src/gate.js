@@ -29,6 +29,8 @@
  *        (measured by `evaluateObservable()` on 50 labelled corpus items).
  */
 
+import { wilson } from './stats.js';
+
 export const CHECKS = ['window', 'observable', 'single', 'no_leak', 'condition'];
 
 export const SEVERITY = Object.freeze({
@@ -271,6 +273,10 @@ export function evaluateObservable(examples) {
     warnRecall: totalNeedsObjective ? tpWarn / totalNeedsObjective : null,
     falseWarnRate: n - totalNeedsObjective > 0 ? fpWarn / (n - totalNeedsObjective) : null,
     accuracy: (tpWarn + tnPass) / n,
+    // 95% Wilson intervals: at n=50 a headline proportion is only good to about +/-12 points.
+    warnPrecisionCI: totalWarns ? wilson(tpWarn, totalWarns) : null,
+    warnRecallCI: totalNeedsObjective ? wilson(tpWarn, totalNeedsObjective) : null,
+    falseWarnRateCI: n - totalNeedsObjective > 0 ? wilson(fpWarn, n - totalNeedsObjective) : null,
     disagreements,
   };
 }

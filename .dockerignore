@@ -1,0 +1,11 @@
+node_modules
+.git
+archive
+data
+mockups
+organiser
+docs
+scripts
+**/test
+.env
+.env.*

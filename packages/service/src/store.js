@@ -27,6 +27,26 @@ function clone(v) {
   return v === undefined ? undefined : structuredClone(v);
 }
 
+/** Does `doc` contain `where`? Recursive containment, like jsonb `@>` (key order never matters). */
+export function matchesWhere(doc, where) {
+  if (where === null || typeof where !== 'object' || Array.isArray(where)) {
+    return JSON.stringify(doc ?? null) === JSON.stringify(where ?? null);
+  }
+  if (doc === null || typeof doc !== 'object') return false;
+  return Object.entries(where).every(([k, v]) => matchesWhere(doc[k], v));
+}
+
+/**
+ * Every method is async so the same service runs on this adapter and on
+ * Postgres (pg-store.js). `find(where, pred)`: `where` is an equality object
+ * (a jsonb containment query in Postgres, so it can be indexed); `pred` is an
+ * optional extra JS filter.
+ */
+/**
+ * @param {Record<string, { unique?: string[][] }>} spec
+ * @param {{ file?: string }} [opts]
+ * @returns {Record<string, any>}
+ */
 export function createStore(spec, { file } = {}) {
   const data = {};
   const unique = {};
@@ -58,9 +78,12 @@ export function createStore(spec, { file } = {}) {
   let seq = 0;
   for (const name of Object.keys(spec)) {
     const m = data[name];
+    /** @param {Record<string, any>} [where] @param {(d: any) => boolean} [pred] */
+    const select = (where = {}, pred = () => true) =>
+      [...m.values()].filter((d) => matchesWhere(d, where) && pred(d));
     tables[name] = {
       /** Insert a row under `key`. Throws ConflictError on a duplicate key or unique constraint. */
-      insert(key, row) {
+      async insert(key, row) {
         if (m.has(key)) throw new ConflictError(`${name}: ${key} already exists`);
         const keys = uniqueKey(name, row);
         for (const other of m.values()) {
@@ -74,17 +97,17 @@ export function createStore(spec, { file } = {}) {
         return clone(row);
       },
       /** Append with a generated key (for append-only tables). */
-      append(row) {
+      async append(row) {
         return this.insert(`${String(++seq).padStart(12, '0')}:${Date.now()}`, row);
       },
-      get: (key) => clone(m.get(key)),
-      find: (pred = () => true) => [...m.values()].filter(pred).map(clone),
-      all: () => [...m.values()].map(clone),
+      async get(key) { return clone(m.get(key)); },
+      async find(where, pred) { return select(where, pred).map(clone); },
+      async all() { return [...m.values()].map(clone); },
       /**
        * Compare-and-set: writes only if the stored row still has
        * `expectedVersion`. Equivalent to `update ... where id=? and version=?`.
        */
-      update(key, expectedVersion, next) {
+      async update(key, expectedVersion, next) {
         const cur = m.get(key);
         if (!cur) throw new ConflictError(`${name}: ${key} does not exist`);
         if ((cur.version ?? 0) !== expectedVersion) {
@@ -95,11 +118,12 @@ export function createStore(spec, { file } = {}) {
         return clone(next);
       },
       /** Unconditional replace, for tables without a version column. */
-      put(key, row) { m.set(key, clone(row)); persist(); return clone(row); },
-      remove(key) { const had = m.delete(key); if (had) persist(); return had; },
-      removeWhere(pred) {
+      async put(key, row) { m.set(key, clone(row)); persist(); return clone(row); },
+      async remove(key) { const had = m.delete(key); if (had) persist(); return had; },
+      async removeWhere(where, pred) {
+        const doomed = new Set(select(where, pred));
         let n = 0;
-        for (const [k, v] of [...m.entries()]) if (pred(v)) { m.delete(k); n++; }
+        for (const [k, v] of [...m.entries()]) if (doomed.has(v)) { m.delete(k); n++; }
         if (n) persist();
         return n;
       },
@@ -108,6 +132,7 @@ export function createStore(spec, { file } = {}) {
   return tables;
 }
 
+/** @param {{ file?: string }} [opts] */
 export const createRosterStore = (opts) =>
   createStore(
     {
@@ -119,12 +144,13 @@ export const createRosterStore = (opts) =>
     opts
   );
 
+/** @param {{ file?: string }} [opts] */
 export const createAnswerStore = (opts) => {
   const t = createStore(
     {
       cards: {},
       estimates: { unique: [['cardId', 'respondentKey', 'round']] },
-      releases: {},
+      releases: { unique: [['cardId', 'round', 'visibility', 'n', 'closed']] },
       dissents: {},
       notifications: {},
       audit: {},
