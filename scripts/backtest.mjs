@@ -51,5 +51,5 @@ calibration(panelPlusIntensity, 4).forEach((b) =>
 console.log('\nreference ladder:');
 console.log(`  naive floor           ${LADDER.naiveFloor}`);
 console.log(`  ACAPS judgement       ${LADDER.acapsRatings}`);
-console.log(`  structured logistic   ${LADDER.fourFieldLogistic}   ← out of sample; loses to ACAPS`);
+console.log(`  structured logistic   ${LADDER.fourFieldLogistic}   ← out of sample; nominally behind ACAPS, indistinguishable`);
 console.log('\n⚠ synthetic predictor — this proves the harness, not the panel.');

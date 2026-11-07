@@ -71,6 +71,7 @@ if (!fs.existsSync(fitPath)) {
   const checks = [
     ['naiveFloor', fit.brier.constant],
     ['acapsRatings', fit.brier.acaps],
+    ['acapsOrdinal', fit.brier.acapsOrdinal],
     ['fourFieldLogistic', fit.brier.loo],
   ];
   for (const [k, measured] of checks) {
@@ -81,7 +82,7 @@ if (!fs.existsSync(fitPath)) {
   if (LADDER.fourFieldLogistic < LADDER.acapsRatings) {
     fail('LADDER claims the regression beat ACAPS — it does not. Fix the claim, not the test.');
   }
-  console.log(`✓ ladder matches the fitted artefacts: ${LADDER.naiveFloor} / ${LADDER.acapsRatings} / ${LADDER.fourFieldLogistic}`);
+  console.log(`✓ ladder matches the fitted artefacts: ${LADDER.naiveFloor} / ${LADDER.acapsRatings} (ordinal ${LADDER.acapsOrdinal}) / ${LADDER.fourFieldLogistic}`);
 }
 
 // ── 2. retired figures in prose ─────────────────────────────────────────────
@@ -151,6 +152,9 @@ const TEST_MAP = [
   ['packages/core/src/gate.js', 'packages/benchmark/test/gate.test.js'],
   ['packages/core/src/dispatch.js', 'packages/benchmark/test/dispatch.test.js'],
   ['packages/core/src/anonymity.js', 'packages/benchmark/test/anonymity.test.js'],
+  ['packages/core/src/hmac.js', 'packages/benchmark/test/hmac.test.js'],
+  ['packages/service/src/service.js', 'packages/service/test/flow.test.js'],
+  ['packages/service/src/http.js', 'packages/service/test/http.test.js'],
   ['packages/benchmark/src/dissent.js', 'packages/benchmark/test/dissent.test.js'],
 ];
 

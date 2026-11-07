@@ -3,7 +3,7 @@
  * always with its uncertainty interval, small-panel privacy guard, and ACAPS
  * Risk Level mapping.
  *
- * Scope discipline (see design/04-adoption-review.md and docs/02-scoring-rules.md):
+ * Scope discipline (see docs/04-adoption-review.md and docs/02-scoring-rules.md):
  *
  *   FULL:
  *     - Pooling on single-probability cards: median (default), linear mean,
@@ -82,6 +82,34 @@ export const ACAPS_BANDS = Object.freeze([
   Object.freeze({ ordinal: 4, label: 'High', min: 0.6, max: 0.8 }),
   Object.freeze({ ordinal: 5, label: 'Very High', min: 0.8, max: 1.0 }),
 ]);
+
+/**
+ * Midpoint of ACAPS' published percentage band for each rating (rule R9: cards
+ * are seeded here, so the expert adjusts a defensible number):
+ *   Very Low 0-20 -> 0.10 · Low 21-40 -> 0.305 · Medium 41-60 -> 0.505
+ *   High 61-80 -> 0.705 · Very High 81-100 -> 0.905
+ * "Very High" is NOT 1.00: no analyst means a certain event, and a certain
+ * forecast is infinitely overconfident under a log score.
+ */
+export const BAND_PERCENT = Object.freeze({
+  'Very Low': Object.freeze([0, 20]),
+  Low: Object.freeze([21, 40]),
+  Medium: Object.freeze([41, 60]),
+  High: Object.freeze([61, 80]),
+  'Very High': Object.freeze([81, 100]),
+});
+export const BAND_MIDPOINT = Object.freeze(
+  Object.fromEntries(Object.entries(BAND_PERCENT).map(([k, [a, b]]) => [k, (a + b) / 200]))
+);
+
+/** Forecasts are clamped to this range before scoring (protocol rule R9). */
+export const FORECAST_CLAMP = Object.freeze({ min: 0.01, max: 0.99 });
+export function clampForecast(p) {
+  if (typeof p !== 'number' || !Number.isFinite(p) || p < 0 || p > 1) {
+    throw new RangeError(`forecast must be a finite number in [0, 1], got ${typeof p === 'number' ? String(p) : JSON.stringify(p)}`);
+  }
+  return Math.min(FORECAST_CLAMP.max, Math.max(FORECAST_CLAMP.min, p));
+}
 
 /**
  * Verbatim 5x5 Probability (ordinal 1..5) x Impact (1..5) matrix from
@@ -327,7 +355,7 @@ export function deduplicateRounds(estimates, opts = {}) {
 
 /**
  * Compute track-record weights from resolved binary seed items, gated at >= 10
- * shared resolved seeds (Eggstaff et al. 2014; Clemen 2008; design/04-adoption-review.md).
+ * shared resolved seeds (Eggstaff et al. 2014; Clemen 2008; docs/04-adoption-review.md).
  *
  * Uses Murphy (1973) proper Brier skill over the uninformative p=0.5 benchmark
  * (Brier = 0.25) on the IDENTICAL shared seed items across all participating

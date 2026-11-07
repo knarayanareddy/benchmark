@@ -21,6 +21,8 @@
     "check:method": "node scripts/check-methodology.mjs",
     "gate:numbers": "node scripts/numbers-gate.mjs",
     "check:spine": "node scripts/check-spine.mjs",
-    "gate:anonymity": "node scripts/gate-anonymity.mjs"
+    "gate:anonymity": "node scripts/gate-anonymity.mjs",
+    "check:schema": "node packages/service/db/check-schema.mjs",
+    "serve": "node packages/service/bin/serve.mjs"
   }
 }

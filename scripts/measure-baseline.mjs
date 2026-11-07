@@ -12,8 +12,9 @@
  *
  *   outcome   = Status field. "Materialised" → 1, "Not materialised" → 0.
  *               Active and blank Status are UNOBSERVABLE and excluded.
- *   p         = Probability field / 5   (Very Low 1 … Very High 5)
+ *   p         = band midpoint of the Probability field (Very Low 0.10 … Very High 0.905)
  *               blank Probability imputed at the base rate.
+ *               The ordinal reading (rating / 5) is printed as the sensitivity check.
  *   scoring   = Brier over the resulting pairs, bootstrap interval always.
  *   comparison= PAIRED against the constant base-rate predictor, same items.
  *
@@ -24,6 +25,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { brier, bootstrapBrier, paired, calibration } from '../packages/core/src/scoring.js';
+import { BAND_MIDPOINT, BAND_PERCENT } from '../packages/core/src/aggregate.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');
@@ -34,27 +36,19 @@ if (!fs.existsSync(file)) {
 
 const blocks = JSON.parse(fs.readFileSync(file, 'utf8'));
 
-// ACAPS publishes the percentage bands behind their five-point scale in
-// organiser/acaps/references/acaps-risk-methodology-infographic.png:
+// HEADLINE reading: ACAPS publishes the percentage bands behind its five-point
+// scale (organiser/acaps/references/acaps-risk-methodology-infographic.png):
 //   Very Low 0-20 · Low 21-40 · Medium 41-60 · High 61-80 · Very High 81-100
-// We use the band midpoint. This is their mapping, not our guess — an earlier
-// revision divided the ordinal 1-5 by 5, which put "Medium" at 0.60 when their
-// own band says 41-60%. The two readings differ by 0.0003 Brier, so nothing
-// downstream moves, but the midpoint is the one that can be defended from a
-// document in this repo.
-const BANDS = {
-  'Very Low': [0, 20],
-  Low: [21, 40],
-  Medium: [41, 60],
-  High: [61, 80],
-  'Very High': [81, 100],
-};
-const SCALE = Object.fromEntries(
-  Object.entries(BANDS).map(([k, [a, b]]) => [k, (a + b) / 200])
-);
-// The adopted reading stays the ordinal n/5 (0.2168) because that is what
-// data/baseline-fit.json and every document in this repo quote. The band
-// midpoint is reported alongside it so the difference is visible, not hidden.
+// and we use the band midpoint (Very High = 0.905). That is their mapping, not
+// ours, and no analyst means 100% by "Very High" — a certain forecast is
+// infinitely overconfident under a log score.
+//
+// SENSITIVITY reading: the ordinal n/5 ("Very High" = 1.00, "Medium" = 0.60 when
+// their own band says 41-60%). It was the headline in earlier documents, so it
+// is still printed. The two differ by ~0.0003 Brier; the midpoint is the one
+// that can be defended from a document in this repo.
+const BANDS = BAND_PERCENT;
+const SCALE = BAND_MIDPOINT;
 const ORDINAL = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 
 const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
@@ -64,7 +58,8 @@ const fmt = (r) =>
   r.score === null ? 'n/a' : `${r.score.toFixed(4)}  [${r.lo.toFixed(4)}, ${r.hi.toFixed(4)}]  n=${r.n}`;
 
 // ── the adopted reading ────────────────────────────────────────────────────
-const adopted = resolved.map((b) => ({
+const adopted = resolved.map((b) => ({ id: b.id, p: SCALE[b.probability] ?? baseRate, y: b.outcome }));
+const ordinal = resolved.map((b) => ({
   id: b.id,
   p: ORDINAL[b.probability] ? ORDINAL[b.probability] / 5 : baseRate,
   y: b.outcome,
@@ -76,7 +71,8 @@ console.log(`base rate         : ${baseRate.toFixed(4)}\n`);
 
 const constant = resolved.map((b) => ({ id: b.id, p: baseRate, y: b.outcome }));
 console.log('naive floor       :', fmt(bootstrapBrier(constant)));
-console.log('ACAPS rating /5   :', fmt(bootstrapBrier(adopted)), '   ← adopted reading');
+console.log('ACAPS band midpoint:', fmt(bootstrapBrier(adopted)), '   ← headline reading');
+console.log('ACAPS ordinal /5  :', fmt(bootstrapBrier(ordinal)), '   ← sensitivity check');
 
 const p = paired(adopted, constant);
 console.log('paired vs floor   :', `${p.diff.toFixed(4)}  [${p.lo.toFixed(4)}, ${p.hi.toFixed(4)}]  ${p.note}`);
@@ -101,7 +97,7 @@ calibration(adopted, 5).forEach((b) =>
 // ── the readings that do NOT reproduce, kept visible ───────────────────────
 console.log('\nother readings of "ACAPS as a forecast" (not adopted, for completeness):');
 const variants = [
-  ['band midpoint (their published %s)', resolved.map((b) => ({ p: SCALE[b.probability] ?? baseRate, y: b.outcome }))],
+  ['ordinal /5 (sensitivity)', ordinal.map((d) => ({ p: d.p, y: d.y }))],
   ['drop blank Probability', resolved.filter((b) => ORDINAL[b.probability]).map((b) => ({ p: ORDINAL[b.probability] / 5, y: b.outcome }))],
   ['blank Probability = 0.5', resolved.map((b) => ({ p: ORDINAL[b.probability] ? ORDINAL[b.probability] / 5 : 0.5, y: b.outcome }))],
   ['band lower edge', resolved.map((b) => { const n = BANDS[b.probability]; return { p: n ? n[0] / 100 : baseRate, y: b.outcome }; })],

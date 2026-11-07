@@ -1,10 +1,10 @@
 # BUILD.md — start here
 
-**Scaffolded and verified, not finished.** The scoring, aggregation, gate and dispatch logic is written and tested against the real export; the interface is not written.
+**Verified core and service layer, not finished.** The scoring, aggregation, gate, dispatch and dissent logic is written and tested against the real export, and a service layer with an HTTP API wraps it. The interface, a Postgres adapter and staff SSO are not written.
 
 ```
 $ npm run verify
-✓ 108 unit tests pass
+✓ 142 unit tests pass
 ✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items)
 ✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
@@ -16,14 +16,18 @@ $ npm run verify
 | Module | File | State | Proof |
 |---|---|---|---|
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
-| Scoring | `packages/core/src/scoring.js` | **Complete** | Strict `[0, 1]` / `{0, 1, null}` boundary validation, Brier + bootstrap + paired comparison, 13 tests |
+| Scoring | `packages/core/src/scoring.js` | **Complete** | Strict `[0, 1]` / `{0, 1, null}` boundary validation, Brier + bootstrap + paired comparison, 14 tests |
 | Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + variance-preserving smoothed bootstrap intervals, ≥10-seed Brier skill gate, `releaseAggregate()` (`n ≥ 5`, `<10` order-stat suppression, cohort batching), ACAPS 5×5 bridge, 28 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 14 tests |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 15 tests |
 | Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 6 tests |
-| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, 23 tests |
-| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless `cardLedger()`, 6 tests + journey script |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, HMAC-keyed aliases, persisted alias assignment, ballot tokens, day coarsening, identifying-detail hints, 29 tests |
+| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless day-coarsened `cardLedger()`, versioned transitions, 7 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
-| Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |
+| Keyed primitives | `packages/core/src/hmac.js` | **Complete** | Pure-JS HMAC-SHA-256 so aliases and ballot tokens work in a browser and on a server; checked against `node:crypto` and RFC 4231, 3 tests |
+| Service | `packages/service/src/service.js` | **Built — in-memory store with optional JSON snapshot** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention, 17 tests. See `docs/05-service-and-privacy.md` |
+| HTTP transport | `packages/service/src/http.js` | **Built** | Body cap, per-write rate limit, security headers, https enforcement, no cookies, 5 tests |
+| Postgres schema | `packages/service/db/schema.sql` | **Written and run on a real engine; no adapter** | `npm run check:schema` (optional, needs `@electric-sql/pglite`) proves each constraint |
+| Interface | — | **Not written** | React + Vite PWA, per `archive/design/BENCHMARK-blueprint.html` §11 |
 
 ---
 
@@ -45,6 +49,8 @@ node --test packages/benchmark/test/*.test.js
 node scripts/gate-export.mjs    # acceptance test #9
 node scripts/journey.mjs        # acceptance test #7
 node scripts/backtest.mjs       # the scoring harness
+npm run serve                   # the HTTP service; needs BENCHMARK_BALLOT_SECRET and BENCHMARK_ALIAS_SECRET
+npm run check:schema            # optional: runs db/schema.sql on an in-process Postgres
 ```
 
 **Do not hand-roll a CSV parser.** The export has quoted fields with embedded newlines; a naive line-splitter turned 139 rows into 5,970 and silently misaligned every column. Python's `csv` module is correct and free — use it.
@@ -53,12 +59,12 @@ node scripts/backtest.mjs       # the scoring harness
 
 ## The one thing that is still missing, and it is not code
 
-**The panel has never been run — and the baseline it must beat is ACAPS' own 0.2168, not the regression's 0.2177.** The regression loses to the analysts; that is now measured, in this repo, by `scripts/fit-baseline.mjs`.
+**The panel has never been run — and the baseline it must beat is ACAPS' own 0.2171, not the regression's 0.2177.** The regression is nominally behind the analysts by 0.0007 and **indistinguishable from them** (paired interval [−0.026, +0.029]); that is measured, in this repo, by `scripts/fit-baseline.mjs`.
 
 `scripts/backtest.mjs` runs synthetic predictors on the 104 resolved blocks to prove the scoring plumbing, and `packages/core/src/aggregate.js` turns panel estimates into an interval-bearing probability. Two methodological constraints govern how the real panel test must run:
 
-1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2168` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (**28 Active risks** and **266 dated triggers** as rolling windows close).
-2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1505** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0413** Brier at `n = 104` and requiring **n ≈ 445** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements (`266` per export cycle) are where prospective statistical power lives.
+1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2171` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (**28 Active risks** and **266 dated triggers** as rolling windows close).
+2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1605** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0441** Brier at `n = 104` and requiring **n ≈ 506** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements (`266` per export cycle) are where prospective statistical power lives.
 3. **External resolution criteria, not endogenous post-hoc labels.** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is recorded later by ACAPS' own analysts on a selected set of published risks (`61/104 = 58.7%` materialised), measuring analyst self-consistency alongside forecast skill. Prospective trigger evaluation must pre-specify external indicators (ACLED, IPC, UNHCR, IMF) in `objective` before cards open.
 
 ---
@@ -98,8 +104,8 @@ n=22). Impact is collected and discarded, and a model reading Probability *and*
 Risk Level is reading one field twice.
 
 **3. The baseline had to be re-measured, and the answer is unflattering.**
-naive floor **0.2425** → ACAPS' own rating **0.2168** → logistic regression on
-the same fields **0.2177** out of sample. **The regression loses.** In-sample it
+naive floor **0.2425** → ACAPS' own rating **0.2171** → logistic regression on
+the same fields **0.2177** out of sample. The regression is nominally behind, **indistinguishable at n=104**. In-sample it
 scores 0.1965, and that number must never be quoted: its optimism is larger than
 the entire effect under test. `npm run ladder` reproduces all of it.
 

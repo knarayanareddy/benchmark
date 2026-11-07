@@ -19,6 +19,7 @@
  *
  * Pure: no storage, no network, no clock. Everything is passed in.
  */
+import { hmacSha256, hmacSha256Hex } from './hmac.js';
 
 /** The three levels, in the order the expert sees them. */
 export const LEVELS = Object.freeze({
@@ -89,18 +90,15 @@ function assertDeploymentSalt(salt, who) {
   }
 }
 
-function hashSlot(input) {
-  let h1 = 0x811c9dc5;
-  let h2 = 0x9e3779b9;
-  for (let i = 0; i < input.length; i++) {
-    const c = input.charCodeAt(i);
-    h1 = Math.imul(h1 ^ c, 0x01000193);
-    h2 = Math.imul(h2 ^ (c + i), 0x85ebca6b);
-  }
-  h1 ^= h1 >>> 16;
-  h2 ^= h2 >>> 13;
-  const mixed = (Math.imul(h1, 0xc2b2ae35) ^ h2) >>> 0;
-  return (mixed % ALIAS_SPACE) + 1000;
+/**
+ * Map a keyed hash to the 9,000-slot display space. The slot is only a label;
+ * the unforgeable part is the HMAC, keyed by a deployment secret that must
+ * never be in the repository or in the same store as the roster.
+ */
+function hashSlot(secret, input) {
+  const d = hmacSha256(secret, `alias:v2:${input}`);
+  const n = ((d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3]) >>> 0;
+  return (n % ALIAS_SPACE) + 1000;
 }
 
 /**
@@ -113,7 +111,7 @@ function hashSlot(input) {
  */
 export function aliasFor(expertId, country, salt) {
   assertDeploymentSalt(salt, 'aliasFor()');
-  return `Analyst ${hashSlot(`${salt}:${country}:${expertId}`)}`;
+  return `Analyst ${hashSlot(salt, `${country}:${expertId}`)}`;
 }
 
 /**
@@ -134,12 +132,74 @@ export function panelAliases(expertIds = [], country = '', { salt } = {}) {
     let candidate = aliasFor(id, country, salt);
     while (taken.has(candidate)) {
       attempt++;
-      candidate = `Analyst ${hashSlot(`${salt}:${country}:${id}#${attempt}`)}`;
+      candidate = `Analyst ${hashSlot(salt, `${country}:${id}#${attempt}`)}`;
     }
     taken.add(candidate);
     map[id] = candidate;
   }
   return Object.freeze(map);
+}
+
+/**
+ * Extend a persisted alias table without ever renaming anyone.
+ *
+ * `existing` is the stored { expertId: alias } map for ONE country. Entries
+ * already in it are returned unchanged, so rotating the salt (or changing the
+ * hash) cannot silently re-label a person mid-panel. New experts get a fresh
+ * alias that avoids every alias already taken. The caller persists `added`
+ * (one row per expert x country).
+ */
+export function assignAliases(existing = {}, expertIds = [], country = '', { salt } = {}) {
+  assertDeploymentSalt(salt, 'assignAliases()');
+  const aliases = { ...existing };
+  const taken = new Set(Object.values(aliases));
+  const added = {};
+  const fresh = [...new Set(expertIds.filter((id) => id !== undefined && id !== null && String(id).trim() !== '').map(String))]
+    .filter((id) => !Object.prototype.hasOwnProperty.call(aliases, id))
+    .sort();
+  if (taken.size + fresh.length > ALIAS_SPACE) {
+    throw new RangeError(`panel would exceed alias space ${ALIAS_SPACE}`);
+  }
+  for (const id of fresh) {
+    let attempt = 0;
+    let candidate = aliasFor(id, country, salt);
+    while (taken.has(candidate)) {
+      attempt++;
+      candidate = `Analyst ${hashSlot(salt, `${country}:${id}#${attempt}`)}`;
+    }
+    taken.add(candidate);
+    aliases[id] = candidate;
+    added[id] = candidate;
+  }
+  return { aliases: Object.freeze(aliases), added: Object.freeze(added) };
+}
+
+/**
+ * Per-card, per-expert ballot token: HMAC(secret, card, expert).
+ *
+ * It lets the server de-duplicate and revise an anonymous answer without
+ * storing who gave it. That only holds while `secret` lives OUTSIDE the
+ * database that holds the roster (environment or KMS) — otherwise a database
+ * reader can recompute every token and re-link every answer. See
+ * docs/04-privacy-residual-risk.md.
+ */
+export function ballotToken(secret, cardId, expertId) {
+  assertDeploymentSalt(secret, 'ballotToken()');
+  if (!cardId || !expertId) throw new TypeError('ballotToken() needs a cardId and an expertId');
+  return hmacSha256Hex(secret, `ballot:v1:${cardId}:${expertId}`);
+}
+
+/**
+ * Coarsen a timestamp to the UTC day. In a panel of 5-10, a millisecond
+ * timestamp on an anonymous row is a name. Accepts ms, Date or ISO string and
+ * returns { day: 'YYYY-MM-DD', ms: <midnight UTC> }.
+ */
+export function coarsenToDay(at) {
+  const t = at instanceof Date ? at.getTime() : typeof at === 'number' ? at : Date.parse(String(at));
+  if (!Number.isFinite(t)) throw new TypeError('coarsenToDay() needs a valid timestamp');
+  const d = new Date(t);
+  const ms = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return { day: new Date(ms).toISOString().slice(0, 10), ms };
 }
 
 /**
@@ -222,13 +282,57 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
   return kept;
 }
 
+const ORG_ACRONYMS = [
+  'WFP', 'UNHCR', 'OCHA', 'UNICEF', 'WHO', 'FAO', 'IOM', 'UNDP', 'UNFPA', 'MSF', 'IRC', 'NRC', 'ICRC', 'IFRC',
+  'CARE', 'OXFAM', 'ACF', 'DRC', 'ACTED', 'CRS', 'MERCY CORPS', 'SAVE THE CHILDREN', 'WORLD VISION', 'ACLED',
+  'FEWS NET', 'USAID', 'FCDO', 'ECHO', 'UNMISS', 'MONUSCO', 'UNAMA', 'AU', 'ECOWAS', 'IGAD',
+];
+const ORG_RE = new RegExp(`\\b(?:${ORG_ACRONYMS.map((o) => o.replace(/ /g, '\\s+')).join('|')})\\b`, 'i');
+const ROLE_RE = /\b(?:country|regional|programme|program|field|deputy|assistant|senior|chief|head)\s+(?:director|coordinator|officer|manager|representative|of\s+(?:office|mission|programmes?|operations))\b|\b(?:director|coordinator|logistician|nutritionist|epidemiologist|protection officer|security officer|team leader)\b/i;
+const FIRST_PERSON_RE = /\b(?:I\s+(?:work|worked|am based|was based|live|lead|run|manage|head)|my\s+(?:team|office|organi[sz]ation|agency|colleagues|mission|programme|program|district)|our\s+(?:office|team|mission|programme|program|base|compound)|as\s+(?:a|the)\s+\w+(?:\s+\w+)?\s+(?:in|for|at|of))\b/i;
+const UNIQUE_RE = /\b(?:the\s+only|the\s+sole|the\s+one\s+(?:and\s+only\s+)?\w+\s+(?:in|at|for))\b/i;
+const PLACE_RE = /\b(?:based\s+in|stationed\s+in|working\s+(?:in|out\s+of)|posted\s+(?:in|to)|(?:I|we)\s+live\s+in|(?:our|my)\s+office\s+in|here\s+in)\s+(?:the\s+)?([A-Z][\p{L}'-]{2,}(?:\s+[A-Z][\p{L}'-]{2,})?)/u;
+
+/**
+ * Mechanical identifying-detail hints: organisations, job titles,
+ * first-person identifiers, uniqueness claims and self-location ("based in Juba").
+ * Place names that are merely the subject of a forecast are NOT flagged: that
+ * would fire on most cards and teach people to ignore it.
+ * Returns [{ kind, match }] so a UI can offer a one-tap "remove detail".
+ * Heuristic and incomplete by design: a hint is advice for a human, never proof
+ * that text is safe.
+ */
+export function identifyingHints(text) {
+  const t = String(text || '');
+  const hints = [];
+  const add = (kind, re) => {
+    const g = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`);
+    for (const m of t.matchAll(g)) hints.push({ kind, match: kind === 'place' ? m[1] : m[0] });
+  };
+  add('organisation', ORG_RE);
+  add('role', ROLE_RE);
+  add('first_person', FIRST_PERSON_RE);
+  add('unique', UNIQUE_RE);
+  add('place', PLACE_RE);
+  return hints;
+}
+
+/** Replace every hinted span with a neutral marker. */
+export function removeIdentifyingDetail(text, marker = '[detail removed]') {
+  let out = String(text || '');
+  const spans = [...new Set(identifyingHints(out).map((h) => h.match))].sort((a, b) => b.length - a.length);
+  for (const sp of spans) out = out.split(sp).join(marker);
+  return out;
+}
+
 /**
  * The failure mode nobody tests: pseudonymity that does not pseudonymise.
  *
- * With 5–10 experts per country, an alias is only protective if the text does
- * not identify its author. This checks the two that are mechanical: a name
- * appearing in the contribution, and a country–role pair specific enough to
- * pick one person out of a panel that small.
+ * With 5-10 experts per country, an alias is only protective if the text does
+ * not identify its author. This checks the mechanical signals: a name in the
+ * contribution, an organisation, job title, first-person identifier, uniqueness
+ * claim or place name (see `identifyingHints()`), and a panel too small to hide
+ * anyone.
  *
  * Deliberately conservative and deliberately incomplete — it returns warnings
  * for a human, it does not block.
@@ -255,6 +359,20 @@ export function leaksBy(contribution, peers = []) {
     if (n && named(text, n)) {
       warns.push(`the contribution names another panellist (${n})`);
     }
+  }
+  const LABEL = {
+    organisation: 'names an organisation',
+    role: 'names a job title',
+    first_person: 'uses a first-person identifier',
+    unique: 'claims to be the only one',
+    place: 'names a place',
+  };
+  const seen = new Set();
+  for (const h of identifyingHints(text)) {
+    const key = `${h.kind}:${h.match.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    warns.push(`the contribution ${LABEL[h.kind]} ("${h.match}") — in a small panel this can identify the author`);
   }
   if (peers.length > 0 && peers.length < 5) {
     warns.push(

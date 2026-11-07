@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src'].map((d) => path.join(ROOT, d));
+const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src', 'packages/service/src'].map((d) => path.join(ROOT, d));
 
 const FORBIDDEN = [
   { re: /\bdocument\.cookie\b/, why: 'cookie write' },
