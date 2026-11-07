@@ -47,6 +47,7 @@ export const METHODS = Object.freeze({
 
 export const DEFAULT_METHOD = METHODS.MEDIAN;
 export const MIN_PANEL_SIZE = 3;
+export const MIN_RELEASE_PANEL_SIZE = 5;
 export const MIN_COHORT_STEP = 3;
 export const MIN_SEEDS_FOR_WEIGHTING = 10;
 export const MAX_ROUNDS = 2;
@@ -658,24 +659,42 @@ export function aggregate(estimates, opts = {}) {
   const rawPooled = poolOnce(values, baseWeights, method);
   const estimate = appliedD === 1.0 ? rawPooled : extremise(rawPooled, { d: appliedD });
 
-  // Deterministic bootstrap CI over the panel respondents.
-  const rnd = mulberry32(seed);
-  const boot = new Array(reps);
-  const sampleVals = new Array(n);
-  const sampleWeights = new Array(n);
+  // Deterministic variance-preserving smoothed bootstrap CI (Efron & Tibshirani
+  // 1993, §16.5). Pure discrete resampling on small panels (n = 3..5) collapses
+  // the 2.5% and 97.5% median quantiles onto exact participant submissions
+  // [min, max] (U1); continuous Gaussian kernel smoothing with shrinkage
+  // sqrt(1 - 1/n) and bandwidth sd/sqrt(n) preserves exact sample variance
+  // while keeping [lo, hi] off individual panellists' raw inputs.
+  const meanVal = values.reduce((a, b) => a + b, 0) / n;
+  const sampleSd = Math.sqrt(values.reduce((a, v) => a + (v - meanVal) ** 2, 0) / n);
+  let lo = estimate;
+  let hi = estimate;
 
-  for (let r = 0; r < reps; r++) {
-    for (let i = 0; i < n; i++) {
-      const idx = (rnd() * n) | 0;
-      sampleVals[i] = values[idx];
-      sampleWeights[i] = baseWeights[idx];
+  if (sampleSd > 0) {
+    const shrink = Math.sqrt(Math.max(0, 1 - 1 / n));
+    const bandwidth = sampleSd / Math.sqrt(n);
+    const rnd = mulberry32(seed);
+    const boot = new Array(reps);
+    const sampleVals = new Array(n);
+    const sampleWeights = new Array(n);
+
+    for (let r = 0; r < reps; r++) {
+      for (let i = 0; i < n; i++) {
+        const idx = (rnd() * n) | 0;
+        const u1 = Math.max(1e-12, rnd());
+        const u2 = rnd();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        const smoothed = meanVal + shrink * (values[idx] - meanVal) + bandwidth * z;
+        sampleVals[i] = Math.min(1, Math.max(0, smoothed));
+        sampleWeights[i] = baseWeights[idx];
+      }
+      const bRaw = poolOnce(sampleVals, sampleWeights, method);
+      boot[r] = appliedD === 1.0 ? bRaw : extremise(bRaw, { d: appliedD });
     }
-    const bRaw = poolOnce(sampleVals, sampleWeights, method);
-    boot[r] = appliedD === 1.0 ? bRaw : extremise(bRaw, { d: appliedD });
+    boot.sort((a, b) => a - b);
+    lo = Math.min(estimate, quantileSorted(boot, alpha / 2));
+    hi = Math.max(estimate, quantileSorted(boot, 1 - alpha / 2));
   }
-  boot.sort((a, b) => a - b);
-  const lo = Math.min(estimate, quantileSorted(boot, alpha / 2));
-  const hi = Math.max(estimate, quantileSorted(boot, 1 - alpha / 2));
 
   const out = {
     suppressed: false,
@@ -713,23 +732,22 @@ export function aggregate(estimates, opts = {}) {
 }
 
 /**
- * Temporal-differencing release gate around `aggregate()`.
+ * Privacy-enforcing release gate around `aggregate()` for all panellist,
+ * analyst, and public views (closes U1 and U4):
  *
- * A static `n >= 3` floor stops one-shot subtraction, NOT sequential
- * observation: if a view refreshes as `n = 3 -> 4 -> 5`, diffing consecutive
- * medians or sample extremes (`min`/`max`) can isolate a single newcomer's
- * probability. `releaseAggregate()` enforces two release policies:
- *
- *   - `RELEASE_POLICIES.ON_CLOSE` (default — Round-1 -> Round-2 reveal):
- *     withholds all numerical statistics while `closed === false`; publishes
- *     once when `closed === true` (subject to `n >= effectiveMin` and pinning
- *     `previousSnapshot` if a prior snapshot existed within `< MIN_COHORT_STEP`
- *     respondents).
- *   - `RELEASE_POLICIES.BATCH` (long-horizon live triggers):
- *     publishes the first snapshot once `n >= effectiveMin` with exact sample
- *     extremes masked (`min: null, max: null, spread: null`), and pins
- *     `previousSnapshot` (`stale: true, releaseHeld: true`) until at least
- *     `minStep >= MIN_COHORT_STEP` (3) additional respondents arrive.
+ *   1. Raises the release floor to `MIN_RELEASE_PANEL_SIZE = 5` on panel views
+ *      (matching `anonymity.js` `leaksBy`'s `< 5` threshold) and `PUBLIC.minCount = 10`
+ *      on public views so colluding or `IDENTIFIED` peers cannot isolate an
+ *      `ANONYMOUS` peer on a 3- or 4-person panel.
+ *   2. Suppresses auxiliary order statistics (`q25`, `q75`, `iqr`, `min`, `max`,
+ *      `spread`) whenever `n < PUBLIC.minCount` (`10`) in BOTH `on_close` and
+ *      `batch` modes, eliminating order-statistic linear-system solvers
+ *      (`2*q25 - median`, `2*q75 - median`). Only `{ estimate, lo, hi }` (with
+ *      variance-preserving smoothed bootstrap `[lo, hi]`) is emitted below 10.
+ *   3. Prevents sequential temporal differencing (`U4`): `on_close` (default)
+ *      withholds all interim statistics until `closed: true`; `batch` pins
+ *      `previousSnapshot` until `>= MIN_COHORT_STEP` (`3`) new respondents arrive
+ *      and masks `min`/`max`/`spread` while open.
  */
 export function releaseAggregate(estimates, opts = {}) {
   const policy = opts.policy === undefined ? RELEASE_POLICIES.ON_CLOSE : opts.policy;
@@ -745,7 +763,14 @@ export function releaseAggregate(estimates, opts = {}) {
   const minStep = Math.max(MIN_COHORT_STEP, requestedStep);
   const prev = opts.previousSnapshot && !opts.previousSnapshot.suppressed ? opts.previousSnapshot : null;
 
-  const base = aggregate(estimates, opts);
+  const requestedMin = opts.minPanel === undefined ? MIN_RELEASE_PANEL_SIZE : opts.minPanel;
+  if (!Number.isInteger(requestedMin) || requestedMin < 1) {
+    throw new RangeError(`minPanel must be a positive integer, got ${JSON.stringify(requestedMin)}`);
+  }
+  const releaseFloor = opts.visibility === 'public' ? PUBLIC.minCount : MIN_RELEASE_PANEL_SIZE;
+  const effectiveReleaseMin = Math.max(releaseFloor, requestedMin);
+
+  const base = aggregate(estimates, { ...opts, minPanel: effectiveReleaseMin });
   if (base.suppressed) {
     return {
       ...base,
@@ -820,12 +845,16 @@ export function releaseAggregate(estimates, opts = {}) {
     return withheld;
   }
 
-  // In live BATCH mode (before round close), mask exact sample extremes so a
-  // newly arriving outlier cannot be read off `min` or `max` even across a
-  // 3-person cohort; bootstrap [lo, hi] and [q25, q75] remain intact.
-  const maskExtremes = policy === RELEASE_POLICIES.BATCH && !closed;
+  // Below PUBLIC.minCount (10), suppress quartiles and extremes in ALL modes so
+  // { estimate, q25, q75 } or { min, max } can never invert individual answers
+  // (U1). Above 10 in live BATCH mode, keep sample extremes masked as well.
+  const maskQuartiles = base.n < PUBLIC.minCount;
+  const maskExtremes = maskQuartiles || (policy === RELEASE_POLICIES.BATCH && !closed);
   return {
     ...base,
+    q25: maskQuartiles ? null : base.q25,
+    q75: maskQuartiles ? null : base.q75,
+    iqr: maskQuartiles ? null : base.iqr,
     min: maskExtremes ? null : base.min,
     max: maskExtremes ? null : base.max,
     spread: maskExtremes ? null : base.spread,

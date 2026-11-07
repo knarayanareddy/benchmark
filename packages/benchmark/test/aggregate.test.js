@@ -5,6 +5,7 @@ import {
   METHODS,
   DEFAULT_METHOD,
   MIN_PANEL_SIZE,
+  MIN_RELEASE_PANEL_SIZE,
   MIN_COHORT_STEP,
   MIN_SEEDS_FOR_WEIGHTING,
   MAX_ROUNDS,
@@ -733,77 +734,97 @@ test('end-to-end backtest integration: aggregate() outputs pipe cleanly into boo
 
 // ── 7. Temporal differencing guard & anonymous ballot-token dedupe (U4) ─────
 
-test('releaseAggregate() prevents sequential temporal differencing via on_close and >=3 cohort batching', () => {
+test('releaseAggregate() enforces MIN_RELEASE_PANEL_SIZE=5, suppresses <10 order statistics, and batches cohorts', () => {
+  assert.equal(MIN_RELEASE_PANEL_SIZE, 5);
   assert.equal(MIN_COHORT_STEP, 3);
-  const p3 = mkPanel([0.50, 0.60, 0.70]);
   const p4 = mkPanel([0.50, 0.60, 0.70, 0.90]);
   const p5 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65]);
   const p6 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65, 0.55]);
+  const p7 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65, 0.55, 0.62]);
+  const p8 = mkPanel([0.50, 0.60, 0.70, 0.90, 0.65, 0.55, 0.62, 0.58]);
+  const p10 = mkPanel([0.20, 0.35, 0.50, 0.55, 0.60, 0.62, 0.65, 0.70, 0.80, 0.90]);
+
+  // 0. Panels below 5 are suppressed even when closed (matching anonymity.js <5 rule)
+  const blocked4 = releaseAggregate(p4, { closed: true, minPanel: 3 });
+  assert.equal(blocked4.suppressed, true);
+  assert.equal(blocked4.needed, 5);
+  assert.equal(blocked4.estimate, null);
 
   // 1. Default policy is ON_CLOSE: interim snapshots while open are suppressed
-  const openHold = releaseAggregate(p4, { closed: false, impact: 4 });
+  const openHold = releaseAggregate(p5, { closed: false, impact: 4 });
   assert.equal(openHold.policy, RELEASE_POLICIES.ON_CLOSE);
   assert.equal(openHold.suppressed, true);
   assert.equal(openHold.releaseHeld, true);
   assert.equal(openHold.estimate, null);
   assert.equal(openHold.acaps.suppressed, true);
 
-  // Once the round closes, the full aggregate releases cleanly
-  const closedSnap = releaseAggregate(p4, { closed: true, impact: 4 });
-  assert.equal(closedSnap.suppressed, false);
-  assert.equal(closedSnap.releaseHeld, false);
-  assert.ok(Math.abs(closedSnap.estimate - 0.65) < 1e-12);
-  assert.equal(closedSnap.max, 0.90);
+  // Once closed at n=5 (<10), estimate + smoothed [lo, hi] release while quartiles/extremes stay null
+  const closed5 = releaseAggregate(p5, { closed: true, impact: 4 });
+  assert.equal(closed5.suppressed, false);
+  assert.equal(closed5.releaseHeld, false);
+  assert.equal(closed5.estimate, 0.65);
+  assert.equal(closed5.q25, null, 'quartiles suppressed below n=10 to prevent linear inversion');
+  assert.equal(closed5.q75, null);
+  assert.equal(closed5.min, null);
+  assert.equal(closed5.max, null);
 
-  // 2. Live BATCH mode: releases at n=3 with min/max/spread masked, then pins
-  //    previousSnapshot across n=4 and n=5 (blocking 1- and 2-person deltas)
-  //    until n=6 clears MIN_COHORT_STEP=3 (even if caller passes minStep: 1).
-  const snap3 = releaseAggregate(p3, { policy: RELEASE_POLICIES.BATCH, closed: false, minStep: 1 });
-  assert.equal(snap3.suppressed, false);
-  assert.equal(snap3.estimate, 0.60);
-  assert.equal(snap3.min, null, 'live batch mode masks sample min to prevent extreme-value differencing');
-  assert.equal(snap3.max, null, 'live batch mode masks sample max to prevent extreme-value differencing');
-  assert.equal(snap3.spread, null);
+  // At n=10 closed, full quartiles and extremes release
+  const closed10 = releaseAggregate(p10, { closed: true });
+  assert.equal(closed10.suppressed, false);
+  assert.ok(closed10.q25 !== null && closed10.q75 !== null);
+  assert.equal(closed10.min, 0.20);
+  assert.equal(closed10.max, 0.90);
 
-  const snap4 = releaseAggregate(p4, {
-    policy: RELEASE_POLICIES.BATCH,
-    closed: false,
-    minStep: 1, // floor must clamp to MIN_COHORT_STEP = 3
-    previousSnapshot: snap3,
-  });
-  assert.equal(snap4.estimate, snap3.estimate, '4th answer must not shift released median');
-  assert.equal(snap4.n, 3, 'released count stays pinned at previous cohort');
-  assert.equal(snap4.stale, true);
-  assert.equal(snap4.releaseHeld, true);
-  assert.equal(snap4.heldBackCount, 1);
-  assert.equal(snap4.neededForNextBatch, 2);
-
-  const snap5 = releaseAggregate(p5, {
-    policy: RELEASE_POLICIES.BATCH,
-    closed: false,
-    previousSnapshot: snap3,
-  });
-  assert.equal(snap5.n, 3);
-  assert.equal(snap5.heldBackCount, 2);
-  assert.equal(snap5.neededForNextBatch, 1);
+  // 2. Live BATCH mode: releases at n=5, then pins previousSnapshot across n=6
+  //    and n=7 (blocking 1- and 2-person deltas) until n=8 clears MIN_COHORT_STEP=3.
+  const snap5 = releaseAggregate(p5, { policy: RELEASE_POLICIES.BATCH, closed: false, minStep: 1 });
+  assert.equal(snap5.suppressed, false);
+  assert.equal(snap5.estimate, 0.65);
+  assert.equal(snap5.min, null);
+  assert.equal(snap5.max, null);
+  assert.equal(snap5.q25, null);
+  assert.equal(snap5.q75, null);
 
   const snap6 = releaseAggregate(p6, {
     policy: RELEASE_POLICIES.BATCH,
     closed: false,
-    previousSnapshot: snap3,
+    minStep: 1, // floor must clamp to MIN_COHORT_STEP = 3
+    previousSnapshot: snap5,
   });
-  assert.equal(snap6.n, 6, 'new cohort releases once >=3 additional respondents arrive');
-  assert.equal(snap6.stale, false);
-  assert.equal(snap6.releaseHeld, false);
-  assert.equal(snap6.heldBackCount, 0);
-  assert.equal(snap6.max, null);
+  assert.equal(snap6.estimate, snap5.estimate, '6th answer must not shift released median');
+  assert.equal(snap6.n, 5, 'released count stays pinned at previous cohort');
+  assert.equal(snap6.stale, true);
+  assert.equal(snap6.releaseHeld, true);
+  assert.equal(snap6.heldBackCount, 1);
+  assert.equal(snap6.neededForNextBatch, 2);
+
+  const snap7 = releaseAggregate(p7, {
+    policy: RELEASE_POLICIES.BATCH,
+    closed: false,
+    previousSnapshot: snap5,
+  });
+  assert.equal(snap7.n, 5);
+  assert.equal(snap7.heldBackCount, 2);
+  assert.equal(snap7.neededForNextBatch, 1);
+
+  const snap8 = releaseAggregate(p8, {
+    policy: RELEASE_POLICIES.BATCH,
+    closed: false,
+    previousSnapshot: snap5,
+  });
+  assert.equal(snap8.n, 8, 'new cohort releases once >=3 additional respondents arrive');
+  assert.equal(snap8.stale, false);
+  assert.equal(snap8.releaseHeld, false);
+  assert.equal(snap8.heldBackCount, 0);
+  assert.equal(snap8.q25, null);
+  assert.equal(snap8.max, null);
 
   // Regressing panel size or invalid policy throws explicitly
   assert.throws(
-    () => releaseAggregate(p3, { policy: RELEASE_POLICIES.BATCH, previousSnapshot: snap6 }),
+    () => releaseAggregate(p5, { policy: RELEASE_POLICIES.BATCH, previousSnapshot: snap8 }),
     /regressed/
   );
-  assert.throws(() => releaseAggregate(p3, { policy: 'every_click' }), /unknown release policy/);
+  assert.throws(() => releaseAggregate(p5, { policy: 'every_click' }), /unknown release policy/);
 });
 
 test('card-scoped ballotToken deduplicates anonymous Round-1/Round-2 ballots without retaining expertId', () => {

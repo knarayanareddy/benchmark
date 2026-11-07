@@ -71,16 +71,48 @@ export function mulberry32(seed) {
   };
 }
 
-/** pairs: [{p: 0..1, y: 0|1|null}] — null y is unobservable and is EXCLUDED. */
+function validatePair(d, label = 'item') {
+  if (!d || typeof d !== 'object') {
+    throw new TypeError(`${label} must be an object with { p, y }`);
+  }
+  if (typeof d.p !== 'number' || !Number.isFinite(d.p) || d.p < 0 || d.p > 1) {
+    throw new RangeError(
+      `${label}.p must be a finite probability in [0, 1], got ${JSON.stringify(d.p)}`
+    );
+  }
+  if (d.y !== 0 && d.y !== 1 && d.y !== null && d.y !== undefined) {
+    throw new RangeError(
+      `${label}.y must be 0, 1, or null/undefined (unobservable), got ${JSON.stringify(d.y)}`
+    );
+  }
+}
+
+/** pairs: [{p: 0..1, y: 0|1|null}] — null/undefined y is unobservable and is EXCLUDED; invalid p or y throws. */
 export function observed(pairs) {
-  return pairs.filter((d) => d.y === 0 || d.y === 1);
+  if (!Array.isArray(pairs)) {
+    throw new TypeError('pairs must be an array');
+  }
+  const out = [];
+  for (let i = 0; i < pairs.length; i++) {
+    const d = pairs[i];
+    validatePair(d, `pairs[${i}]`);
+    if (d.y === 0 || d.y === 1) out.push(d);
+  }
+  return out;
 }
 
 export function brierItem(d) {
+  validatePair(d, 'item');
+  if (d.y !== 0 && d.y !== 1) {
+    throw new RangeError(
+      `brierItem requires a resolved binary outcome (0 or 1), got ${JSON.stringify(d.y)}`
+    );
+  }
   const e = d.p - d.y;
   return e * e;
 }
 
+/** Low-level scalar mean Brier primitive; use bootstrapBrier() for interval-bearing output. */
 export function brier(pairs) {
   const o = observed(pairs);
   if (!o.length) return { score: null, n: 0, note: 'no observable outcomes' };

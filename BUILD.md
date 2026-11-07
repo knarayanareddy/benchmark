@@ -4,9 +4,9 @@
 
 ```
 $ npm run verify
-✓ 98 unit tests pass
+✓ 101 unit tests pass
 ✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items)
-✓ five-state dissent loop, shared loop.js copy, cap-bypass dispatch and anonymous opt-out verified
+✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
 
 ---
@@ -16,12 +16,12 @@ $ npm run verify
 | Module | File | State | Proof |
 |---|---|---|---|
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
-| Scoring | `packages/core/src/scoring.js` | **Complete** | Brier + bootstrap + paired comparison, 9 tests |
-| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + intervals, ≥10-seed Brier skill gate, static & temporal (`releaseAggregate`) differencing guards, ACAPS 5×5 bridge, 27 tests |
+| Scoring | `packages/core/src/scoring.js` | **Complete** | Strict `[0, 1]` / `{0, 1, null}` boundary validation, Brier + bootstrap + paired comparison, 10 tests |
+| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + variance-preserving smoothed bootstrap intervals, ≥10-seed Brier skill gate, `releaseAggregate()` (`n ≥ 5`, `<10` order-stat suppression, cohort batching), ACAPS 5×5 bridge, 27 tests |
 | The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 13 tests |
 | Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 6 tests |
-| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, 20 tests |
-| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs + anonymous opt-out, 5 tests + journey script |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, 21 tests |
+| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless `cardLedger()`, 6 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |
 
@@ -59,13 +59,14 @@ node scripts/backtest.mjs       # the scoring harness
 
 1. **Prospective, not retrospective (hindsight contamination).** An earlier draft proposed asking human country specialists to score the 104 already-resolved historical risks retrospectively. That is invalid as an accuracy test: specialists in late 2026 already know whether 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) materialised. The 104 resolved rows establish the incumbent baselines (`0.2425` / `0.2168` / `0.2177`); the human panel must be evaluated **prospectively** on unresolved statements (**28 Active risks** and **266 dated triggers** as rolling windows close).
 2. **Statistical power requires trigger-level volume.** On the 104 resolved risks, the paired Brier difference SD is **0.1505** (`scripts/measure-baseline.mjs`), giving an 80%-power two-sided minimum detectable effect of **0.0413** Brier at `n = 104` and requiring **n ≈ 445** resolved statements to detect a **0.02** Brier gain. Top-level country risks (`139` total) are too scarce; dated trigger statements (`266` per export cycle) are where prospective statistical power lives.
+3. **External resolution criteria, not endogenous post-hoc labels.** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is recorded later by ACAPS' own analysts on a selected set of published risks (`61/104 = 58.7%` materialised), measuring analyst self-consistency alongside forecast skill. Prospective trigger evaluation must pre-specify external indicators (ACLED, IPC, UNHCR, IMF) in `objective` before cards open.
 
 ---
 
 ## Hard rules
 
 - **No leaderboard.** Panel scores public, individual scores private.
-- **Two-tier small-cell & temporal differencing suppression.** Country panels of 5–10 experts publish internally to analysts and Round-2 panellists at `MIN_PANEL_SIZE = 3` (`aggregate.js`), while `releaseAggregate()` releases only at Round-1 close (`on_close`) or in `≥ 3`-respondent cohorts (`batch`, masking `min`/`max`) so consecutive updates cannot be differenced. Public outputs enforce `PUBLIC.minCount = 10` (`anonymity.js`), showing cross-country regional/thematic rollups rather than single-country cells.
+- **Tiered small-cell, order-statistic & temporal differencing suppression.** Released analyst and Round-2 views go through `releaseAggregate()` (`MIN_RELEASE_PANEL_SIZE = 5`, matching `anonymity.js`'s `< 5` rule), use variance-preserving smoothed bootstrap intervals (so `[lo, hi]` never collapses onto raw `[min, max]`), suppress `q25`/`q75`/`iqr`/`min`/`max`/`spread` below `n = 10` (so linear quartile systems cannot invert individual answers), and update only at Round-1 close (`on_close`) or in `≥ 3`-respondent cohorts (`batch`). Public outputs enforce `PUBLIC.minCount = 10` (`anonymity.js`), showing cross-country regional/thematic rollups rather than single-country cells.
 - **Every score renders with its interval.** There is no code path that returns a naked point estimate.
 - **Unobservable ≠ miss.** `scoring.js` excludes `null` outcomes; it never counts them as failures.
 - **The Declaration decides who is told, never how much weight they carry.** Weighting is by seed-variable performance, and only where a domain has ≥10 seed items.

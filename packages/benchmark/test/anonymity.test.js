@@ -4,6 +4,11 @@ import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
   resolveLevel, aliasFor, panelAliases, attribute, leaksBy, publicable, PUBLIC,
 } from '../../core/src/anonymity.js';
+import {
+  aggregate,
+  releaseAggregate,
+  RELEASE_POLICIES,
+} from '../../core/src/aggregate.js';
 
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
 
@@ -189,4 +194,60 @@ test('9,000-slot alias space avoids small-panel collisions and panelAliases() gu
   );
   assert.equal(attributed.by, mapA.expert_1);
 });
+
+test('intervals and small-panel releases resist order-statistic & quartile inversion attacks (U1)', () => {
+  // 1. Even on low-level aggregate() at n=3,4,5, smoothed bootstrap [lo, hi]
+  //    must NOT collapse onto [min, max] (the individual boundary answers).
+  for (const secret of [
+    [0.17, 0.63, 0.89],
+    [0.12, 0.44, 0.68, 0.91],
+    [0.11, 0.29, 0.47, 0.68, 0.89],
+  ]) {
+    const raw = aggregate(secret.map((p, i) => ({ expertId: `e${i + 1}`, p })));
+    assert.notEqual(raw.lo, secret[0], `n=${secret.length}: lo must not equal x_1 (${secret[0]})`);
+    assert.notEqual(
+      raw.hi,
+      secret[secret.length - 1],
+      `n=${secret.length}: hi must not equal x_n (${secret[secret.length - 1]})`
+    );
+  }
+
+  // 2. On the released boundary (releaseAggregate), n=3 and n=4 are suppressed
+  //    completely, and for n=5..9 q25/q75/iqr/min/max/spread are all null so
+  //    neither [lo, estimate, hi] nor 2*q25 - estimate can solve individual answers.
+  for (const small of [
+    [0.17, 0.63, 0.89],
+    [0.12, 0.44, 0.68, 0.91],
+  ]) {
+    for (const policy of Object.values(RELEASE_POLICIES)) {
+      const held = releaseAggregate(
+        small.map((p, i) => ({ expertId: `e${i + 1}`, p })),
+        { policy, closed: true }
+      );
+      assert.equal(held.suppressed, true);
+      assert.equal(held.needed, 5);
+    }
+  }
+
+  const secret5 = [0.11, 0.29, 0.47, 0.68, 0.89];
+  for (const policy of Object.values(RELEASE_POLICIES)) {
+    const rel = releaseAggregate(
+      secret5.map((p, i) => ({ expertId: `e${i + 1}`, p, level: LEVELS.ANONYMOUS })),
+      { policy, closed: true }
+    );
+    assert.equal(rel.suppressed, false);
+    assert.equal(rel.q25, null, `${policy}: q25 must be null below n=10`);
+    assert.equal(rel.q75, null, `${policy}: q75 must be null below n=10`);
+    assert.equal(rel.iqr, null);
+    assert.equal(rel.min, null);
+    assert.equal(rel.max, null);
+    assert.equal(rel.spread, null);
+    // Neither lo nor hi matches any participant's exact submission
+    for (const p of secret5) {
+      assert.ok(Math.abs(rel.lo - p) > 1e-4, `${policy}: lo (${rel.lo}) leaked submission ${p}`);
+      assert.ok(Math.abs(rel.hi - p) > 1e-4, `${policy}: hi (${rel.hi}) leaked submission ${p}`);
+    }
+  }
+});
+
 

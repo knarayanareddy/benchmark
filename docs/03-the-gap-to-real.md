@@ -41,6 +41,8 @@ So the product has to argue something narrow and testable: *the regression sees 
 
 **Why prospective triggers rather than retrospective risks.** The 104 already-resolved risks establish the incumbent baselines (`0.2425` floor, `0.2168` ACAPS, `0.2177` LOO logistic), but asking human country experts today to "forecast" historical 2021–2025 crises (Taliban provincial-capital offensives, Sudan, Gaza) is contaminated by hindsight — experts already know what happened. And at `n = 104` the smallest paired difference detectable at 80% power is `0.0413` Brier. Scoring rolling 30–90 day trigger statements prospectively solves both hindsight contamination and sample size.
 
+**Why external resolution criteria matter (endogenous labels & selection).** In `risk-radar-export.csv`, `Materialised` / `Not materialised` is assigned post-hoc by ACAPS' own analysts with no fixed end date and no independent oracle — so `0.2168` measures analyst-to-analyst self-consistency as much as exogenous forecast skill, on a non-random sample of published concerns (`61/104 = 58.7%` materialised). A credible prospective trial must bind each trigger's `objective` before opening to an external source (ACLED event logs, IPC Phase releases, UNHCR border counts, official decrees) rather than post-hoc editorial judgement.
+
 ---
 
 ## What full-fledged would need that the blueprint does not specify

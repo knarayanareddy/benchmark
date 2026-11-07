@@ -59,9 +59,11 @@ The obvious product is "get more experts to fill in more cells." The evidence sa
 This is the interface ACAPS' own cognitive-bias brief (March 2016) argues for.
 That document is organised as bias → mitigation strategy, and most of its named
 biases are properties of how a question is asked rather than of the person
-answering it. Independent round one addresses anchoring and herding. Two-tier
-small-cell suppression (`n ≥ 3` inside the analyst/panel surface; `n ≥ 10` for
-public regional/thematic rollups) addresses differencing and social proof. "Make
+answering it. Independent round one addresses anchoring and herding. Tiered
+small-cell & order-statistic suppression (`n ≥ 5` via `releaseAggregate()` with
+quartiles/extremes suppressed below `10` and smoothed bootstrap intervals inside
+analyst/panel views; `n ≥ 10` for public regional/thematic rollups) addresses
+inversion, differencing and social proof. "Make
 sense, not data" is the same position: the judgement is the product, and the
 interface is what determines whether the judgement is any good. Target budget:
 ninety seconds per recurring card, one thumb, phone-first (design target, not yet
