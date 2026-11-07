@@ -47,7 +47,7 @@ export async function pgDriverStores() {
   const db2 = {
     async query(sql, params) {
       try { return await pool.query(sql, params); } catch (e) {
-        if (e.code === 'ECONNRESET') return pool.query(sql, params);
+        if (e.code === 'ECONNRESET' || /Connection terminated unexpectedly/.test(String(e.message))) return pool.query(sql, params);
         throw e;
       }
     },

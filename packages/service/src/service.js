@@ -34,6 +34,9 @@ import {
   ValidationError, AuthError, ForbiddenError, NotFoundError, ConflictError,
 } from './errors.js';
 import { can, ROLES, newToken, hashToken } from './auth.js';
+import { isSensitiveCountry, DEFAULT_SENSITIVE_COUNTRIES } from '@benchmark/core/sensitive';
+import { createRoundtable } from './roundtable.js';
+import { createPublication } from './publication.js';
 import { CONSENT_VERSION, consentText, consentHash, RETENTION_MONTHS } from './consent.js';
 
 export const BREAK_GLASS_CATEGORIES = Object.freeze(['safety_threat', 'safety_welfare', 'legal_obligation']);
@@ -67,13 +70,13 @@ const isoList = (v) => {
 /**
  * @param {{
  *   roster: any, answers: any, secrets: { ballot: string, alias: string }, now?: () => number, releasePolicy?: string,
- *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string
+ *   breakGlassPublicKey?: string, breakGlassPrivateKey?: string, blindKey?: string, sensitiveCountries?: readonly string[]
  * }} deps
  * `breakGlassPublicKey` (RSA, PEM) turns the safety override on: an anonymous objection then carries its
  * sender's id sealed to that key. The private key is NOT needed to run the service; it is supplied at collection.
  * `blindKey` (RSA private key, PEM) turns on device-held ballots: blind-signed tokens an expert's device keeps.
  */
-export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey } = /** @type {any} */ ({})) {
+export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES } = /** @type {any} */ ({})) {
   if (!roster || !answers) throw new TypeError('createService needs { roster, answers }');
   for (const k of ['ballot', 'alias']) {
     if (typeof secrets?.[k] !== 'string' || secrets[k].length < MIN_SECRET) {
@@ -309,7 +312,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       out.push({
         id: c.id, statement: c.statement, country: c.country, status: c.status, round: c.round,
         parentId: c.parentId, window: c.window, resolver: c.resolver, resolutionSource: c.resolutionSource,
-        version: c.version, responses: rows.length, hasSecondLook: Boolean(c.secondLook),
+        version: c.version, responses: rows.length, hasSecondLook: Boolean(c.secondLook), threadEnabled: Boolean(c.thread?.enabled),
       });
     }
     return out;
@@ -331,6 +334,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     need(actor, 'round.manage');
     const card = await getCard(cardId);
     if (card.status !== 'closed' || card.round !== 1) throw new ConflictError('round 2 opens only on a card whose round 1 is closed');
+    if (await roundtable.pendingCount(cardId) > 0) throw new ConflictError('round 2 cannot open while discussion posts are waiting for a moderator');
     const next = await updateCard(card, { status: 'open', round: 2 });
     await audit(actor, 'round.open2', cardId);
     return next;
@@ -451,6 +455,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
         else if (card.round === 2) {
           openForRevision.push(cardView(card, {
             release: await cardRelease(card.id, { round: 1 }), deviceHeld: true, secondLook: { available: Boolean(card.secondLook) },
+            thread: { available: Boolean(card.thread?.enabled) },
           }));
         }
         continue;
@@ -465,6 +470,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
           openForRevision.push(cardView(card, {
             yourEstimate: first.p, release: await cardRelease(card.id, { round: 1 }),
             secondLook: { available: Boolean(card.secondLook) && armFor(card.id, key) !== 'control' },
+            thread: { available: Boolean(card.thread?.enabled) },
           }));
         }
       }
@@ -474,7 +480,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       id: n.id, kind: n.kind, day: n.day,
       text: `On ${n.day}, two ACAPS moderators opened the sealed note on an anonymous objection you sent, because of ${CATEGORY_LABEL[n.category] ?? 'a serious concern'}.`,
     }));
-    return { toAnswer, openForRevision, notifications, notices, deviceMode: expert.tokenMode === 'device' };
+    return {
+      toAnswer, openForRevision, notifications, notices, deviceMode: expert.tokenMode === 'device',
+      discussion: await roundtable.discussionFor(expert), publications: await publication.listForExpert(expert.id),
+    };
   }
 
   // ── dissent ─────────────────────────────────────────────────────────────
@@ -652,7 +661,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       expert: e,
       aliases: await roster.aliases.find({ expertId: e.id }),
       // The arm and whether the second look was opened are experiment metadata, not the expert's own answer.
-      estimates: (await ownedEstimates(e)).map(({ row: { arm: _arm, sawSecondLook: _saw, ...own } }) => own),
+      estimates: (await ownedEstimates(e)).map(({ row: { arm: _arm, sawSecondLook: _saw, sawThread: _thread, ...own } }) => own),
+      threadPosts: await roundtable.exportFor(e),
+      publications: await publication.exportFor(e.id),
       dissents: await answers.dissents.find({ expert: e.id }),
       notifications: await answers.notifications.find({ to: e.id }),
       note: e.tokenMode === 'device'
@@ -671,7 +682,9 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     for (const x of await ownedEstimates(e)) {
       await answers.estimates.remove(x.key);
       await answers.second_look.remove(secondLookKey(x.row.cardId, x.row.respondentKey));
+      await roundtable.eraseKey(x.row.cardId, x.row.respondentKey);
     }
+    await publication.eraseExpert(e.id);
     await answers.dissents.removeWhere({ expert: e.id });
     await answers.notifications.removeWhere({ to: e.id });
     await roster.aliases.removeWhere({ expertId: e.id });
@@ -695,6 +708,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
       removed += await answers.estimates.removeWhere({ cardId: c.id });
       await answers.second_look.removeWhere({ cardId: c.id });
     }
+    await roundtable.eraseCards(stale.map((c) => c.id));
     await audit(actor, 'retention.run', '', `${removed} rows, ${months} months`);
     return { removed, cards: stale.map((c) => c.id) };
   }
@@ -783,10 +797,14 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
   // ── the optional second look: Round 2 background, assigned by arm ─────
   /** The arm fields a Round-2 row carries. Decided here, never taken from a client. */
   async function secondLookFields(card, key) {
-    if (card.round !== 2 || !card.secondLook) return {};
+    if (card.round !== 2) return {};
     return {
-      arm: armFor(card.id, key),
-      sawSecondLook: Boolean(await answers.second_look.get(secondLookKey(card.id, key))),
+      ...(card.secondLook ? {
+        arm: armFor(card.id, key),
+        sawSecondLook: Boolean(await answers.second_look.get(secondLookKey(card.id, key))),
+      } : {}),
+      // The roundtable also influences Round 2, so the analysis can stratify on it.
+      ...(card.thread?.enabled ? { sawThread: await roundtable.sawThread(card.id, key) } : {}),
     };
   }
 
@@ -997,6 +1015,15 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     return answers.audit.all();
   }
 
+  // Roundtable and publication credit live in their own modules and share only these helpers.
+  const moduleCtx = {
+    roster, answers, secrets, t, need, audit, expertOf, respondentKey, estimateKey, getCard, updateCard, checkBallot,
+    ensureAlias, cardView, isSensitive: (/** @type {string} */ c) => isSensitiveCountry(c, sensitiveCountries),
+    newId: (/** @type {string} */ prefix) => `${prefix}_${crypto.randomUUID()}`,
+  };
+  const roundtable = createRoundtable(moduleCtx);
+  const publication = createPublication(moduleCtx);
+
   return Object.freeze({
     authenticate, createStaffSession, createInvite, createReinvite, listExperts, redeemInvite,
     createCard, listCards, closeRound, openRound2, resolveCard,
@@ -1006,5 +1033,10 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     requestBreakGlass, decideBreakGlass, collectBreakGlass, listBreakGlass, ackNotice, consentFor,
     blindPublicKey, issueBlindToken, submitAnonymousEstimate, anonymousStatus, eraseAnonymousEstimate,
     setSecondLook, getSecondLook, openSecondLook, openAnonymousSecondLook, secondLookSummary,
+    setThread: roundtable.setThread, openThread: roundtable.openThread, postToThread: roundtable.postToThread,
+    openAnonymousThread: roundtable.openAnonymousThread, postAnonymous: roundtable.postAnonymous,
+    listPending: roundtable.listPending, moderate: roundtable.moderate, eraseAnonymous: roundtable.eraseAnonymous,
+    propose: publication.propose, respond: publication.respond, review: publication.review, publish: publication.publish,
+    withdraw: publication.withdraw, listForStaff: publication.listForStaff, listOfferable: publication.listOfferable, listPublic: publication.listPublic,
   });
 }

@@ -163,6 +163,25 @@ export function createHandler({
     ['GET', /^\/api\/staff\/cards\/([^/]+)\/second-look$/, async (req, m) => service.getSecondLook(await actorOf(req), m[1])],
     ['PUT', /^\/api\/staff\/cards\/([^/]+)\/second-look$/, async (req, m, b) => service.setSecondLook(await actorOf(req), { cardId: m[1], content: b })],
     ['GET', /^\/api\/staff\/second-look\/summary$/, async (req) => service.secondLookSummary(await actorOf(req))],
+    // Roundtable: one moderated thread per card. Posts are read by a moderator before anyone else sees them.
+    ['PUT', /^\/api\/staff\/cards\/([^/]+)\/thread$/, async (req, m, b) => service.setThread(await actorOf(req), { cardId: m[1], enabled: b.enabled })],
+    ['GET', /^\/api\/staff\/thread\/pending$/, async (req) => service.listPending(await actorOf(req), { cardId: new URL(req.url, 'http://x').searchParams.get('cardId') || undefined })],
+    ['POST', /^\/api\/staff\/thread\/posts\/([^/]+)\/moderate$/, async (req, m, b) => service.moderate(await actorOf(req), m[1], { approve: b.approve, note: b.note })],
+    ['POST', /^\/api\/thread$/, async (req, m, b) => service.openThread(await actorOf(req), { cardId: b.cardId })],
+    ['POST', /^\/api\/thread\/posts$/, async (req, m, b) => service.postToThread(await actorOf(req), { cardId: b.cardId, kind: b.kind, text: b.text, parentId: b.parentId })],
+    ['POST', /^\/api\/anon\/thread$/, async (req, m, b) => service.openAnonymousThread(b)],
+    ['POST', /^\/api\/anon\/thread\/posts$/, async (req, m, b) => service.postAnonymous(b)],
+    ['POST', /^\/api\/anon\/thread\/erase$/, async (req, m, b) => service.eraseAnonymous(b)],
+    // Publication credit: one contribution, one consent, a second moderator, a cooling-off wait.
+    ['POST', /^\/api\/staff\/publications$/, async (req, m, b) => service.propose(await actorOf(req), { sourceKind: b.sourceKind, sourceId: b.sourceId })],
+    ['GET', /^\/api\/staff\/publications\/offerable$/, async (req) => service.listOfferable(await actorOf(req))],
+    ['GET', /^\/api\/staff\/publications$/, async (req) => service.listForStaff(await actorOf(req))],
+    ['POST', /^\/api\/staff\/publications\/([^/]+)\/review$/, async (req, m, b) => service.review(await actorOf(req), m[1], { approve: b.approve, note: b.note, checked: b.checked })],
+    ['POST', /^\/api\/staff\/publications\/([^/]+)\/publish$/, async (req, m) => service.publish(await actorOf(req), m[1])],
+    ['POST', /^\/api\/publications\/([^/]+)\/respond$/, async (req, m, b) => service.respond(await actorOf(req), m[1], b)],
+    ['POST', /^\/api\/publications\/([^/]+)\/withdraw$/, async (req, m) => service.withdraw(await actorOf(req), m[1])],
+    // The one public list that can carry a name, and only a name its owner agreed to for that one item.
+    ['GET', /^\/api\/public\/credits$/, async () => service.listPublic()],
     ['GET', /^\/api\/staff\/breakglass$/, async (req) => service.listBreakGlass(await actorOf(req))],
     ['POST', /^\/api\/staff\/breakglass$/, async (req, m, b) => service.requestBreakGlass(await actorOf(req), b)],
     ['POST', /^\/api\/staff\/breakglass\/([^/]+)\/decide$/, async (req, m, b) => service.decideBreakGlass(await actorOf(req), m[1], b)],
@@ -200,7 +219,7 @@ export function createHandler({
 
   function serveStatic(req, res, pathname) {
     if (!staticDir || (req.method !== 'GET' && req.method !== 'HEAD')) return false;
-    const rel = pathname === '/' ? '/index.html' : pathname === '/staff' ? '/staff.html' : pathname;
+    const rel = pathname === '/' ? '/index.html' : pathname === '/staff' ? '/staff.html' : pathname === '/credits' ? '/credits.html' : pathname;
     const file = path.normalize(path.join(staticDir, rel));
     if (!file.startsWith(path.normalize(staticDir)) || !MIME[path.extname(file)]) return false;
     let body;

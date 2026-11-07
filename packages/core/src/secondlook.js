@@ -42,6 +42,9 @@ const FIGURE = new RegExp([
 // An ACAPS rating used as a probability ("high probability", "probability is high").
 const RATING = /\b(very low|low|medium|high|very high)\s+probability\b|\bprobability\s+(is|of)\s+(very low|low|medium|high|very high)\b/i;
 
+/** True if the text states a probability, percentage, odds, or an ACAPS rating used as one. @param {unknown} s */
+export const containsProbabilityFigure = (s) => FIGURE.test(String(s ?? '')) || RATING.test(String(s ?? ''));
+
 /**
  * Checks one piece of text, records every problem it has, and returns it trimmed.
  * @param {unknown} value @param {string} label @param {number} min @param {number} max @param {string[]} problems

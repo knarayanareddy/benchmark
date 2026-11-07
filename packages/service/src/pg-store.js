@@ -48,6 +48,19 @@ const TABLES = {
     columns: (d) => ({ card_id: d.cardId, expert_id: d.expert ?? null, level: d.level, status: d.status }),
   },
   notifications: { schema: 'answers', columns: (d) => ({ expert_id: d.to }) },
+  thread_posts: {
+    schema: 'answers',
+    columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey, status: d.status, kind: d.kind, parent_id: d.parentId ?? null }),
+  },
+  thread_participants: { schema: 'answers', columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey, n: d.n }) },
+  thread_views: { schema: 'answers', columns: (d) => ({ card_id: d.cardId, respondent_key: d.respondentKey }) },
+  publications: {
+    schema: 'roster',
+    columns: (d) => ({
+      expert_id: d.expertId, status: d.status, source_kind: d.sourceKind, source_id: d.sourceId, card_id: d.cardId,
+      proposer: d.proposer, reviewer: d.reviewer ?? null,
+    }),
+  },
   issuances: { schema: 'roster', columns: (d) => ({ expert_id: d.expertId, card_id: d.cardId }) },
   notices: { schema: 'roster', columns: (d) => ({ expert_id: d.expertId }) },
   break_glass: {

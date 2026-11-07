@@ -24,7 +24,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
   if (req.mode === 'navigate') {
     // Pages: network first (so a deploy is seen), the cached page when offline.
-    const page = url.pathname.startsWith('/staff') ? '/staff.html' : '/index.html';
+    const page = url.pathname.startsWith('/staff') ? '/staff.html' : url.pathname.startsWith('/credits') ? '/credits.html' : '/index.html';
     event.respondWith(fetch(req).catch(() => caches.match(page)));
     return;
   }

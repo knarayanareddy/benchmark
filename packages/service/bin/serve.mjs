@@ -24,6 +24,8 @@
  *                             when they collect an approved request (BENCHMARK_BREAKGLASS_PRIVATE_KEY exists
  *                             for single-host pilots only).
  *   Every secret above also accepts a <NAME>_FILE variant that names a file (Docker/Kubernetes secrets).
+ *   BENCHMARK_SENSITIVE_COUNTRIES  "TCD,SDN,..." ISO codes where being named needs an extra acknowledgement.
+ *                             Optional: a conservative default list applies (docs/09-roundtable-and-credit.md).
  *   PORT                      default 8080
  *   BENCHMARK_TRUST_PROXY=1   behind a TLS-terminating proxy that sets
  *                             X-Forwarded-Proto / X-Forwarded-For
@@ -76,6 +78,7 @@ const service = createService({
   blindKey: read('BENCHMARK_BLIND_KEY'),
   breakGlassPublicKey: read('BENCHMARK_BREAKGLASS_PUBLIC_KEY'),
   breakGlassPrivateKey: read('BENCHMARK_BREAKGLASS_PRIVATE_KEY'),
+  ...(env.BENCHMARK_SENSITIVE_COUNTRIES ? { sensitiveCountries: env.BENCHMARK_SENSITIVE_COUNTRIES.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean) } : {}),
 });
 
 /** @type {ReturnType<typeof createOidc> | null} */

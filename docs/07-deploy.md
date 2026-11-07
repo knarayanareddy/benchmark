@@ -30,6 +30,9 @@ Forward-only. There is no `down`: a destructive change ships in two releases, **
 |---|---|---|
 | Device-held anonymous keys | `node packages/service/bin/blind-keygen.mjs > blind-key.pem`, set `BENCHMARK_BLIND_KEY_FILE` | the option is not offered |
 | Two-moderator safety override | `node packages/service/bin/breakglass-keygen.mjs`, give the service only the **public** key (`BENCHMARK_BREAKGLASS_PUBLIC_KEY_FILE`), keep the private key offline with the moderators who may approve | there is no override, and the consent text says so |
+| Sensitive-country list for publication credit | `BENCHMARK_SENSITIVE_COUNTRIES="TCD,SDN,..."` (ISO 3-letter codes) | a conservative default list applies; naming in those countries needs an extra acknowledgement |
+
+Who maintains the sensitive-country list, who moderates the roundtable, and who is the second reviewer of a publication are decisions for ACAPS, not settings (`docs/09-roundtable-and-credit.md`).
 
 Decide both before inviting anyone: the consent text an expert accepts describes what the deployment can do at that moment, and a hash of it is stored with their consent.
 

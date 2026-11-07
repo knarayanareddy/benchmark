@@ -3,6 +3,8 @@ import { asErr } from '../lib/api.js';
 import { cachedBallot } from '../lib/device.js';
 import { anonymous } from '../lib/send.js';
 import { CardView } from './CardView.jsx';
+import { Thread } from './Thread.jsx';
+import { Offers } from './Offers.jsx';
 
 /** @param {{ api: import('../lib/api.js').Api, mode: 'server' | 'device', onExpired: () => void, refreshKey?: number }} props */
 export function Inbox({ api, mode, onExpired, refreshKey = 0 }) {
@@ -64,6 +66,14 @@ export function Inbox({ api, mode, onExpired, refreshKey = 0 }) {
       )}
       {box.notifications.length > 0 && (
         <section><h2>What changed because of you</h2>{box.notifications.map((n, i) => <p key={i}>{n.body}</p>)}</section>
+      )}
+      {box.publications?.length > 0 && <Offers api={api} items={box.publications} onChange={load} />}
+      {box.discussion?.length > 0 && (
+        <section aria-label="Discussion">
+          <h2>Discussion before round 2</h2>
+          <p className="muted">You answered these. Talk about why people might disagree, without numbers. A moderator reads each post before others see it.</p>
+          {box.discussion.map((c) => <div key={c.id} className="card question"><h3>{c.statement}</h3><Thread api={api} card={c} mode={mode} /></div>)}
+        </section>
       )}
       {box.openForRevision.length > 0 && (
         <>

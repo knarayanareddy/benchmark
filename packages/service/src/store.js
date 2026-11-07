@@ -142,6 +142,7 @@ export const createRosterStore = (opts) =>
       aliases: {},
       notices: {},
       issuances: {},
+      publications: { unique: [['sourceKind', 'sourceId']] },
     },
     opts
   );
@@ -153,6 +154,9 @@ export const createAnswerStore = (opts) => {
       cards: {},
       estimates: { unique: [['cardId', 'respondentKey', 'round']] },
       second_look: { unique: [['cardId', 'respondentKey']] },
+      thread_posts: {},
+      thread_participants: { unique: [['cardId', 'respondentKey'], ['cardId', 'n']] },
+      thread_views: { unique: [['cardId', 'respondentKey']] },
       releases: { unique: [['cardId', 'round', 'visibility', 'n', 'closed']] },
       dissents: {},
       notifications: {},

@@ -3,6 +3,7 @@
 **Status: draft.** This is the protocol to timestamp (for example on OSF) **before the first card opens**. Nothing below is a result. No panel has run. Items marked **[DECISION]** need a human owner.
 
 **Amendment log** (the draft is not yet registered; once it is, changes are dated and appended here, never edited in place).
+- *7 Nov 2026, draft (third entry).* Added an optional moderated discussion between Round 1 and Round 2 (`docs/09-roundtable-and-credit.md`). It never touches the primary endpoint, which is the blind Round-1 estimate. It does influence Round 2, so every Round-2 analysis is stratified on whether the expert opened the thread (`sawThread`, recorded by the server) as well as on the second-look arm.
 - *7 Nov 2026, draft (second entry).* Added the randomised second look as a secondary measurement in Round 2 only. It never touches the primary endpoint, never shows an ACAPS probability, and its content is locked when Round 1 closes.
 - *7 Nov 2026, draft.* Primary endpoint changed from the pooled **Round-2** estimate to the pooled blind **Round-1** estimate, and rule R9 changed so no expert sees ACAPS's rating or a pre-filled number in Round 1. Reason: under the old design every expert started from ACAPS's own number, so the panel-versus-ACAPS comparison measured anchoring, not forecasting.
 
@@ -23,6 +24,7 @@ Paired Brier difference, **panel minus ACAPS**, over the same resolved statement
 - **Round-2 pooled estimate versus ACAPS** (same paired method). Round 2 shows each expert the panel distribution and their own first answer, so it measures what social information does, not independent forecasting.
 - **Revision effect:** Round-2 minus Round-1 Brier, and the direction of each revision relative to ACAPS's reading (toward or away).
 - **Second-look arms** (`docs/08-second-look.md`): per arm, mean Round-2 minus Round-1 change and the change toward ACAPS's reading, among those who opened the background and among all. Descriptive; a cell with fewer than 5 pairs is not reported. Arms are assigned at random per expert per card and the background text is fixed before Round 1 opens.
+- **Discussion exposure (cards with a thread):** Round-2 change split by `sawThread`, crossed with the second-look arm. Descriptive; a cell with fewer than 5 pairs is not reported. Posts are free text and are never scored.
 - **Time per answer and completion in Round 1**, because blind answers are slower than adjusting a number. This is a cost of R9 and is measured, not assumed.
 
 ## Scope and exclusions
@@ -61,6 +63,7 @@ Calibration by band; Round 1 versus Round 2 movement; panel versus the logistic 
 - **Endogenous labels.** The historical labels were assigned by ACAPS' own analysts after the fact. The prospective design exists to remove this; it only works if objectives are bound to external sources at authoring.
 - **Selection of statements.** ACAPS chooses which risks to publish. Results generalise to that set only.
 - **Expert dropout.** The literature base rate is about 51%. **[DECISION]** who recruits, who is paid, and what happens to uncovered domains.
+- **The discussion contaminates Round 2.** Experts who read it may move toward the loudest argument. That is the point of the Delphi step, and it is why it is secondary and stratified. A thread also lets typing style identify people in a small circle; moderators read every post and numbers are refused, which reduces this and does not remove it.
 - **Anonymous experts are pulled, not pushed**, so they may answer Round 2 less often. Report Round-2 completion by anonymity level.
 
 ## Before the first card opens

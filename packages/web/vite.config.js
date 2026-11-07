@@ -30,7 +30,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
-    rollupOptions: { input: { index: path.resolve(import.meta.dirname, 'index.html'), staff: path.resolve(import.meta.dirname, 'staff.html') } },
+    rollupOptions: { input: { index: path.resolve(import.meta.dirname, 'index.html'), staff: path.resolve(import.meta.dirname, 'staff.html'), credits: path.resolve(import.meta.dirname, 'credits.html') } },
   },
   test: {
     environment: 'jsdom',

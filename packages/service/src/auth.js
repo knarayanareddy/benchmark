@@ -10,13 +10,14 @@ export const ROLES = Object.freeze({ EXPERT: 'expert', ANALYST: 'analyst', MODER
 
 const ANALYST = ['release.read', 'card.author', 'dissent.read', 'dissent.route', 'dissent.act', 'dissent.notify', 'dissent.close'];
 export const PERMISSIONS = Object.freeze({
-  [ROLES.EXPERT]: Object.freeze(['inbox.read', 'estimate.submit', 'dissent.submit', 'release.read', 'me.manage']),
-  [ROLES.ANALYST]: Object.freeze(ANALYST),
+  [ROLES.EXPERT]: Object.freeze(['inbox.read', 'estimate.submit', 'dissent.submit', 'release.read', 'me.manage', 'roundtable.read', 'roundtable.post', 'publication.respond']),
+  [ROLES.ANALYST]: Object.freeze([...ANALYST, 'roundtable.moderate']),
   // Moderator is a SEPARATE, higher role: analysts cannot invite, close rounds,
   // resolve outcomes, read the audit log or run retention.
   [ROLES.MODERATOR]: Object.freeze([
     ...ANALYST, 'invite.create', 'round.manage', 'card.resolve', 'audit.read', 'retention.run',
     'breakglass.request', 'breakglass.decide', 'breakglass.collect', 'breakglass.read',
+    'roundtable.moderate', 'publication.propose', 'publication.review', 'publication.publish', 'publication.read',
   ]),
 });
 

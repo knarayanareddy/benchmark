@@ -5,6 +5,7 @@ import { enqueue } from '../lib/queue.js';
 import { obtainBallot } from '../lib/device.js';
 import { anonymous } from '../lib/send.js';
 import { SecondLook } from './SecondLook.jsx';
+import { Thread } from './Thread.jsx';
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 /** Plain words for the expert's own number, so a slider position means something. Never a reference to anyone else's view. @param {number} p */
@@ -139,6 +140,7 @@ export function CardView({ api, card, mode, revise = false, onNext, onQueued }) 
         : <p className="callout">Nothing is filled in for you. Move the slider or type a number from 1 to 99: 1 means almost certainly not, 99 means almost certainly yes.</p>}
       {blocked ? <div className="msg warn">{blocked}</div> : (
         <>
+          {revise && card.thread?.available && <Thread api={api} card={card} mode={mode} />}
           {lookBlock}
           {lookError && <div className="msg err" role="alert">{lookError}</div>}
           <div className="estimate">

@@ -165,6 +165,11 @@ const TEST_MAP = [
   ['packages/core/src/secondlook.js', 'packages/benchmark/test/secondlook.test.js'],
   ['packages/service/test/secondlook.test.js', 'packages/service/test/secondlook.test.js'],
   ['packages/core/src/blind.js', 'packages/benchmark/test/blind.test.js'],
+  ['packages/core/src/roundtable.js', 'packages/benchmark/test/roundtable.test.js'],
+  ['packages/core/src/publication.js', 'packages/benchmark/test/publication.test.js'],
+  ['packages/core/src/sensitive.js', 'packages/benchmark/test/sensitive.test.js'],
+  ['packages/service/test/roundtable.test.js', 'packages/service/test/roundtable.test.js'],
+  ['packages/service/test/publication.test.js', 'packages/service/test/publication.test.js'],
   ['packages/core/src/stats.js', 'packages/benchmark/test/stats.test.js'],
   ['packages/core/src/csv.js', 'packages/benchmark/test/csv.test.js'],
   ['packages/core/src/authoring.js', 'packages/benchmark/test/authoring.test.js'],
@@ -203,6 +208,11 @@ const WEB_MAP = [
   ['packages/web/src/lib/', 'packages/web/src/lib/lib.test.js'],
   ['packages/web/src/expert/', 'packages/web/src/expert/expert.test.jsx'],
   ['packages/web/src/staff/', 'packages/web/src/staff/staff.test.jsx'],
+  ['packages/web/src/expert/roundtable.test.jsx', 'packages/web/src/expert/roundtable.test.jsx'],
+  ['packages/web/src/staff/roundtable.test.jsx', 'packages/web/src/staff/roundtable.test.jsx'],
+  ['packages/web/src/expert/credit.test.jsx', 'packages/web/src/expert/credit.test.jsx'],
+  ['packages/web/src/staff/credit.test.jsx', 'packages/web/src/staff/credit.test.jsx'],
+  ['packages/web/src/credits/credits.test.jsx', 'packages/web/src/credits/credits.test.jsx'],
 ];
 {
   const out = path.join(ROOT, 'packages/web/.vitest-count.json');
