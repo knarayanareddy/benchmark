@@ -81,7 +81,7 @@ for (const backend of BACKENDS) {
 
     const box = await w.svc.inbox(w.anon.actor);
     assert.equal(box.notices.length, 1);
-    assert.match(box.notices[0].text, /On 2026-11-07, two ACAPS moderators opened the sealed note.*threat to someone's safety/);
+    assert.match(box.notices[0].text, /On 2026-11-07, two ACAPS moderators opened the sealed note on an anonymous objection you sent, because of a threat to someone's safety\.$/);
     assert.ok(!/mod1|mod2/.test(JSON.stringify(box.notices)), 'the notice does not name who');
     await w.svc.ackNotice(w.anon.actor, box.notices[0].id);
     assert.equal((await w.svc.inbox(w.anon.actor)).notices.length, 0);

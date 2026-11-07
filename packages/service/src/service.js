@@ -35,7 +35,7 @@ import { CONSENT_VERSION, consentText, consentHash, RETENTION_MONTHS } from './c
 
 export const BREAK_GLASS_CATEGORIES = Object.freeze(['safety_threat', 'safety_welfare', 'legal_obligation']);
 const BREAK_GLASS_TTL_MS = 24 * 3600 * 1000;
-const CATEGORY_LABEL = { safety_threat: 'threat to someone\'s safety', safety_welfare: 'welfare', legal_obligation: 'legal' };
+const CATEGORY_LABEL = { safety_threat: 'a threat to someone\'s safety', safety_welfare: 'a welfare concern', legal_obligation: 'a legal obligation' };
 
 export const RESOLUTION_SOURCES = SOURCES;
 const STAFF_SESSION_TTL_MS = 12 * 3600 * 1000;
@@ -456,7 +456,7 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
     const notifications = await answers.notifications.find({ to: expert.id });
     const notices = (await roster.notices.find({ expertId: expert.id })).map((n) => ({
       id: n.id, kind: n.kind, day: n.day,
-      text: `On ${n.day}, two ACAPS moderators opened the sealed note on an anonymous objection you sent, because of a ${CATEGORY_LABEL[n.category] ?? 'serious'} concern.`,
+      text: `On ${n.day}, two ACAPS moderators opened the sealed note on an anonymous objection you sent, because of ${CATEGORY_LABEL[n.category] ?? 'a serious concern'}.`,
     }));
     return { toAnswer, openForRevision, notifications, notices, deviceMode: expert.tokenMode === 'device' };
   }

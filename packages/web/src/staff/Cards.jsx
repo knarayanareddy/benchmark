@@ -14,7 +14,7 @@ function Row({ api, c, reload }) {
   return (
     <tr>
       <td><strong>{c.id}</strong><br />{c.statement}</td>
-      <td><span className="tag">{c.status}</span><span className="tag">round {c.round}</span><br />{c.responses} answers</td>
+      <td><span className="tag">{c.status}</span><span className="tag">round {c.round}</span><br />{c.responses} {c.responses === 1 ? 'answer' : 'answers'}</td>
       <td>
         {c.status === 'open' && <button type="button" className="secondary" onClick={() => act(() => api('POST', `/api/staff/cards/${c.id}/close`))}>Close round</button>}
         {c.status === 'closed' && c.round === 1 && <button type="button" className="secondary" onClick={() => act(() => api('POST', `/api/staff/cards/${c.id}/round2`))}>Open round 2</button>}

@@ -184,7 +184,10 @@ for (const [modLabel, relTest] of TEST_MAP) {
   });
   const m = /^# tests (\d+)$/m.exec(run.stdout || '');
   if (run.status !== 0 || !m) {
-    fail(`could not measure test count from ${relTest} (exit=${run.status})`);
+    // Say WHY: the names of the failing tests and the tail of the output, so a flaky test is diagnosable.
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    const failing = [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((x) => x[1]).slice(0, 5);
+    fail(`could not measure test count from ${relTest} (exit=${run.status}${run.signal ? `, signal ${run.signal}` : ''})${failing.length ? `; failing: ${failing.join(' | ')}` : ''}\n${out.trim().split('\n').slice(-12).join('\n')}`);
     continue;
   }
   const n = Number(m[1]);
