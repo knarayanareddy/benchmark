@@ -131,7 +131,7 @@ export function App({ api: injected, deviceKeys = true }) {
     window.history.replaceState(null, '', window.location.pathname);
     await enter();
   }
-  const expired = useCallback(async () => { await kvDel(TOKEN); resetLevelCache(); setView('landing'); }, []);
+  const expired = useCallback(async () => { await kvDel(TOKEN); await clearQueue(); resetLevelCache(); setQueued(0); setView('landing'); }, []);
   const out = async () => { await kvDel(TOKEN); await kvDel(MODE); await clearQueue(); resetLevelCache(); setQueued(0); setView('landing'); };
 
   return (

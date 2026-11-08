@@ -61,7 +61,9 @@ test('end to end over HTTP: invite -> consent -> estimate -> close -> release; s
     assert.equal((await w.call('POST', '/api/staff/cards', { token: experts[0], body: CARD })).status, 403, 'an expert is not staff');
     assert.equal((await w.call('POST', `/api/staff/cards/${card.id}/close`, { token: experts[0] })).status, 403);
 
-    assert.equal((await w.call('GET', `/api/cards/${card.id}/release`, { token: experts[0] })).json.suppressed, true, 'open round is withheld');
+    const openRelease = await w.call('GET', `/api/cards/${card.id}/release`, { token: experts[0] });
+    assert.equal(openRelease.status, 403, 'open round is withheld from an expert, even one who answered');
+    assert.match(openRelease.json.error ?? openRelease.json.message ?? JSON.stringify(openRelease.json), /not published yet/);
     assert.equal((await w.call('POST', `/api/staff/cards/${card.id}/close`, { token: staff, body: {} })).status, 200);
     const rel = (await w.call('GET', `/api/cards/${card.id}/release`, { token: experts[0] })).json;
     assert.equal(rel.suppressed, false);

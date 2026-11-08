@@ -34,7 +34,8 @@ describe('the picture: geometry', () => {
   it('draws no ACAPS marker when the card has no rating, and says so in its tile', () => {
     const { container } = render(<Picture acaps={null} release={RELEASE} mine={0.3} revised={null} />);
     expect(container.querySelector('.picture-acaps')).toBeNull();
-    expect(screen.getByText('Unrated risk.')).toBeInTheDocument();
+    expect(screen.getByText("ACAPS's band is not shown here.")).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/implied by|rating/);
   });
 
   it('shows no circle numbers and the not-published text when the release is suppressed', () => {
@@ -84,13 +85,14 @@ describe('the picture: accessibility', () => {
   it('the bar is an image whose label states every number in words', () => {
     render(<Picture acaps={{ p: 70 }} release={RELEASE} mine={0.3} revised={40} />);
     const bar = screen.getByRole('img');
-    expect(bar).toHaveAttribute('aria-label', 'Probability bar from 0 to 100 percent. ACAPS rating 70 percent. Circle pooled estimate 55 percent, circle range 40 to 70 percent. Your first estimate 30 percent. Revised estimate 40 percent.');
+    expect(bar).toHaveAttribute('aria-label', 'Probability bar from 0 to 100 percent. ACAPS band implies about 70 percent. Circle pooled estimate 55 percent, circle range 40 to 70 percent. Your first estimate 30 percent. Revised estimate 40 percent.');
   });
 
   it('the same numbers are written out as visible text, so no meaning rests on colour', () => {
     render(<Picture acaps={{ p: 70 }} release={RELEASE} mine={0.3} revised={40} />);
     expect(screen.getByText('Circle range 40–70% · n=6')).toBeInTheDocument();
-    expect(screen.getByText('~70%')).toBeInTheDocument();
+    expect(screen.getByText('about 70%')).toBeInTheDocument();
+    expect(screen.getByText(/implied by ACAPS.s band \(its midpoint\), not a figure ACAPS gave/)).toBeInTheDocument();
     expect(screen.getByText(/Your locked first estimate/)).toHaveTextContent('Your locked first estimate: 30% · revised to 40%');
   });
 

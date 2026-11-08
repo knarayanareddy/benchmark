@@ -29,8 +29,8 @@ for (const backend of BACKENDS) {
     return { ...w, c1, c2, e };
   }
 
-  test('ACAPS on Round 2 only: an integer percentage on the revision entry, never on a Round-1 payload', async () => {
-    const w = await roundTwoWorld();
+  test('ACAPS on Round 2 only, when the switch is on: an integer percentage on the revision entry, never on a Round-1 payload', async () => {
+    const w = await roundTwoWorld({ showAcapsRound2: true });
     const t = (await w.svc.createCard(w.analyst, { ...CARD, theme: 'conflict', statement: 'A thread question about Chad.' })).card;
     await w.svc.setThread(w.mod, { cardId: t.id, enabled: true });
     await w.svc.submitEstimate(w.e.actor, { cardId: t.id, p: 0.3 });
@@ -53,7 +53,12 @@ for (const backend of BACKENDS) {
     for (const e of [...p.asks, ...p.radar]) assert.equal('acaps' in e.card, false);
   });
 
-  test('ACAPS is null on a Round-2 card that has no reading, and the switch off nulls every Round-2 reading', async () => {
+  test('by default Round 2 carries no ACAPS marker: acaps is null, key present, even on a rated card; the switch off nulls it too', async () => {
+    const dflt = await roundTwoWorld();
+    const rated = (await dflt.svc.inbox(dflt.e.actor)).openForRevision.find((c) => c.id === dflt.c1.id);
+    assert.equal(rated.acaps, null, 'the default is off, so a rated card still shows no reading');
+    assert.equal('acaps' in rated, true);
+
     const w = await worldFor(backend);
     const unrated = (await w.svc.createCard(w.analyst, { ...CARD, probability: undefined })).card;
     assert.equal(unrated.acapsP, null);
@@ -71,8 +76,8 @@ for (const backend of BACKENDS) {
     assert.equal(offEntry.yourEstimate, 0.4);
   });
 
-  test('ACAPS on the Round-2 reading comes through HTTP, and a Round-1 payload over HTTP has no acaps', async () => {
-    const w = await roundTwoWorld();
+  test('ACAPS on the Round-2 reading comes through HTTP when the switch is on, and a Round-1 payload over HTTP has no acaps', async () => {
+    const w = await roundTwoWorld({ showAcapsRound2: true });
     const open = (await w.svc.createCard(w.analyst, { ...CARD, theme: 'food', statement: 'An open question about Chad.' })).card;
     const server = createServer({
       service: w.svc,

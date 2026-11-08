@@ -63,7 +63,11 @@ const dash = (value) => (value == null || value === '' ? '—' : String(value));
 function listMeta(/** @type {any} */ r) {
   const n = r.liveQuestions ?? 0;
   if (n === 0) return 'No question open on this risk';
-  return `${n} live ${n === 1 ? 'question' : 'questions'} · ${r.answered ? 'you answered' : 'answer to reveal'}`;
+  const count = `${n} live ${n === 1 ? 'question' : 'questions'}`;
+  if (r.answered === true) return `${count} · you answered`;
+  if (r.answered === false) return `${count} · answer to reveal`;
+  // null: none is put to this person, or the server cannot see a device-held answer. A locked row carries no analysis.
+  return `${count} · ${'level' in r ? 'not put to you' : 'answer to reveal'}`;
 }
 
 /**
@@ -72,16 +76,22 @@ function listMeta(/** @type {any} */ r) {
  * @param {{ api: import('../lib/api.js').Api, question: { id: number | string }, onExpired?: () => void }} props
  */
 function Circle({ api, question, onExpired }) {
-  const [state, setState] = useState(/** @type {{ status: 'loading' } | { status: 'ready', release: any } | { status: 'error', message: string }} */ ({ status: 'loading' }));
+  const [state, setState] = useState(/** @type {{ status: 'loading' } | { status: 'ready', release: any } | { status: 'unpublished' } | { status: 'error', message: string }} */ ({ status: 'loading' }));
   // The parent keys this component by question id, so a new question starts in the loading state.
   useEffect(() => {
     let live = true;
     api('GET', `/api/cards/${encodeURIComponent(String(question.id))}/release`)
       .then((release) => { if (live) setState({ status: 'ready', release }); })
-      .catch((e) => { if (live) setState({ status: 'error', message: failure(e, onExpired) || 'The circle view could not be loaded.' }); });
+      .catch((e) => {
+        if (!live) return;
+        // The server refuses the panel while the question is open or not answered by this person: that is "not published yet".
+        if (asErr(e).status === 403) setState({ status: 'unpublished' });
+        else setState({ status: 'error', message: failure(e, onExpired) || 'The circle view could not be loaded.' });
+      });
     return () => { live = false; };
   }, [api, question.id, onExpired]);
   if (state.status === 'loading') return <p className="muted">Loading…</p>;
+  if (state.status === 'unpublished') return <p className="muted">The circle result is not published yet.</p>;
   if (state.status === 'error') return <p className="msg err" role="alert">{state.message}</p>;
   const r = state.release;
   if (!r || r.suppressed || r.estimate == null) return <p className="muted">Hidden until ≥ {MIN_RELEASE_PANEL_SIZE} members answer.</p>;

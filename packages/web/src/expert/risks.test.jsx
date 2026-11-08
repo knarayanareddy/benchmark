@@ -67,6 +67,15 @@ describe('Risks list', () => {
     expect(screen.getByRole('button', { name: /Quiet one/ })).toHaveTextContent('No question open on this risk');
   });
 
+  it('a visible analysis whose live question is not put to you says so, and never asks you to answer to reveal it', async () => {
+    const { api } = listing({ active: [FULL_ROW({ id: 'X', title: 'Not asked one', hasQuestion: true, liveQuestions: 1, answered: null }), LOCKED_ROW({ id: 'Y', title: 'Device one', hasQuestion: true, liveQuestions: 1, answered: null })] });
+    render(<Risks api={api} />);
+    expect(await screen.findByText(/Not asked one/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Not asked one/ })).toHaveTextContent('1 live question · not put to you');
+    expect(screen.getByRole('button', { name: /Not asked one/ })).not.toHaveTextContent('answer to reveal');
+    expect(screen.getByRole('button', { name: /Device one/ })).toHaveTextContent('1 live question · answer to reveal');
+  });
+
   it('a locked row shows no level, status or probability', async () => {
     const { api } = listing({ active: [LOCKED_ROW({ id: 'L', title: 'Locked one', hasQuestion: true, liveQuestions: 1, answered: false })] });
     render(<Risks api={api} />);
@@ -221,6 +230,13 @@ describe('Risks detail', () => {
     render(<Risks api={routes(table({ ...FULL, question: { id: 'C1', open: false, answered: true } }, { 'GET /api/cards/C1/release': { n: 2, estimate: null, lo: null, hi: null, suppressed: true } }))} />);
     await open();
     expect(await screen.findByText('Hidden until ≥ 5 members answer.')).toBeInTheDocument();
+  });
+
+  it('a circle the server refuses (403, not published yet) says so in the circle wording, with no error box', async () => {
+    render(<Risks api={routes(table({ ...FULL, question: { id: 'C1', open: true, answered: true } }, { 'GET /api/cards/C1/release': fail(403, 'the circle result is not published yet') }))} />);
+    await open();
+    expect(await screen.findByText('The circle result is not published yet.')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('a full view with no question has no Circle view', async () => {

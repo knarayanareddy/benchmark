@@ -46,13 +46,19 @@ export function createRadar(ctx) {
   /**
    * The expert's gate for one risk. `locked` when a live card put to them is not answered by them (a device-held expert
    * has no answer the server can see, so every matching live card locks). `card` is the card the lock is about: open before closed.
+   * `put` is whether any live card on the risk is put to them at all.
    */
   const gateFor = async (/** @type {any} */ expert, /** @type {any[]} */ liveCards) => {
     const ordered = [...liveCards].sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || byId(a, b));
     const pending = [];
+    let put = false;
     // Only a question put to this person (their declared countries, regions and themes) can hold the analysis back.
-    for (const c of ordered) if (matches(c, expert.declaration) && (await answeredBy(expert, c)) !== true) pending.push(c);
-    return { locked: pending.length > 0, card: pending[0] ?? null };
+    for (const c of ordered) {
+      if (!matches(c, expert.declaration)) continue;
+      put = true;
+      if ((await answeredBy(expert, c)) !== true) pending.push(c);
+    }
+    return { locked: pending.length > 0, card: pending[0] ?? null, put };
   };
 
   /** Why the analysis is held: the person answers an open question, or the question closed before they answered it. */
@@ -77,13 +83,15 @@ export function createRadar(ctx) {
       if (iso && !r.isos.includes(iso)) continue;
       const liveCards = live.get(r.id) ?? [];
       // Locked for this viewer: the analysis is not in the row, so the row cannot be sorted by its status either.
-      const locked = expert ? (await gateFor(expert, liveCards)).locked : false;
+      const gate = expert ? await gateFor(expert, liveCards) : null;
+      const locked = gate?.locked ?? false;
       if (view === 'active' && !locked && r.status !== 'Active') continue;
       if (view === 'history' && (locked || !HISTORY_STATUS.includes(r.status ?? ''))) continue;
       const row = {
         id: r.id, title: r.title, country: r.country, region: r.region, theme: r.theme, riskType: r.riskType,
         hasQuestion: liveCards.length > 0, liveQuestions: liveCards.length,
-        answered: expert && liveCards.length > 0 && expert.tokenMode !== 'device' ? !locked : null,
+        // Only about questions put to this expert: null when none is put to them (or the server cannot see their answers).
+        answered: gate && gate.put && expert.tokenMode !== 'device' ? !locked : null,
       };
       if (!locked) Object.assign(row, { level: r.level, probability: r.probability, status: r.status });
       rows.push(row);

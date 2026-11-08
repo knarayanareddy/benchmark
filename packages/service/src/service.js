@@ -79,12 +79,13 @@ const isoList = (v) => {
  *   radar?: Record<string, any>[], demo?: boolean, demoLabels?: boolean,
  *   showAcapsRound2?: boolean
  * }} deps
- * `showAcapsRound2` (default true) false withholds ACAPS's reading from Round-2 entries. Round 1 never carries it.
+ * `showAcapsRound2` (default false) true adds ACAPS's reading to Round-2 entries. Off by default: opt-in only, pending a
+ * protocol amendment. Round 1 never carries it.
  * `breakGlassPublicKey` (RSA, PEM) turns the safety override on: an anonymous objection then carries its
  * sender's id sealed to that key. The private key is NOT needed to run the service; it is supplied at collection.
  * `blindKey` (RSA private key, PEM) turns on device-held ballots: blind-signed tokens an expert's device keeps.
  */
-export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES, radar: radarRaw = [], demo = false, demoLabels = true, showAcapsRound2 = true } = /** @type {any} */ ({})) {
+export function createService({ roster, answers, secrets, now = Date.now, releasePolicy, breakGlassPublicKey, breakGlassPrivateKey, blindKey, sensitiveCountries = DEFAULT_SENSITIVE_COUNTRIES, radar: radarRaw = [], demo = false, demoLabels = true, showAcapsRound2 = false } = /** @type {any} */ ({})) {
   if (!roster || !answers) throw new TypeError('createService needs { roster, answers }');
   for (const k of ['ballot', 'alias']) {
     if (typeof secrets?.[k] !== 'string' || secrets[k].length < MIN_SECRET) {
@@ -484,15 +485,19 @@ export function createService({ roster, answers, secrets, now = Date.now, releas
    * The panel result for a card, for a person. Staff: always. An expert: only for a resolved card, or for a card they
    * have answered in Round 1 (they have then already given their own number, so seeing the circle's is the point of
    * Round 2). A device-held expert cannot prove an answer without a ballot, so they get it only once it is resolved.
+   * While Round 1 is open no expert sees its panel, answered or not (Round 1 is blind). In Round 2 an expert gets the
+   * Round-1 result, as the inbox does, never the live Round-2 aggregate, until the card is resolved.
    * @param {Actor} actor @param {string} cardId
    */
   async function cardReleaseFor(actor, cardId) {
     need(actor, 'release.read');
     const card = await getCard(cardId);
     if (actor.role === ROLES.EXPERT && card.status !== 'resolved') {
+      if (card.round === 1 && card.status === 'open') throw new ForbiddenError('the circle result is not published yet');
       const expert = await expertOf(actor);
       const answered = expert.tokenMode !== 'device' && Boolean(await answers.estimates.get(estimateKey(card.id, respondentKey(card, expert), 1)));
       if (!answered) throw new ForbiddenError('answer this question first to see the circle result');
+      if (card.round === 2) return cardRelease(cardId, { round: 1 });
     }
     return cardRelease(cardId);
   }

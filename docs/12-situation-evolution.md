@@ -36,4 +36,4 @@ Every link is displayed with "Analyst judgement, not a finding", its mechanism a
 - `StepChart` is an accessible SVG component (title, desc, a data table alternative, no colour-only meaning).
 
 ## 6. Not built, by design
-Automatic cascade detection; correlation statistics between questions (not detectable at pilot scale. This is an estimate from the planner's prototype, not measured by a script in this repository; the power specification is in progress as `docs/14` and is not yet written); expert-facing panel series; anything that treats completion rate as a probability.
+Automatic cascade detection; correlation statistics between questions (not detectable at pilot scale. This is an estimate from the planner's prototype. The simulator in [`packages/simulate/`](../packages/simulate/README.md) estimates it under stated assumptions, so it is a simulation, not a measurement; the power specification is in progress as `docs/14` and is not yet written); expert-facing panel series; anything that treats completion rate as a probability.

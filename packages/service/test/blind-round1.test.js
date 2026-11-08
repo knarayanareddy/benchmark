@@ -6,8 +6,15 @@ import { CONSENT_VERSION } from '../src/consent.js';
 import * as B from '@benchmark/core/blind';
 
 const blindKey = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' });
-// Anything that would tell an expert what ACAPS thinks, in any spelling.
-const LEAK = /acaps(P|Band)|acaps_p|seedP|0\.705|"High"|midpoint/;
+// Anything that would tell an expert what ACAPS thinks, in any spelling. `"acaps":{` or `"acaps":71` is the marker's shape.
+const LEAK = /acaps(P|Band)|acaps_p|seedP|0\.705|"High"|midpoint|"acaps":\s*[{0-9]/;
+const ACAPS_FIELDS = new Set(['acaps', 'acapsP', 'acapsBand', 'acaps_p', 'acaps_band', 'seedP']);
+/** Every place in a payload, at any depth, where a key that carries ACAPS's reading holds a non-null value. */
+function acapsLeaks(node, path = '$') {
+  if (Array.isArray(node)) return node.flatMap((v, i) => acapsLeaks(v, `${path}[${i}]`));
+  if (!node || typeof node !== 'object') return [];
+  return Object.entries(node).flatMap(([k, v]) => [...(ACAPS_FIELDS.has(k) && v !== null ? [`${path}.${k}`] : []), ...acapsLeaks(v, `${path}.${k}`)]);
+}
 
 for (const backend of BACKENDS) {
   const test = (name, fn) => baseTest(`[${backend}] ${name}`, () => fn());
@@ -26,6 +33,7 @@ for (const backend of BACKENDS) {
       const box = await w.svc.inbox(actor);
       assert.equal(box.toAnswer.length, 1);
       assert.doesNotMatch(JSON.stringify(box), LEAK);
+      assert.deepEqual(acapsLeaks(box), [], 'no non-null ACAPS field anywhere in a Round-1 payload');
       assert.ok(!('seedP' in box.toAnswer[0]) && !('acapsP' in box.toAnswer[0]));
     }
     // The staff list is for staff, but it never needs the reading either.
@@ -33,6 +41,7 @@ for (const backend of BACKENDS) {
     // And a submitted answer echoes only the expert's own number.
     const r = await w.svc.submitEstimate(named.actor, { cardId: card.id, p: 0.3 });
     assert.doesNotMatch(JSON.stringify(r), LEAK);
+    assert.deepEqual(acapsLeaks(r), []);
   });
 
   test('a card ACAPS never rated opens with no reading and no invented number', async () => {
@@ -74,6 +83,9 @@ for (const backend of BACKENDS) {
     assert.equal(box.openForRevision[0].yourEstimate, 0.2);
     assert.equal(box.openForRevision[0].release.n, 6);
     assert.doesNotMatch(JSON.stringify(box), LEAK);
+    // The default is off: the Round-2 entry carries the key with no reading, anywhere in the payload.
+    assert.equal(box.openForRevision[0].acaps, null);
+    assert.deepEqual(acapsLeaks(box), [], 'no non-null ACAPS field in a Round-2 payload by default');
   });
 
   test('the blind Round-1 result is ledgered at close and cannot change when Round 2 revises it (the primary endpoint)', async () => {

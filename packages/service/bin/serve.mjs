@@ -34,7 +34,9 @@
  *                             demo flags, isolation from the second-look analysis, and the database refusal.
  *   BENCHMARK_DEMO_STAFF_CREDENTIALS  "a,b" optional: the two demo moderator credentials to use instead of random ones.
  *   BENCHMARK_DEMO_ALLOW_DATABASE=1   required, with BENCHMARK_DEMO=1 and DATABASE_URL, to start at all.
- *   BENCHMARK_SHOW_ACAPS_ROUND2=0  withhold ACAPS's reading from Round-2 cards (default: shown). Round 1 never shows it.
+ *   BENCHMARK_SHOW_ACAPS_ROUND2=1  show ACAPS's reading on Round-2 cards (default: off, no marker). Opt-in only: it needs a
+ *                             protocol amendment (docs/02 R9, docs/08), since it makes Round 2 uninformative about revision
+ *                             toward ACAPS. Round 1 never shows it.
  *   BENCHMARK_RADAR_FILE      the ACAPS radar export as JSON (default data/risk-radar.json in this repo)
  *   BENCHMARK_SENSITIVE_COUNTRIES  "TCD,SDN,..." ISO codes where being named needs an extra acknowledgement.
  *                             Optional: a conservative default list applies (docs/09-roundtable-and-credit.md).
@@ -113,7 +115,7 @@ const service = createService({
   secrets: { ballot: need('BENCHMARK_BALLOT_SECRET'), alias: need('BENCHMARK_ALIAS_SECRET') },
   blindKey: read('BENCHMARK_BLIND_KEY'),
   radar, demo, demoLabels,
-  showAcapsRound2: env.BENCHMARK_SHOW_ACAPS_ROUND2 !== '0',
+  showAcapsRound2: env.BENCHMARK_SHOW_ACAPS_ROUND2 === '1',
   breakGlassPublicKey: read('BENCHMARK_BREAKGLASS_PUBLIC_KEY'),
   breakGlassPrivateKey: read('BENCHMARK_BREAKGLASS_PRIVATE_KEY'),
   ...(env.BENCHMARK_SENSITIVE_COUNTRIES ? { sensitiveCountries: env.BENCHMARK_SENSITIVE_COUNTRIES.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean) } : {}),

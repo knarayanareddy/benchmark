@@ -398,6 +398,12 @@ for (const backend of BACKENDS) {
     assert.equal(other.question.answered, false);
     const row = (await w.svc.listRisks(notAsked.actor, { q: 'chad' })).find((r) => r.id === 'R1066');
     assert.ok(row && 'level' in row, 'the list row carries the analysis too');
+    assert.equal(row.hasQuestion, true);
+    assert.equal(row.answered, null, 'no question is put to this expert, so the row claims no answer either way');
+    const askedRow = (await w.svc.listRisks(asked.actor, { q: 'chad' })).find((r) => r.id === 'R1066');
+    assert.equal(askedRow.answered, false, 'a question is put to this expert and not yet answered');
+    await w.svc.submitEstimate(asked.actor, { cardId: (await w.svc.getRisk(asked.actor, 'R1066')).question.id, p: 0.4 });
+    assert.equal((await w.svc.listRisks(asked.actor, { q: 'chad' })).find((r) => r.id === 'R1066').answered, true);
   });
 
   test('over HTTP: the view parameter reaches the service, so History and Active differ', async () => {

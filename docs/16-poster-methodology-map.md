@@ -13,7 +13,7 @@
 - **Forecasting** fits mainly in the **Anticipate** step. A forecast "card" (question, blind Round 1 estimate, Round 2 revision, resolution) is built. What is **missing** is the step where a resolved card is scored against what happened, and any screen that shows it.
 - **Situation evolution** exists as **recorded history**: dated completion and trend lines, dated rationale notes, and per-round panel results. It does not compute change over time, and it cannot show rating history, which ACAPS has said it cannot share.
 - **Correlation between questions** is **not built** in the app. The repo has analyst-written links (with a stated mechanism and a rival explanation) and a simulation that estimates how many resolved questions a correlation test would need. Correlation is never inferred automatically, and the repo does not claim causation.
-- **Two things need an owner decision** before anyone relies on the docs: Round 2 shows ACAPS's percentage by default in the code, which the scoring rules say it should not (section "Conflicts found"); and the docs say no simulation is in the repo, while `packages/simulate` is present but untracked.
+- **Two things need an owner decision** before anyone relies on the docs: Round 2 no longer shows ACAPS's percentage by default (the marker is off; the opt-in `BENCHMARK_SHOW_ACAPS_ROUND2=1` needs a protocol amendment) (section "Conflicts found"); and the docs say no simulation is in the repo, while `packages/simulate` is present but untracked.
 
 ---
 
@@ -151,7 +151,7 @@ Also missing and **not** on the poster's list, but worth knowing: ACAPS rating h
 
 ## Conflicts found (for the owner to decide; not fixed here)
 
-1. **Round 2 and ACAPS's reading.** `docs/02-scoring-rules.md` R9 (line 55) says "Round 2 shows an expert the panel distribution and their own first answer, never ACAPS's rating", and `docs/06` (line 28) says the same. But `service/src/service.js` line 82 documents `showAcapsRound2` as **default true**, `acapsRound2` (line 509) returns `{ p: … }` when it is on, and it is attached to Round 2 payloads (lines 522 and 536). `service/bin/serve.mjs` line 116 sets it on unless `BENCHMARK_SHOW_ACAPS_ROUND2=0`. `BUILD.md` line 56 says "The ACAPS reading appears only on Round 2", which matches the code. So the docs and the code disagree on the default. It may be intended, but the docs say it should never happen.
+1. **Round 2 and ACAPS's reading (resolved after review).** The docs say Round 2 never shows ACAPS's rating. The code used to default `showAcapsRound2` to on. By owner decision (7 Nov) it is now **off by default**; the marker is an opt-in switch (`BENCHMARK_SHOW_ACAPS_ROUND2=1`) that needs a protocol amendment, because showing it makes the revision-toward-ACAPS and second-look measurements uninformative.
 2. **Docs say the simulation is absent.** See the Question 3 note on `packages/simulate/` (untracked, not in version control). `docs/05` line 102 and `docs/12` line 39 say it is not in the repo.
 3. **Noisy-panel range.** `docs/05` says "about 60 to 105 pairs"; the simulator gives 37 to 112.
 4. **Hard-coded 15 comparisons.** `packages/simulate/bin/run.mjs` line 251 uses `0.05/15`. The basis is not documented in any file I opened.

@@ -19,7 +19,7 @@ export function Picture({ acaps, release, mine, revised }) {
   const rangeWords = live ? `circle range ${whole(live.lo)} to ${whole(live.hi)} percent` : '';
   const label = [
     'Probability bar from 0 to 100 percent.',
-    hasAcaps ? `ACAPS rating ${acaps.p} percent.` : '',
+    hasAcaps ? `ACAPS band implies about ${acaps.p} percent.` : '',
     live ? `Circle pooled estimate ${whole(live.estimate)} percent, ${rangeWords}.` : 'The circle result is not published yet.',
     hasMine ? `Your first estimate ${whole(mine)} percent.` : '',
     hasRevised ? `Revised estimate ${revised} percent.` : '',
@@ -58,10 +58,10 @@ export function Picture({ acaps, release, mine, revised }) {
           <div className="picture-tile-label">ACAPS</div>
           {hasAcaps
             ? <>
-              <div className="picture-tile-value">~{acaps.p}%</div>
-              <div className="picture-tile-note">implied by its rating (empirical materialisation rate)</div>
+              <div className="picture-tile-value">about {acaps.p}%</div>
+              <div className="picture-tile-note">implied by ACAPS&apos;s band (its midpoint), not a figure ACAPS gave</div>
             </>
-            : <div className="picture-tile-note">Unrated risk.</div>}
+            : <div className="picture-tile-note">ACAPS&apos;s band is not shown here.</div>}
         </div>
         <div className="picture-tile teal">
           <div className="picture-tile-label">Circle (the circle&apos;s pooled estimate)</div>

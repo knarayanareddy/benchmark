@@ -12,7 +12,7 @@ Round 1 is blind. In Round 2 (a revision round a moderator opens after Round 1 c
 | `balanced` | reasons the event could be **more** likely and reasons it could be **less** likely, in one fixed layout |
 | `acaps_view` | ACAPS's own reasoning and sources for the risk |
 
-**No arm ever shows an ACAPS probability.** The text is checked on save and rejected if it contains a percentage or "high probability"-style wording. The arm is never sent to the client; the expert cannot tell which arm they are in, and a control expert cannot tell a missing background from being in the control arm.
+**No arm ever shows an ACAPS probability.** The text is checked on save and rejected if it contains a percentage or "high probability"-style wording. The arm is never sent to the client; the expert cannot tell which arm they are in, and a control expert cannot tell a missing background from being in the control arm. The Round-2 ACAPS marker is not an arm and is off by default (`BENCHMARK_SHOW_ACAPS_ROUND2=1` turns it on); with it on, every Round-2 expert sees ACAPS's band, which would make these arms uninformative, so it needs a protocol amendment first.
 
 ## How it avoids steering
 

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from './App.jsx';
 import { CardView, resetLevelCache } from './CardView.jsx';
-import { routes, card } from '../test-helpers.js';
+import { routes, card, fail } from '../test-helpers.js';
 import { kvSet, kvGet } from '../lib/kv.js';
 import { enqueue, pending, clearQueue } from '../lib/queue.js';
 
@@ -21,6 +21,15 @@ describe('signing out leaves nothing of the last person behind', () => {
     expect(await screen.findByText(/invitation-only panel/)).toBeInTheDocument();
     expect(await pending()).toEqual([]);
     expect(await kvGet('session.expert')).toBeUndefined();
+  });
+
+  it('an expired session also empties the offline queue, so it is not sent under the next person', async () => {
+    await kvSet('session.expert', 'old'); await kvSet('session.mode', 'server');
+    await enqueue('C1', 0.4, { reason: 'something private I wrote', confidence: 3 });
+    const gone = fail(401, 'session invalid or expired');
+    render(<App api={routes({ 'GET /api/me/profile': gone, 'GET /api/pulse': gone, 'GET /api/inbox': gone })} />);
+    expect(await screen.findByText(/invitation-only panel/)).toBeInTheDocument();
+    expect(await pending()).toEqual([]);
   });
 
   it('forgets the privacy label, so a person who joins next at a different level sees their own', async () => {
