@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ground-truth-circle
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: groundtruth-db
+          property: connectionString
+      - key: DEMO_MODE
+        value: "on"
+      - key: SESSION_SECRET
+        generateValue: true
+
+databases:
+  - name: groundtruth-db
+    plan: free
+    region: frankfurt
