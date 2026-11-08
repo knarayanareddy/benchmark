@@ -1,0 +1,110 @@
+name: docker
+
+# Builds the Dockerfile and smoke-tests the deploy/ stack: Postgres, the migration, then the service on its port.
+# Caddy (HTTPS) is not started. All secrets here are throwaway and generated on the runner; none is committed.
+
+on:
+  pull_request:
+    paths: ['Dockerfile', 'deploy/**', '.github/workflows/docker.yml', 'packages/service/**']
+  push:
+    branches: [main]
+    paths: ['Dockerfile', 'deploy/**', '.github/workflows/docker.yml', 'packages/service/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SMOKE_DIR: ${{ runner.temp }}/smoke
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        timeout-minutes: 15
+        run: docker build -t benchmark:ci .
+
+      - name: Generate throwaway secrets and a blind-signing key (never committed)
+        run: |
+          mkdir -m 755 "$SMOKE_DIR"
+          openssl genrsa -out "$SMOKE_DIR/blind-key.pem" 3072 2>/dev/null
+          # The service runs as a non-root user in the container and must be able to read the mounted key.
+          chmod 644 "$SMOKE_DIR/blind-key.pem"
+          cat > "$SMOKE_DIR/smoke.env" <<EOF
+          DOMAIN=ci.example.org
+          OWNER_DB_PASSWORD=$(openssl rand -hex 24)
+          ROSTER_DB_PASSWORD=$(openssl rand -hex 24)
+          ANSWERS_DB_PASSWORD=$(openssl rand -hex 24)
+          BENCHMARK_BALLOT_SECRET=$(openssl rand -hex 24)
+          BENCHMARK_ALIAS_SECRET=$(openssl rand -hex 24)
+          BLIND_KEY_FILE=$SMOKE_DIR/blind-key.pem
+          BREAKGLASS_PUBLIC_KEY_FILE=
+          OIDC_ISSUER=https://login.example.org
+          OIDC_CLIENT_ID=ci
+          OIDC_CLIENT_SECRET=ci-not-a-secret
+          STAFF_ROLES=ci-moderator@example.org:moderator
+          EOF
+          # Publish the app port on the runner only (the compose file itself publishes nothing).
+          cat > "$SMOKE_DIR/ports.yml" <<'EOF'
+          services:
+            app:
+              ports: ["127.0.0.1:8080:8080"]
+          EOF
+
+      - name: Start Postgres
+        timeout-minutes: 5
+        run: >
+          docker compose -f deploy/docker-compose.yml -f "$SMOKE_DIR/ports.yml" --env-file "$SMOKE_DIR/smoke.env"
+          up -d --wait --wait-timeout 120 db
+
+      - name: Run the migration (as the database owner, once)
+        timeout-minutes: 5
+        run: >
+          docker compose -f deploy/docker-compose.yml -f "$SMOKE_DIR/ports.yml" --env-file "$SMOKE_DIR/smoke.env"
+          --profile tools run --rm migrate
+
+      - name: Start the service
+        timeout-minutes: 5
+        run: >
+          docker compose -f deploy/docker-compose.yml -f "$SMOKE_DIR/ports.yml" --env-file "$SMOKE_DIR/smoke.env"
+          up -d app
+
+      - name: Wait up to 60 s for GET /api/config, then check its shape
+        timeout-minutes: 3
+        run: |
+          ok=0
+          for i in $(seq 1 60); do
+            # The service refuses plain http unless the proxy says https (BENCHMARK_TRUST_PROXY=1 in the image).
+            if curl -fsS -H 'X-Forwarded-Proto: https' http://127.0.0.1:8080/api/config -o "$SMOKE_DIR/config.json"; then
+              ok=1; break
+            fi
+            sleep 1
+          done
+          if [ "$ok" != 1 ]; then echo "GET /api/config did not return 200 within 60 s"; exit 1; fi
+          cat "$SMOKE_DIR/config.json"; echo
+          python3 - "$SMOKE_DIR/config.json" <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))
+          keys = {"demo", "deviceKeys", "breakGlass", "demoLabels"}
+          assert set(d) == keys, f"unexpected keys: {sorted(d)}"
+          assert all(isinstance(d[k], bool) for k in keys), f"not booleans: {d}"
+          # The blind key was configured and mounted, so the key file path must have been read at boot.
+          assert d["deviceKeys"] is True, "deviceKeys is false: the key file was not mounted or not read"
+          assert d["demo"] is False, "demo mode must be off in the smoke test"
+          print("config shape OK")
+          PY
+
+      - name: Logs (failure only)
+        if: failure()
+        run: >
+          docker compose -f deploy/docker-compose.yml -f "$SMOKE_DIR/ports.yml" --env-file "$SMOKE_DIR/smoke.env"
+          logs --no-color --tail=300
+
+      - name: Tear down (always)
+        if: always()
+        run: |
+          docker compose -f deploy/docker-compose.yml -f "$SMOKE_DIR/ports.yml" --env-file "$SMOKE_DIR/smoke.env" down -v --remove-orphans || true
+          rm -rf "$SMOKE_DIR"
