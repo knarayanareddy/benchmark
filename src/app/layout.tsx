@@ -5,6 +5,7 @@ import "./globals.css";
 import { currentExpert, langPref, pickablePersonas } from "@/lib/session";
 import { t } from "@/lib/i18n";
 import { PersonaSwitcher, LangToggle } from "@/components/PersonaSwitcher";
+import { PitchSlidesModal } from "@/components/PitchSlidesModal";
 import { ANON_LEVELS } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -98,6 +99,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             Prototype · real ACAPS Risk Radar export (139 risks) · all experts, forecasts and discussion are <b>synthetic</b> · no personal data
           </div>
         </header>
+        <PitchSlidesModal />
         <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
         <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-stone-500">
           Built for Hackathon for Good #8 · ACAPS Ground Truth challenge. Individual contributions are never public — only aggregates with n ≥ 10.
