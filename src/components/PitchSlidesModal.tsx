@@ -132,17 +132,17 @@ export function PitchSlidesModal() {
                 The Problem · Slide 1 of 2
               </div>
               <h1 className="font-serif text-3xl sm:text-5xl font-medium leading-tight text-white tracking-tight">
-                Humanitarian risk ratings are judgments.{" "}
-                <em className="not-italic text-amber-400">We rarely learn how well they hold up.</em>
+                In a crisis, the people who know the ground truth are hard to find,{" "}
+                <em className="not-italic text-amber-400">hard to weigh, and often cannot speak freely.</em>
               </h1>
               <p className="text-base text-slate-300 leading-relaxed max-w-2xl">
-                Analysts rate each risk from Very Low to Very High. Years later we know what happened, but there is no routine way to score the ratings, learn from the experts who saw it coming, or tell good judgment from lucky guesses.
+                Where data is thin and access is limited, expert opinion is often the best signal there is. But it arrives unscored and unweighted, from people who may be at risk for what they say. Analysts cannot tell whose judgment holds up.
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                 <div>
                   <div className="font-serif text-3xl sm:text-4xl font-bold text-white">139</div>
-                  <div className="text-xs text-slate-400 mt-1">risks tracked on radar</div>
+                  <div className="text-xs text-slate-400 mt-1">risks on ACAPS radar</div>
                 </div>
                 <div>
                   <div className="font-serif text-3xl sm:text-4xl font-bold text-white">104</div>
@@ -160,7 +160,7 @@ export function PitchSlidesModal() {
 
               <div className="border-l-4 border-amber-400 bg-slate-900/60 p-4 rounded-r-xl text-xs sm:text-sm text-slate-200 space-y-1">
                 <div>
-                  ACAPS&apos;s ratings score <b>0.217</b> against <b>0.243</b> for always guessing the base rate. Better, but only about 1.6 standard errors apart on 104 risks: suggestive, not proven.
+                  The one place we can check: 104 ACAPS risks with known outcomes. Their ratings score <b>0.217</b> against <b>0.243</b> for always guessing the base rate. Better, but only about 1.6 standard errors apart: suggestive, not proven.
                 </div>
                 <div className="text-slate-400 text-xs">
                   Brier score, lower is better. Computed from the ACAPS risk radar export in our repository.
@@ -233,7 +233,7 @@ export function PitchSlidesModal() {
                 <div className="font-serif text-2xl font-bold text-amber-400">1</div>
                 <h3 className="font-bold text-white text-base">Ask</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  A risk becomes a precise question with a window and a public source that will settle it.
+                  A risk becomes a precise question with a window and a public source that will settle it, sent to experts who know that country or theme.
                 </p>
               </div>
 
@@ -257,7 +257,7 @@ export function PitchSlidesModal() {
                 <div className="font-serif text-2xl font-bold text-amber-400">4</div>
                 <h3 className="font-bold text-white text-base">Resolve and score</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  When the source settles it, every forecast is scored, so the circle learns who is well calibrated.
+                  When the source settles it, each forecast can be scored against the outcome, so reliability is measured, not assumed.
                 </p>
               </div>
             </div>
