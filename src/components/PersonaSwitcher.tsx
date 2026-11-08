@@ -29,11 +29,16 @@ export function PersonaSwitcher({
         }
 
         const expertId = Number(v);
-        await fetch("/api/session", {
+        const res = await fetch("/api/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ expertId }),
         });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          alert(data.error || "Failed to switch persona.");
+          return;
+        }
 
         const selectedOpt = options.find((o) => o.id === expertId);
         const isMod = selectedOpt?.group === "ACAPS";

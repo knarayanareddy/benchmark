@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as s from "@/db/schema";
-import { COOKIE } from "@/lib/session";
+import { setSession } from "@/lib/session";
 import { getWorld, loadWorld } from "@/lib/world";
 import { makeAlias } from "@/lib/identity";
 import { matchScore } from "@/lib/dispatch";
@@ -84,6 +84,6 @@ export async function POST(req: Request) {
     });
   }
   const jar = await cookies();
-  jar.set(COOKIE, String(row.id), { path: "/", httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
+  setSession(jar, row.id, true);
   return ok({ id: row.id, alias: row.alias, name, asks: cands.length });
 }

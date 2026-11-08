@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-/** ACAPS Risk Radar export (real data, 139 risks). */
+/** ACAPS Risk Radar export (real data, 139 risks) + dated rationaleUpdates. */
 export const risks = pgTable("risks", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
@@ -24,6 +24,10 @@ export const risks = pgTable("risks", {
   trend: text("trend").notNull().default(""),
   status: text("status").notNull(),
   rationale: text("rationale").notNull().default(""),
+  rationaleUpdates: jsonb("rationale_updates")
+    .$type<Array<{ date: string | null; text: string }>>()
+    .notNull()
+    .default([]),
   sources: jsonb("sources").$type<string[]>().notNull(),
   exposure: text("exposure").notNull().default(""),
   expectedImpact: text("expected_impact").notNull().default(""),
@@ -35,6 +39,16 @@ export const triggers = pgTable("triggers", {
   riskId: text("risk_id").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
+  completionHistory: jsonb("completion_history")
+    .$type<Array<{ date: string; value: number }>>()
+    .notNull()
+    .default([]),
+  trendHistory: jsonb("trend_history")
+    .$type<Array<{ date: string; value: string }>>()
+    .notNull()
+    .default([]),
+  dateEnteredISO: text("date_entered_iso"),
+  lastUpdateISO: text("last_update_iso"),
 });
 
 /**
@@ -84,7 +98,11 @@ export const questions = pgTable("questions", {
   text: text("text").notNull(),
   criteria: text("criteria").notNull(),
   season: text("season").notNull().default("current"),
-  status: text("status").notNull().default("open"), // open | resolved
+  status: text("status").notNull().default("open"), // open | closed | resolved
+  round: integer("round").notNull().default(1), // 1 | 2
+  closedRounds: jsonb("closed_rounds").$type<number[]>().notNull().default([]),
+  /** forecast = 6-month ACAPS risk/trigger question; signal = short-horizon "signal check" that resolves in days/weeks */
+  kind: text("kind").notNull().default("forecast"),
   outcome: text("outcome"), // yes | no | unobservable
   opensAt: timestamp("opens_at").notNull().defaultNow(),
   closesAt: timestamp("closes_at").notNull(),
@@ -102,6 +120,10 @@ export const forecasts = pgTable(
     confidence: integer("confidence").notNull().default(2),
     reason: text("reason").notNull().default(""),
     evidenceType: text("evidence_type").notNull().default("none"),
+    /** divergence interview: what would change my mind (pre-registered disconfirmer) */
+    disconfirmer: text("disconfirmer").notNull().default(""),
+    /** divergence interview: what the expert says drives the gap vs ACAPS */
+    gapBasis: text("gap_basis").notNull().default(""),
     identityMode: text("identity_mode").notNull().default("profile"),
     coiFlag: boolean("coi_flag").notNull().default(false),
     secondsSpent: integer("seconds_spent").notNull().default(60),
@@ -109,6 +131,49 @@ export const forecasts = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("forecast_q_e").on(t.questionId, t.expertId)]
+);
+
+/**
+ * Closed-round panel release ledger (`answers.releases` in benchmark).
+ * Only closed rounds with visibility='panel' are exposed in panel series;
+ * rounds with n < 5 are withheld to prevent order-statistic or sequential-differencing inversion.
+ */
+export const releases = pgTable("releases", {
+  id: serial("id").primaryKey(),
+  cardId: text("card_id").notNull(),
+  questionId: integer("question_id").notNull(),
+  round: integer("round").notNull(),
+  n: integer("n").notNull(),
+  closed: boolean("closed").notNull().default(true),
+  visibility: text("visibility").notNull().default("panel"),
+  at: timestamp("at").notNull().defaultNow(),
+  snapshot: jsonb("snapshot").$type<{
+    estimate: number | null;
+    lo: number | null;
+    hi: number | null;
+    suppressed?: boolean;
+    releaseHeld?: boolean;
+  } | null>(),
+});
+
+/**
+ * Analyst-authored links between questions (`answers.card_links` / 0008_card_links.sql).
+ * Never inferred automatically. Both mechanism and rival explanation (20..500 chars) are required.
+ */
+export const cardLinks = pgTable(
+  "card_links",
+  {
+    id: text("id").primaryKey(),
+    fromCardId: text("from_card_id").notNull(),
+    toCardId: text("to_card_id").notNull(),
+    mechanism: text("mechanism").notNull(),
+    rival: text("rival").notNull(),
+    by: text("by").notNull().default("ACAPS moderator"),
+    day: text("day").notNull(),
+    version: integer("version").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("card_links_pair").on(t.fromCardId, t.toCardId)]
 );
 
 /** Roundtable (structured debate) */

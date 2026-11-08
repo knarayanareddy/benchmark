@@ -1,7 +1,7 @@
 import { currentExpert } from "@/lib/session";
 import { toRow } from "@/lib/world";
 import { buildStats, expertiseOf } from "@/lib/scoring";
-import { signalsFor } from "@/lib/integrity";
+import { signalsFor, coordinationPairs } from "@/lib/integrity";
 import { showExpert } from "@/lib/identity";
 import { Card, H, Pill } from "@/components/ui";
 import { ModNav } from "@/components/ModNav";
@@ -17,12 +17,39 @@ export default async function Integrity() {
       return { e, st, ex: expertiseOf(w, stats, e), sig: signalsFor(st) };
     })
     .sort((a, b) => a.sig.quality - b.sig.quality);
+  const pairs = coordinationPairs(w.forecasts);
+  const label = (id: number) => {
+    const e = w.expertById.get(id)!;
+    const sh = showExpert(toRow(w, e), "profile", { role: "moderator", id: me.id });
+    return sh.label === "Sealed expert" ? `Sealed expert #${id}` : sh.label;
+  };
   return (
     <div>
       <H sub="Nobody can read intent. What we can do is surface patterns — and make sure that low-information, over-confident or motivated answers cannot move the aggregate.">Integrity signals</H>
       <ModNav here="/moderator/integrity" />
       <Card className="mb-6 bg-amber-50 text-sm text-amber-900">
         Signals are prompts for a human conversation, <b>never automatic penalties</b>. Weight in the circle aggregate comes only from resolved track record (shrunk toward a floor for newcomers), so a poser or a motivated voice has a bounded effect — whether or not anybody notices.
+      </Card>
+      <Card className="mb-6">
+        <div className="mb-1 flex items-center gap-2">
+          <h2 className="font-serif text-lg font-semibold">Coordination &amp; herding check</h2>
+          <Pill tone={pairs.length ? "amber" : "green"}>{pairs.length ? `${pairs.length} pair(s) to ask about` : "nothing flagged"}</Pill>
+        </div>
+        <p className="mb-3 text-xs text-stone-500">
+          Independent experts differ by a few points and answer at different times. Pairs that repeatedly give near-identical numbers within minutes,
+          with overlapping wording, are shown as a question for a human (shared source? one person with two profiles?) — not as an accusation.
+          Uses behavioural metadata only, so it works for Sealed experts without revealing who they are.
+        </p>
+        {pairs.length === 0 && <p className="text-sm text-stone-500">No pair of experts answers in lock-step.</p>}
+        <div className="space-y-2">
+          {pairs.map((p) => (
+            <div key={`${p.a}-${p.b}`} className="rounded-xl border border-stone-200 bg-white p-3 text-sm">
+              <Pill tone={p.strength === "strong" ? "rose" : "amber"}>{p.strength === "strong" ? "Strong pattern" : "Possible pattern"}</Pill>{" "}
+              <b>{label(p.a)}</b> &amp; <b>{label(p.b)}</b>
+              <div className="text-xs text-stone-500">{p.why}</div>
+            </div>
+          ))}
+        </div>
       </Card>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-sm">

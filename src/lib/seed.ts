@@ -6,6 +6,7 @@ import { makeAlias } from "./identity";
 import { LEVEL_PRIOR } from "./constants";
 import { loadWorld } from "./world";
 import { planDispatch } from "./dispatch";
+import { seedSignals, seedEvolution } from "./seed3";
 
 type RiskJson = (typeof riskData)[number];
 
@@ -141,6 +142,8 @@ async function runSeed() {
     client.release();
   }
   if (didSeed) await seedNotifications();
+  await seedSignals();
+  await seedEvolution();
 }
 
 async function chunked<T>(rows: T[], fn: (c: T[]) => Promise<unknown>, size = 200) {
@@ -165,9 +168,12 @@ async function seedAll() {
         probability: x.probability,
         impact: x.impact,
         level: x.level,
-        trend: x.trend,
+        trend: (x as Record<string, unknown>).riskTrend ? String((x as Record<string, unknown>).riskTrend) : x.trend,
         status: x.status,
         rationale: x.rationale,
+        rationaleUpdates: Array.isArray((x as Record<string, unknown>).rationaleUpdates)
+          ? ((x as Record<string, unknown>).rationaleUpdates as Array<{ date: string | null; text: string }>)
+          : [],
         sources: x.sources,
         exposure: x.exposure,
         expectedImpact: x.expectedImpact,
@@ -176,7 +182,23 @@ async function seedAll() {
     )
   );
   const trigRows = risks.flatMap((x) =>
-    x.triggers.map((t) => ({ id: `${x.id}-${t.id}`, riskId: x.id, title: t.title, description: t.description }))
+    x.triggers.map((t) => {
+      const tr = t as Record<string, unknown>;
+      return {
+        id: `${x.id}-${t.id}`,
+        riskId: x.id,
+        title: t.title,
+        description: t.description,
+        completionHistory: Array.isArray(tr.completionHistory)
+          ? (tr.completionHistory as Array<{ date: string; value: number }>)
+          : [],
+        trendHistory: Array.isArray(tr.trendHistory)
+          ? (tr.trendHistory as Array<{ date: string; value: string }>)
+          : [],
+        dateEnteredISO: typeof tr.dateEnteredISO === "string" ? tr.dateEnteredISO : null,
+        lastUpdateISO: typeof tr.lastUpdateISO === "string" ? tr.lastUpdateISO : null,
+      };
+    })
   );
   await chunked(trigRows, (c) => db.insert(s.triggers).values(c));
 

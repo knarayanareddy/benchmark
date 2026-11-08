@@ -15,7 +15,7 @@ export function acapsProb(risk: Risk | undefined): number | null {
 
 /** Only risk-level questions carry a directly comparable ACAPS rating. */
 export function questionAcaps(q: Question, risk: Risk | undefined): number | null {
-  if (q.triggerId) return null;
+  if (q.triggerId || q.kind === "signal") return null;
   return acapsProb(risk);
 }
 

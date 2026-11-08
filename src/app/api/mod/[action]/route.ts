@@ -49,9 +49,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
     const risk = w.riskById.get(String(b.riskId));
     if (!risk) return bad("Unknown risk", 404);
     const trig = b.triggerId ? w.triggers.find((t) => t.id === b.triggerId) : undefined;
+    const signal = b.kind === "signal";
+    const horizon = Math.min(30, Math.max(3, Number(b.days) || 14));
     const text =
       String(b.text ?? "").trim() ||
-      (trig
+      (signal
+        ? `Within the next ${horizon} days, will we see a concrete, observable sign of this risk: “${risk.title.slice(0, 120)}”?`
+        : trig
         ? `Within the next 6 months, will this ACAPS trigger occur: “${trig.title}”?`
         : `Within the next 6 months, will this risk materialise: “${risk.title}”?`);
     const plan = planDispatch(w, risk, { id: -1 });
@@ -67,8 +71,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
         riskId: risk.id,
         triggerId: trig?.id ?? null,
         text,
-        criteria: "Resolved by an ACAPS analyst on the close date using the Risk Radar evidence standard. ‘Unobservable’ is never counted as a miss.",
-        closesAt: new Date(Date.now() + 183 * 86400000),
+        criteria: signal
+          ? "Resolved by an ACAPS analyst on the close date against the observable stated in the question, using public reporting. ‘Unobservable’ is never counted as a miss."
+          : "Resolved by an ACAPS analyst on the close date using the Risk Radar evidence standard. ‘Unobservable’ is never counted as a miss.",
+        kind: signal ? "signal" : "forecast",
+        closesAt: new Date(Date.now() + (signal ? horizon : 183) * 86400000),
       })
       .returning({ id: s.questions.id });
     const real = planDispatch(w, risk, { id: q.id });

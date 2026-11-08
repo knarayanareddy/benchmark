@@ -35,6 +35,24 @@ export default async function Risks({ searchParams }: { searchParams: Promise<{ 
     <div className="space-y-6">
       <H sub="Every card is a real ACAPS Risk Radar entry. Circle numbers appear only after you've answered — and only when at least three members have.">Risks &amp; the Roundtable</H>
 
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-teal-200 bg-teal-50/80 p-4 shadow-sm">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-semibold text-white">Featured Roundtable</span>
+            <span className="text-xs font-semibold text-teal-800">Chad / Sudan Border Insecurity (R1043)</span>
+          </div>
+          <p className="text-xs text-slate-700">
+            Active structured debate with 6 contributions from verified experts &amp; ACAPS moderators.
+          </p>
+        </div>
+        <Link
+          href="/risks/R1043"
+          className="rounded-xl bg-teal-700 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-teal-800 shadow-sm"
+        >
+          Enter Roundtable →
+        </Link>
+      </div>
+
       {regions.size > 0 && (
         <Card>
           <h2 className="mb-2 font-semibold">Where the circle agrees — and disagrees — with ACAPS, by geography</h2>
@@ -76,12 +94,14 @@ export default async function Risks({ searchParams }: { searchParams: Promise<{ 
           const done = rq && answered.has(rq.id);
           const a = rq && (done || me?.isModerator) ? aggregate(w, stats, rq.id) : null;
           const nResp = rq ? w.forecasts.filter((f) => f.questionId === rq.id).length : 0;
+          const postCount = w.posts.filter((p) => p.riskId === r.id && !p.hidden).length;
           return (
             <Link key={r.id} href={`/risks/${r.id}`} className="block rounded-2xl border border-stone-200 bg-white p-4 shadow-sm hover:border-teal-600">
               <div className="mb-1 flex flex-wrap items-center gap-1.5">
                 <Pill tone="teal">{r.country}</Pill>
                 {r.level && <Pill tone={levelTone(r.level)}>{r.level}</Pill>}
                 <Pill>{THEMES[r.theme]}</Pill>
+                {postCount > 0 && <Pill tone="emerald">💬 {postCount} debate posts</Pill>}
                 {view === "history" && <Pill tone={r.status === "Materialised" ? "rose" : "green"}>{r.status}</Pill>}
               </div>
               <div className="font-medium leading-snug text-slate-900">{r.title}</div>

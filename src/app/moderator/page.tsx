@@ -1,3 +1,4 @@
+import { GAP_BASES } from "@/lib/constants";
 import Link from "next/link";
 import { currentExpert } from "@/lib/session";
 import { toRow } from "@/lib/world";
@@ -5,10 +6,30 @@ import { showExpert } from "@/lib/identity";
 import { Card, H, Pill } from "@/components/ui";
 import { DissentAdvance, VerifyButton } from "@/components/ModTools";
 import { ModNav } from "@/components/ModNav";
+import { QuickPersonaButton } from "@/components/PersonaButtons";
 
 export default async function Moderator() {
   const { me, w } = await currentExpert();
-  if (!me?.isModerator) return <Card><p>Moderator console. Choose “ACAPS moderator” in the persona switcher (top right).</p></Card>;
+  const modPersona = w.experts.find((e) => e.isModerator);
+  if (!me?.isModerator) {
+    return (
+      <div className="space-y-4">
+        <ModNav here="/moderator" />
+        <Card className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-700">
+            Moderator console. Switch to <b>ACAPS Moderator</b> to manage dissents,
+            verify experts, or record analyst links in Situation Evolution.
+          </p>
+          {modPersona && (
+            <QuickPersonaButton
+              expertId={modPersona.id}
+              label="Switch to ACAPS Moderator →"
+            />
+          )}
+        </Card>
+      </div>
+    );
+  }
   const experts = w.experts.filter((e) => !e.isModerator);
   const pending = experts.filter((e) => e.verification !== "verified");
   const openRiskQ = w.questions.filter((q) => q.status === "open" && !q.triggerId);
@@ -47,6 +68,12 @@ export default async function Moderator() {
                       <span className="ml-auto text-stone-500">{sh.label}{sh.sub ? ` · ${sh.sub}` : ""}</span>
                     </div>
                     <p className="mt-1 text-sm text-slate-800">“{f.reason}”</p>
+                    {(f.gapBasis || f.disconfirmer) && (
+                      <div className="mt-1 rounded-lg bg-stone-50 px-2.5 py-1.5 text-xs text-stone-600">
+                        {f.gapBasis && <div><b>Driver of gap:</b> {GAP_BASES[f.gapBasis]}</div>}
+                        {f.disconfirmer && <div><b>Would change their mind:</b> {f.disconfirmer}</div>}
+                      </div>
+                    )}
                     {d.analystNote && <p className="mt-1 rounded bg-teal-50 p-1.5 text-xs text-teal-900">Analyst: {d.analystNote}</p>}
                     <div className="mt-2 flex items-center justify-between">
                       <Link href={`/q/${d.questionId}`} className="text-xs text-teal-700 underline">View question</Link>

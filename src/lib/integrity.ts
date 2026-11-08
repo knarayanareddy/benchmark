@@ -38,3 +38,85 @@ export function signalsFor(st: Stats): { signals: Signal[]; quality: number } {
   if (st.skill !== null) quality += Math.round(Math.max(-10, Math.min(20, st.skill * 30)));
   return { signals: s, quality: Math.max(5, Math.min(100, quality)) };
 }
+
+export type CoordPair = {
+  a: number;
+  b: number;
+  shared: number;
+  meanGap: number;
+  medianMinutes: number;
+  textOverlap: number;
+  strength: "weak" | "strong";
+  why: string;
+};
+
+const tokens = (t: string) => new Set(t.toLowerCase().replace(/[^a-zà-ÿ\s]/g, " ").split(/\s+/).filter((x) => x.length > 3));
+const jaccard = (x: Set<string>, y: Set<string>) => {
+  if (!x.size || !y.size) return 0;
+  let i = 0;
+  for (const v of x) if (y.has(v)) i++;
+  return i / (x.size + y.size - i);
+};
+
+/**
+ * Coordination / herding detector. Independent experts disagree by a few points and answer at different times.
+ * Pairs that repeatedly give near-identical numbers within minutes, with overlapping wording, are surfaced to a
+ * moderator as a *question* (shared source? group chat? one person, two profiles?) — never as an accusation.
+ * It only uses behavioural metadata; it never reads identity, so it works for Sealed experts too.
+ */
+export function coordinationPairs(
+  forecasts: { questionId: number; expertId: number; probability: number; reason: string; createdAt: Date }[]
+): CoordPair[] {
+  const byQ = new Map<number, typeof forecasts>();
+  for (const f of forecasts) {
+    const a = byQ.get(f.questionId) ?? [];
+    a.push(f);
+    byQ.set(f.questionId, a);
+  }
+  const acc = new Map<string, { a: number; b: number; gaps: number[]; mins: number[]; overlaps: number[] }>();
+  for (const fs of byQ.values()) {
+    for (let i = 0; i < fs.length; i++)
+      for (let j = i + 1; j < fs.length; j++) {
+        const [x, y] = fs[i].expertId < fs[j].expertId ? [fs[i], fs[j]] : [fs[j], fs[i]];
+        const key = `${x.expertId}-${y.expertId}`;
+        const r = acc.get(key) ?? { a: x.expertId, b: y.expertId, gaps: [], mins: [], overlaps: [] };
+        r.gaps.push(Math.abs(x.probability - y.probability));
+        r.mins.push(Math.abs(x.createdAt.getTime() - y.createdAt.getTime()) / 60000);
+        if (x.reason && y.reason) r.overlaps.push(jaccard(tokens(x.reason), tokens(y.reason)));
+        acc.set(key, r);
+      }
+  }
+  const med = (v: number[]) => {
+    const s = [...v].sort((p, q) => p - q);
+    return s.length ? s[Math.floor(s.length / 2)] : 0;
+  };
+  const out: CoordPair[] = [];
+  for (const r of acc.values()) {
+    if (r.gaps.length < 3) continue;
+    const meanGap = r.gaps.reduce((p, q) => p + q, 0) / r.gaps.length;
+    const medianMinutes = med(r.mins);
+    const textOverlap = r.overlaps.length ? r.overlaps.reduce((p, q) => p + q, 0) / r.overlaps.length : 0;
+    const close = meanGap <= 3;
+    const fast = medianMinutes <= 30;
+    const echo = textOverlap >= 0.45;
+    const hits = [close, fast, echo].filter(Boolean).length;
+    if (!close || hits < 2) continue;
+    out.push({
+      a: r.a,
+      b: r.b,
+      shared: r.gaps.length,
+      meanGap: Math.round(meanGap * 10) / 10,
+      medianMinutes: Math.round(medianMinutes),
+      textOverlap: Math.round(textOverlap * 100) / 100,
+      strength: hits === 3 ? "strong" : "weak",
+      why: [
+        `${r.gaps.length} shared questions, answers differ by ${meanGap.toFixed(1)} pts on average`,
+        fast ? `submitted a median ${Math.round(medianMinutes)} min apart` : "",
+        echo ? `${Math.round(textOverlap * 100)}% wording overlap in reasons` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    });
+  }
+  return out.sort((p, q) => (q.strength === "strong" ? 1 : 0) - (p.strength === "strong" ? 1 : 0) || q.shared - p.shared);
+}

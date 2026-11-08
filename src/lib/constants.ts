@@ -135,3 +135,12 @@ export const LOADED_LEXICON = [
   "definitely",
   "certainly",
 ];
+
+/** Divergence interview: what the expert says drives a gap vs ACAPS. Neutral wording, no option is "better". */
+export const GAP_BASES: Record<string, string> = {
+  new_info: "Newer information than the analysis reflects",
+  local_detail: "Local detail the analysis may lack",
+  reading: "A different reading of the same facts",
+  definition: "A different definition or timeframe",
+  unsure: "I'm not sure — I hold this loosely",
+};

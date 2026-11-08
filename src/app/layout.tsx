@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
-import { currentExpert, langPref } from "@/lib/session";
+import { currentExpert, langPref, pickablePersonas } from "@/lib/session";
 import { t } from "@/lib/i18n";
 import { PersonaSwitcher, LangToggle } from "@/components/PersonaSwitcher";
 import { ANON_LEVELS } from "@/lib/constants";
@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const isCustomExpert = (e: (typeof w.experts)[number]) => e.archetype === "real" || e.id > 29;
 
   // Prioritize custom experts, then moderator, then seed experts
-  const sortedExperts = [...w.experts].sort((a, b) => {
+  const sortedExperts = [...(await pickablePersonas(w))].sort((a, b) => {
     const aCustom = isCustomExpert(a);
     const bCustom = isCustomExpert(b);
     if (aCustom && !bCustom) return -1;
@@ -60,11 +60,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const links: [string, string][] = [
     ["/pulse", t(lang, "pulse")],
     ["/risks", t(lang, "risks")],
+    ["/moderator/evolution", t(lang, "evolution")],
     ["/honour", t(lang, "stage")],
     ["/me", t(lang, "me")],
   ];
   if (me?.isModerator) links.push(["/moderator", t(lang, "moderator")]);
-  links.push(["/review", t(lang, "review")]);
   return (
     <html lang={lang}>
       <body className="min-h-screen bg-[#f6f3ee] text-slate-900 antialiased">

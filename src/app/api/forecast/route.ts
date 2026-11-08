@@ -4,7 +4,7 @@ import * as s from "@/db/schema";
 import { bad, ok, requireExpert } from "@/lib/api";
 import { redact } from "@/lib/scrub";
 import { questionAcaps } from "@/lib/scoring";
-import { EVIDENCE_TYPES } from "@/lib/constants";
+import { EVIDENCE_TYPES, GAP_BASES } from "@/lib/constants";
 
 export async function POST(req: Request) {
   const r = await requireExpert();
@@ -55,6 +55,14 @@ export async function PATCH(req: Request) {
   if (!f) return bad("No estimate to revise.", 404);
   const p = Math.round(Number(b.revised));
   if (!(p >= 1 && p <= 99)) return bad("Probability must be between 1 and 99.");
-  await db.update(s.forecasts).set({ revised: p, seenAcapsFirst: true }).where(eq(s.forecasts.id, f.id));
+  await db
+    .update(s.forecasts)
+    .set({
+      revised: p,
+      seenAcapsFirst: true,
+      gapBasis: String(b.gapBasis ?? "") in GAP_BASES ? String(b.gapBasis) : "",
+      disconfirmer: redact(String(b.disconfirmer ?? "").slice(0, 200)),
+    })
+    .where(eq(s.forecasts.id, f.id));
   return ok();
 }

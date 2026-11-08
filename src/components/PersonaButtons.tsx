@@ -26,3 +26,39 @@ export function PersonaButtons({ items }: { items: { id: number; title: string; 
   );
 }
 
+export function QuickPersonaButton({
+  expertId,
+  label,
+  returnTo,
+  className,
+}: {
+  expertId: number;
+  label: string;
+  returnTo?: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ expertId }),
+        });
+        if (returnTo) {
+          window.location.href = returnTo;
+        } else {
+          window.location.reload();
+        }
+      }}
+      className={
+        className ??
+        "rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+      }
+    >
+      {label}
+    </button>
+  );
+}
+

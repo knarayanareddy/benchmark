@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { currentExpert, langPref } from "@/lib/session";
+import { currentExpert, langPref, pickablePersonas } from "@/lib/session";
 import { toRow } from "@/lib/world";
 import { aggregate, buildStats, questionAcaps, MIN_PANEL, PUBLIC_MIN } from "@/lib/scoring";
 import { showExpert } from "@/lib/identity";
@@ -33,7 +33,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
   });
 
   if (!me) {
-    const cards = w.experts.map(toPersonaCard);
+    const cards = (await pickablePersonas(w)).map(toPersonaCard);
     return (
       <div className="mx-auto max-w-3xl space-y-5">
         <div className="flex flex-wrap items-center gap-2 text-sm text-stone-500">
@@ -86,7 +86,8 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
         <span>·</span>
         <Pill tone="teal">{risk.country}</Pill>
         <Pill>{THEMES[risk.theme]}</Pill>
-        <Pill tone="indigo">{q.triggerId ? "Trigger question" : "Risk question"}</Pill>
+        <Pill tone="indigo">{q.kind === "signal" ? "Signal check" : q.triggerId ? "Trigger question" : "Risk question"}</Pill>
+          {q.kind === "signal" && <Pill tone="amber">⚡ Fast loop · closes {fmtDate(q.closesAt)}</Pill>}
         <span>closes {fmtDate(q.closesAt)}</span>
       </div>
       <Card>
@@ -118,7 +119,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
             <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-serif text-xl font-semibold">The picture</h2>
               <div className="flex gap-2">
-                {risk.level && <Pill tone={levelTone(risk.level)}>ACAPS: {risk.probability || risk.level} probability</Pill>}
+                {risk.level && q.kind !== "signal" && <Pill tone={levelTone(risk.level)}>ACAPS: {risk.probability || risk.level} probability</Pill>}
                 {agg && <Pill tone={agg.label === "Strong agreement" ? "green" : agg.label === "Mixed views" ? "amber" : "rose"}>{agg.label}</Pill>}
               </div>
             </div>
@@ -132,7 +133,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
                     <div className="text-xs text-stone-500">implied by its “{risk.probability || risk.level}” rating (empirical materialisation rate)</div>
                   </>
                 ) : (
-                  <div className="text-xs text-stone-500">{q.triggerId ? "ACAPS rates the parent risk, not this trigger separately." : "Unrated risk."}</div>
+                  <div className="text-xs text-stone-500">{q.kind === "signal" ? "Signal checks are short-horizon observations ACAPS does not rate. They exist so you get feedback in days, and so your track record starts to exist." : q.triggerId ? "ACAPS rates the parent risk, not this trigger separately." : "Unrated risk."}</div>
                 )}
               </div>
               <div className="rounded-xl bg-teal-50 p-3">
@@ -203,7 +204,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ id: s
           )}
 
           <Link href={`/risks/${risk.id}`} className="block rounded-2xl bg-slate-900 p-4 text-center font-semibold text-white hover:bg-slate-800">
-            Continue on the Roundtable → debate this risk, anonymously or by name
+            Continue to Full Risk View → inspect Situation Evolution timeline &amp; join the Roundtable
           </Link>
         </>
       )}

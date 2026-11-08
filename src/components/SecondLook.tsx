@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GAP_BASES } from "@/lib/constants";
 
 type Arg = { who: string; sub: string; text: string; p: number };
 
@@ -27,10 +28,15 @@ export function SecondLook({
   const [revising, setRevising] = useState(false);
   const [v, setV] = useState(mine);
   const [busy, setBusy] = useState(false);
+  const [basis, setBasis] = useState("");
+  const [disc, setDisc] = useState("");
 
   async function save(val: number) {
     setBusy(true);
-    await fetch("/api/forecast", { method: "PATCH", body: JSON.stringify({ questionId, revised: val }) });
+    await fetch("/api/forecast", {
+      method: "PATCH",
+      body: JSON.stringify({ questionId, revised: val, gapBasis: basis, disconfirmer: disc }),
+    });
     setBusy(false);
     router.refresh();
   }
@@ -66,8 +72,36 @@ export function SecondLook({
         </ul>
       </div>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
-        {col("Reasons given for a higher probability", higher)}
-        {col("Reasons given for a lower probability", lower)}
+        {/* column order is counterbalanced per question so layout never nudges toward "up" or "down" */}
+        {questionId % 2 === 0 ? col("Reasons given for a higher probability", higher) : col("Reasons given for a lower probability", lower)}
+        {questionId % 2 === 0 ? col("Reasons given for a lower probability", lower) : col("Reasons given for a higher probability", higher)}
+      </div>
+      <div className="mt-4 rounded-xl border border-stone-200 bg-white p-3">
+        <div className="text-xs font-semibold uppercase tracking-wide text-stone-500">Optional · two taps, helps the analyst read your number</div>
+        <div className="mt-2 text-sm font-medium text-slate-800">What mainly makes your view different?</div>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {Object.entries(GAP_BASES).map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setBasis(basis === k ? "" : k)}
+              className={`rounded-full border px-3 py-1 text-xs ${basis === k ? "border-teal-700 bg-teal-700 text-white" : "border-stone-300 bg-stone-50 text-slate-700 hover:bg-stone-100"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <label className="mt-3 block text-sm font-medium text-slate-800">
+          What would change your mind? <span className="font-normal text-stone-500">(a concrete observation — recorded now, before the outcome)</span>
+        </label>
+        <input
+          value={disc}
+          maxLength={200}
+          onChange={(e) => setDisc(e.target.value)}
+          placeholder="e.g. Adré crossing stays open to trucks for a full month"
+          className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+        />
+        <p className="mt-1 text-[11px] text-stone-500">Nothing here changes your weight. Saying “I hold this loosely” is as valid as anything else.</p>
       </div>
       {!revising ? (
         <div className="mt-4 flex flex-wrap gap-3">

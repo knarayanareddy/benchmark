@@ -22,12 +22,22 @@ export function RoundtableHeader({
   const unlocked = personas.filter((p) => p.hasAnswered);
 
   async function handleSwitch(id: number) {
-    await fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ expertId: id }),
-    });
-    window.location.reload();
+    try {
+      const res = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expertId: id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        alert(data.error || "Failed to switch persona.");
+        return;
+      }
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to switch persona", err);
+      alert("Network error switching persona.");
+    }
   }
 
   return (

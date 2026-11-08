@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { currentExpert } from "@/lib/session";
+import { currentExpert, pickablePersonas } from "@/lib/session";
 import { toRow } from "@/lib/world";
 import { badgesOf, buildStats, expertiseOf, questionAcaps, type Stats } from "@/lib/scoring";
 import { signalsFor } from "@/lib/integrity";
+import { anonymitySetOf } from "@/lib/privacy";
 import { showExpert } from "@/lib/identity";
 import { Card, H, Pill } from "@/components/ui";
 import { ProfileForm, InviteButton } from "@/components/ProfileForm";
@@ -35,7 +36,7 @@ export default async function Me() {
     isCustom: e.archetype === "real" || e.id > 29,
   });
 
-  const cards = w.experts.map(toPersonaCard);
+  const cards = (await pickablePersonas(w)).map(toPersonaCard);
   const countriesList = Array.from(new Set(w.risks.flatMap((r) => r.countries))).sort();
 
   if (!me) {
@@ -142,6 +143,31 @@ export default async function Me() {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-3">
+          {(() => {
+            const a = anonymitySetOf(w, me);
+            const tone = a.risk === "high" ? "border-rose-300 bg-rose-50" : a.risk === "medium" ? "border-amber-300 bg-amber-50" : "border-teal-200 bg-teal-50/60";
+            return (
+              <Card className={tone}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-serif text-xl font-semibold">Re-identification risk</h2>
+                  <Pill tone={a.risk === "high" ? "rose" : a.risk === "medium" ? "amber" : "green"}>
+                    {a.risk === "high" ? "High — small crowd" : a.risk === "medium" ? "Medium" : "Low — you are in a crowd"}
+                  </Pill>
+                </div>
+                <p className="mt-1 text-sm text-slate-700">
+                  A pseudonym is only as safe as the crowd behind it. Counting the people a circle member could confuse you with today:
+                </p>
+                <div className="mt-3 grid gap-2 text-center text-sm sm:grid-cols-3">
+                  <div className="rounded-xl bg-white/80 p-2"><div className="font-serif text-2xl font-semibold">{a.sameCountry}</div><div className="text-[11px] text-stone-500">share a country with you</div></div>
+                  <div className="rounded-xl bg-white/80 p-2"><div className="font-serif text-2xl font-semibold">{a.sameCountryRole}</div><div className="text-[11px] text-stone-500">…and your role type</div></div>
+                  <div className="rounded-xl bg-white/80 p-2"><div className="font-serif text-2xl font-semibold">{a.k}</div><div className="text-[11px] text-stone-500">…and your theme focus (k)</div></div>
+                </div>
+                <ul className="mt-3 list-inside list-disc space-y-1 text-xs text-slate-700">
+                  {a.advice.map((x) => <li key={x}>{x}</li>)}
+                </ul>
+              </Card>
+            );
+          })()}
           <Card>
             <h2 className="mb-1 font-serif text-xl font-semibold">How visible am I?</h2>
             <p className="mb-3 text-sm text-slate-600">Live proof from your own latest contribution — this is exactly what each audience sees of you right now.</p>
@@ -227,7 +253,7 @@ export default async function Me() {
             <div className="space-y-3">
               <Bar label="Verified credentials" v={ex.credentials} max={25} hint={me.verification === "verified" ? "Verified once by a moderator; evidence deleted." : "Pending moderator verification."} />
               <Bar label="Peer vouches" v={ex.vouches} max={15} hint="Verified members who staked their reputation on you." />
-              <Bar label="Track record" v={ex.trackRecord} max={40} hint={st.n ? `${st.n} resolved, skill ${Math.round((st.skill ?? 0) * 100)}%` : "Starts when your first question resolves."} />
+              <Bar label="Track record" v={ex.trackRecord} max={40} hint={st.n ? `${st.n} resolved, skill ${Math.round((st.skill ?? 0) * 100)}%` : "Starts when your first question resolves — fast-loop signal checks resolve in days."} />
               <Bar label="Peer-rated usefulness" v={ex.usefulness} max={20} hint="‘Added new information’ and ‘changed my mind’ reactions." />
             </div>
           </Card>
