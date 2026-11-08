@@ -14,6 +14,7 @@
     "gate:export": "node scripts/gate-export.mjs",
     "verify": "node scripts/verify.mjs",
     "test:core": "node --test packages/shared/core.test.js",
+    "test:slow": "node --test packages/simulate/test/slow/*.test.js",
     "gate:privacy": "node scripts/gate-privacy.mjs",
     "baseline": "node scripts/measure-baseline.mjs",
     "fit": "node scripts/fit-baseline.mjs",
@@ -27,7 +28,9 @@
     "lint": "eslint .",
     "audit": "npm audit --audit-level=moderate",
     "worklist": "node scripts/authoring-worklist.mjs",
-    "label": "node scripts/label-observable.mjs"
+    "label": "node scripts/label-observable.mjs",
+    "simulate": "node packages/simulate/bin/run.mjs",
+    "simulate:quick": "node packages/simulate/bin/run.mjs --quick"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",

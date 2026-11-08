@@ -1,0 +1,1337 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "J01",
+      "keys": [
+        "tau"
+      ],
+      "plain": "How much more the panel could know about each risk than ACAPS's rating already captures. This sets the ceiling for any improvement.",
+      "options": [
+        "0.75 (small ceiling)",
+        "1.0 (medium)",
+        "1.25 (large)",
+        "1.5 (largest)"
+      ],
+      "value": {
+        "tau": 1.25
+      },
+      "range": {
+        "tau": {
+          "min": 0.75,
+          "max": 1.5
+        }
+      },
+      "why": "Smallest round value at which a 0.05 gain is possible at all. At 1.25 a perfectly informed panel could gain at most 0.054 Brier points over ACAPS. Nobody can measure this before a panel exists.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.2 (default tau = 1.25, ASSUMED); ceiling table in §R J01 (RAN, head.mjs)",
+        "note": "Assumed. The ceiling table is RAN."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "tau 0.75 / 1.0 / 1.25 / 1.5, with expert accuracy held fixed",
+          "result": "true gain 0.004 / 0.017 / 0.031 / 0.044 Brier points over ACAPS; cards needed about 11,400 / 780 / 270 / 140. This is the largest single swing in the study.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S6 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J02",
+      "keys": [
+        "sigma",
+        "sigmaRef",
+        "sigmaRefTrigger"
+      ],
+      "plain": "How accurate each expert is on a card (their noise). We do not choose this directly. We solve it so that the panel is better than the comparison by a stated amount.",
+      "options": [
+        "Fix the expert noise",
+        "Fix the improvement and solve for the noise"
+      ],
+      "value": {
+        "sigma": null,
+        "sigmaRef": 1.53,
+        "sigmaRefTrigger": 2.36
+      },
+      "range": {
+        "sigma": {
+          "min": 0.05,
+          "max": 6,
+          "nullable": true
+        },
+        "sigmaRef": {
+          "min": 0.05,
+          "max": 6
+        },
+        "sigmaRefTrigger": {
+          "min": 0.05,
+          "max": 6
+        }
+      },
+      "why": "Lets the table answer: if the panel really is this much better, can we see it? sigma is null because the simulator solves it for each target gain. sigmaRef (1.53) and sigmaRefTrigger (2.36) are the fixed-accuracy reference settings for the sensitivity sweeps: 1.53 gives a 0.03 gain over ACAPS at 8 responders; 2.36 gives a 0.03 gain over the base rate for trigger cards. The solver bracket 0.05 to 6 is from §B.3.",
+      "evidence": {
+        "tag": "RAN",
+        "source": "power-spec §B.3 (sigmaRef 1.53 and sigmaRefTrigger 2.36, RAN); §R J02",
+        "note": "The choice of method (solve for the noise) is a judgement. The two reference values are measured."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "A gain of 0.03 over ACAPS",
+          "result": "needs a panel whose ranking accuracy (AUC) is about 0.79, against ACAPS's measured 0.703. A reader who thinks this is unrealistic should read the 0.01 and 0.02 rows.",
+          "tag": "RAN",
+          "source": "power-spec §R J02 and §Analysis 3 population table (RAN)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J03",
+      "keys": [
+        "fracUninformed"
+      ],
+      "plain": "Share of experts who know little or nothing about a card and answer near the average.",
+      "options": [
+        "0%",
+        "20%",
+        "40%"
+      ],
+      "value": {
+        "fracUninformed": 0
+      },
+      "range": {
+        "fracUninformed": {
+          "min": 0,
+          "max": 0.4
+        }
+      },
+      "why": "The panel is recruited by declared country and theme.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.3 (phi default 0, ASSUMED)",
+        "note": "Assumed."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "20% or 40% uninformed experts",
+          "result": "At 20% the true gain drops from 0.031 to 0.020 and the cards needed rise from 268 to 668. At 40% the panel is worse than ACAPS (gain -0.008).",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S3b (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J04",
+      "keys": [
+        "skillSpread",
+        "uninformedSd"
+      ],
+      "plain": "How much experts differ in skill (some sharper, some noisier), and how scattered the answers of uninformed experts are.",
+      "options": [
+        "Equal skill (0)",
+        "Moderate spread (0.25)",
+        "Large spread (0.5)"
+      ],
+      "value": {
+        "skillSpread": 0.25,
+        "uninformedSd": 0.8
+      },
+      "range": {
+        "skillSpread": {
+          "min": 0,
+          "max": 0.5
+        },
+        "uninformedSd": {
+          "min": 0,
+          "max": 2
+        }
+      },
+      "why": "Real panels differ; the effect is small.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.3 (eta 0.25 and uninformed spread 0.8, ASSUMED)",
+        "note": "Assumed. The spec gives no range for uninformedSd; 0 to 2 is set wide so that the default is valid. The owner should confirm it."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "No skill spread / moderate / large spread",
+          "result": "Cards needed 254 / 268 / 295. Minor.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S3 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "accepted",
+        "by": "project owner",
+        "date": "2026-11-07",
+        "note": "Decided: keep the range wide (0 to 2) until the simulation shows whether it matters."
+      }
+    },
+    {
+      "id": "J05",
+      "keys": [
+        "icc"
+      ],
+      "plain": "How much experts share the same mistakes on a card (the same news, the same blind spot). This is the share of each expert's error that all experts on that card have in common.",
+      "options": [
+        "0",
+        "0.2",
+        "0.4",
+        "0.6"
+      ],
+      "value": {
+        "icc": 0.2
+      },
+      "range": {
+        "icc": {
+          "min": 0,
+          "max": 0.6
+        }
+      },
+      "why": "Experts read the same sources; averaging cannot remove shared error.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.3 (rho_e default 0.2, ASSUMED)",
+        "note": "Estimable from the pilot's own Round-1 answers without outcomes.",
+        "refs": []
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Shared error 0 / 0.2 / 0.4 / 0.6",
+          "result": "True gain 0.035 / 0.031 / 0.026 / 0.022 over ACAPS; cards needed 181 / 268 / 403 / 625.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S2 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J06",
+      "keys": [
+        "omega"
+      ],
+      "plain": "Whether experts are over-confident (answers too extreme) or under-confident (answers too close to 50%).",
+      "options": [
+        "x0.5 (under-confident)",
+        "x0.75 (under-confident)",
+        "x1 (calibrated)",
+        "x1.5 (over-confident)",
+        "x2 (over-confident)"
+      ],
+      "value": {
+        "omega": 1
+      },
+      "range": {
+        "omega": {
+          "min": 0.5,
+          "max": 2
+        }
+      },
+      "why": "A neutral starting point. Averaging calibrated experts already makes the panel slightly under-confident (calibration slope about 1.2, RAN).",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.3 (omega = 1 calibrated, ASSUMED)",
+        "note": "Assumed."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "x0.5 / x0.75 / x1 / x1.5 / x2",
+          "result": "Cards needed 1,656 / 410 / 268 / 281 / 460. Strong under-confidence is costly.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S4 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J07",
+      "keys": [
+        "sigmaBias",
+        "panelBias"
+      ],
+      "plain": "A lean shared by the whole panel (too gloomy or too optimistic), and each expert's own persistent lean.",
+      "options": [
+        "Panel lean -0.5, 0 or +0.5",
+        "Personal lean 0.3 (typical size)"
+      ],
+      "value": {
+        "sigmaBias": 0.3,
+        "panelBias": 0
+      },
+      "range": {
+        "sigmaBias": {
+          "min": 0,
+          "max": 0.6
+        },
+        "panelBias": {
+          "min": -0.5,
+          "max": 0.5
+        }
+      },
+      "why": "No reason to expect a direction; personal lean is a typical-size allowance.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.3 (sigma_b 0.3 and panel lean 0, ASSUMED)",
+        "note": "Assumed."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "Panel lean +0.5 or -0.5",
+          "result": "Panel lean +0.5: gain 0.013, cards needed 2,135; -0.5: cards needed 293 (against 268 at 0). A shared optimistic lean is costly.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S4b (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J08",
+      "keys": [
+        "K",
+        "dropout",
+        "dropoutKappa",
+        "floor",
+        "kFixed",
+        "rosterSize"
+      ],
+      "plain": "How many invited experts answer a card, and how many answers a card needs before it counts. The dropout value is the share who do not answer (0.51 means 51% do not).",
+      "options": [
+        "Response 49%",
+        "Response 17%",
+        "Invite 15",
+        "Invite 50",
+        "Minimum 5 answers",
+        "Minimum 3 answers"
+      ],
+      "value": {
+        "K": 15,
+        "dropout": 0.51,
+        "dropoutKappa": 10,
+        "floor": 5,
+        "kFixed": null,
+        "rosterSize": 40
+      },
+      "range": {
+        "K": {
+          "min": 8,
+          "max": 60
+        },
+        "dropout": {
+          "min": 0.3,
+          "max": 0.83
+        },
+        "dropoutKappa": {
+          "min": 5,
+          "max": 10000
+        },
+        "floor": {
+          "oneOf": [
+            3,
+            5
+          ]
+        },
+        "kFixed": {
+          "min": 3,
+          "max": 15,
+          "nullable": true
+        },
+        "rosterSize": {
+          "min": 20,
+          "max": 100
+        }
+      },
+      "why": "Minimum 5 is the privacy rule in the code. 49% and 17% are the two figures in our own documents, and we cannot tell which fits ACAPS's experts. dropoutKappa sets how much response varies between cards; 10000 stands in for no variation (the infinite case).",
+      "evidence": {
+        "tag": "DOC",
+        "source": "docs/06 (protocol: 51% drop out); docs/00 (about 17% response); power-spec §0 F9",
+        "note": "49%: protocol, source not in repo. 17%: docs/00. The binomial arithmetic is RAN. kFixed null means the dropout model is used; the floor 5 is the code's MIN_RELEASE_PANEL_SIZE."
+      },
+      "veto": "ACAPS programme (they know their experts)",
+      "ifWrong": [
+        {
+          "setting": "Response 49%, invite 15 (stored setting: response varies between experts)",
+          "result": "About 82% of cards reach 5 answers when experts differ in how likely they are to respond (the stored setting); 93% if every expert were equally likely to respond. At 17% response only 9.6% do, and about 50 invited experts per card are needed to reach 94%.",
+          "tag": "RAN",
+          "source": "power-spec §0 F9 (binomial arithmetic, RAN)"
+        },
+        {
+          "setting": "Answers needed per card 3 / 5 / 8 / 15",
+          "result": "Cards needed (80% chance) 528 / 361 / 268 / 219. The true gain also changes with the answer count (see the S1 sweep).",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S1 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J09",
+      "keys": [
+        "yieldRisk",
+        "yieldTrigger"
+      ],
+      "plain": "The share of cards that can actually be scored. A card needs a rating (for risks), a public source we can bind before the card opens, and an outcome in time.",
+      "options": [
+        "Risk cards 40% to 90%",
+        "Trigger cards 30% to 80%"
+      ],
+      "value": {
+        "yieldRisk": 0.6,
+        "yieldTrigger": 0.5
+      },
+      "range": {
+        "yieldRisk": {
+          "min": 0.4,
+          "max": 0.9
+        },
+        "yieldTrigger": {
+          "min": 0.3,
+          "max": 0.8
+        }
+      },
+      "why": "89 of 139 risk headlines trip our 'observable' warning; only 44 of 266 triggers have a filled objective, and most of those are not numbers.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §2 (observable warning count: BUILD.md, DOC; trigger objectives count: RAN)",
+        "note": "Assumed. The counts are DOC and RAN."
+      },
+      "veto": "Owner (it depends on the project's authoring effort)",
+      "ifWrong": [
+        {
+          "setting": "Risk-card yield 0.6 or 0.9",
+          "result": "Directly proportional: halving it doubles the waiting time. At 4.1 new risks a month, 100 comparable risk cards take about 34 months at 60% and about 21 months at 90%.",
+          "tag": "INFERRED",
+          "source": "power-spec §2 table (INFERRED from RAN arrivals)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J10",
+      "keys": [
+        "herd",
+        "herdSd",
+        "r2Noise"
+      ],
+      "plain": "In Round 2, how far experts move toward the panel's average after seeing it. The spread between experts (0.1) and random noise in Round 2 answers (0.1) are typical-size allowances.",
+      "options": [
+        "0 (no movement)",
+        "0.3 (modest revision)",
+        "0.6 (strong revision)"
+      ],
+      "value": {
+        "herd": 0.3,
+        "herdSd": 0.1,
+        "r2Noise": 0.1
+      },
+      "range": {
+        "herd": {
+          "min": 0,
+          "max": 1
+        },
+        "herdSd": {
+          "min": 0,
+          "max": 0.6
+        },
+        "r2Noise": {
+          "min": 0,
+          "max": 0.6
+        }
+      },
+      "why": "Typical size of a modest revision; no data.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.5 (herding ~ N(0.3, 0.1^2) and noise ~ N(0, 0.1^2), ASSUMED)",
+        "note": "Assumed; no data. The range 0 to 0.6 is the row range in §A.8 and is applied to all three keys."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Herding 0 / 0.3 / 0.6, with 40 risk cards (pull 0.3)",
+          "result": "Chance of detecting the second-look pull: 98% / 73% / 39%.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 5 (RAN, r2.mjs and r2b.mjs)"
+        },
+        {
+          "setting": "Herding 0 / 0.3 / 0.6, with 100 risk cards (pull 0.15)",
+          "result": "Chance of detecting the second-look pull: 98% / 68% / 26%.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 5 (RAN, r2.mjs and r2b.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J11",
+      "keys": [
+        "lambdaAcaps",
+        "lambdaBalanced"
+      ],
+      "plain": "How strongly ACAPS's own reasoning pulls experts toward ACAPS's rating in Round 2, for those who open it. The pull for the balanced view is set to zero.",
+      "options": [
+        "0.1 of the gap",
+        "0.2 of the gap",
+        "0.3 of the gap",
+        "0.5 of the gap"
+      ],
+      "value": {
+        "lambdaAcaps": 0.3,
+        "lambdaBalanced": 0
+      },
+      "range": {
+        "lambdaAcaps": {
+          "min": 0.1,
+          "max": 0.5
+        },
+        "lambdaBalanced": {
+          "min": 0,
+          "max": 0.2
+        }
+      },
+      "why": "A visible but not dominant effect, so the design is tested against something it could plausibly see.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.5 (lambda_acaps_view 0.3, lambda_balanced 0, ASSUMED)",
+        "note": "Assumed."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Pull 0.15 / 0.3 / 0.5 of the gap",
+          "result": "Risk cards needed for an 80% chance: about 140 / 40 / 28.",
+          "tag": "INFERRED",
+          "source": "power-spec §Analysis 5 (INFERRED from RAN r2.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J12",
+      "keys": [
+        "pKeep",
+        "qOpen",
+        "c2",
+        "sawThreadShare",
+        "threadHerd"
+      ],
+      "plain": "In Round 2: how often experts keep their first answer, how often they open the background, and how often they answer Round 2 at all. Also whether they read the discussion thread.",
+      "options": [
+        "Keep 10% to 60%",
+        "Open 30% to 100%",
+        "Answer 40% to 100%",
+        "Thread reading off"
+      ],
+      "value": {
+        "pKeep": 0.3,
+        "qOpen": 0.6,
+        "c2": 0.7,
+        "sawThreadShare": 0,
+        "threadHerd": 0.15
+      },
+      "range": {
+        "pKeep": {
+          "min": 0,
+          "max": 1
+        },
+        "qOpen": {
+          "min": 0.3,
+          "max": 1
+        },
+        "c2": {
+          "min": 0.4,
+          "max": 1
+        },
+        "sawThreadShare": {
+          "min": 0,
+          "max": 0.5
+        },
+        "threadHerd": {
+          "min": 0,
+          "max": 0.5
+        }
+      },
+      "why": "Plausible values; none measured.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.5 (p_keep 0.3, q_open 0.6, c2 0.7, ASSUMED); §A.8 (thread 0, 0.15)",
+        "note": "Assumed; none measured."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Pull 0.3 with 40 cards",
+          "result": "Keeping answers at 10% or 60% gives 82% or 49% detection; opening the background at 30% or 100% gives 35% or 97%; answering only 40% gives 46%.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 5 (RAN, r2b.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J13",
+      "keys": [
+        "coupling",
+        "copyShare",
+        "sharedErrRisk"
+      ],
+      "plain": "How much trigger cards under the same risk move together, because they describe the same situation, so their answers and outcomes are alike. This reduces the number of truly independent cards. One dial sets it from 0 (independent) to 1 (near-duplicates).",
+      "options": [
+        "0 (independent)",
+        "0.5 (moderately alike)",
+        "0.7 (planning case)",
+        "0.9 (near-duplicates)"
+      ],
+      "value": {
+        "coupling": 0.7,
+        "copyShare": 0,
+        "sharedErrRisk": 0.3
+      },
+      "range": {
+        "coupling": {
+          "min": 0,
+          "max": 1
+        },
+        "copyShare": {
+          "min": 0,
+          "max": 1
+        },
+        "sharedErrRisk": {
+          "min": 0,
+          "max": 1
+        }
+      },
+      "why": "Triggers under one risk describe the same situation by construction. How alike their outcomes are is unknown, and ACAPS's trigger records would measure it but are not available.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.6 (coupling mapping; realised correlation from RAN trig-run4.mjs); §A.8",
+        "note": "Dial 0 / 0.5 / 0.7 / 0.9 gives a correlation of the score differences within a risk of 0 / 0.11 / 0.27 / 0.51 (RAN). CONFLICT, unresolved: §A.6 maps coupling 0.7 to copyShare 0.7, sharedErrRisk 0.7 and rhoLatent 0.63, but §A.8 lists 0 and 0.3 for copyShare and sharedErrRisk. The owner must choose one reading."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Dial 0.7 (planning case) and 0.9",
+          "result": "At dial 0.7, 149 trigger cards behave like about 62 independent ones, and the chance of noticing a 0.03 gain falls from 84% to 44%; at 0.9 it falls to 38%.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 1, nested table (RAN, trig-pow.mjs)"
+        },
+        {
+          "setting": "Dial 0 / 0.7 / 0.9",
+          "result": "Raw cards needed for an 80% chance of a 0.03 gain: about 135 / 310 / 330.",
+          "tag": "INFERRED",
+          "source": "power-spec §Analysis 1 (INFERRED from RAN, interpolated)"
+        }
+      ],
+      "review": {
+        "state": "accepted",
+        "by": "project owner",
+        "date": "2026-11-07",
+        "note": "Decided: run both 0.3 and 0.7 for how alike trigger cards from one risk are, using the coupling-to-parameters map in the spec, and report them side by side. The stored copyShare and sharedErrRisk are not used for these runs."
+      }
+    },
+    {
+      "id": "J14",
+      "keys": [
+        "benchmark"
+      ],
+      "plain": "What the panel's accuracy is compared with when we ask: is it better than simply guessing the average?",
+      "options": [
+        "(a) the average outcome of the same cards",
+        "(b) always 50%",
+        "(c) the historical rate 58.65%",
+        "(d) the repo's regression on ACAPS fields"
+      ],
+      "value": {
+        "benchmark": "in_sample_base_rate"
+      },
+      "range": {
+        "benchmark": {
+          "oneOf": [
+            "in_sample_base_rate",
+            "fixed_0.5",
+            "fixed_historical"
+          ]
+        }
+      },
+      "why": "It is the hardest simple benchmark, needs no history or ACAPS fields, exists for every card type, and is already the 'naive floor' in our own results. Option (d) needs ACAPS's rating fields and exists only for risk cards.",
+      "evidence": {
+        "tag": "DOC",
+        "source": "repo definition (LADDER: naive floor 0.2425, regression 0.2177); power-spec §Analysis 1",
+        "note": "The repo definitions are DOC. The arithmetic in the effect row is INFERRED."
+      },
+      "veto": "ACAPS programme and owner",
+      "ifWrong": [
+        {
+          "setting": "(b) always 50%, or (c) the historical rate",
+          "result": "Using (b) flatters the panel by 0.010 Brier points when the true rate is 40%; (c) by 0.035 at 40% and 0.011 at 69%. A choice like (c) can make a poor panel look good. Never used for the headline.",
+          "tag": "INFERRED",
+          "source": "power-spec §Analysis 1 (INFERRED arithmetic)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J15",
+      "keys": [
+        "triggerBase",
+        "triggerSpread"
+      ],
+      "plain": "How often a trigger statement turns out true (its base rate), and how widely trigger forecasts spread around it. The spread of 1.47 is the same as the spread of the risk-level forecasts.",
+      "options": [
+        "20%",
+        "40%",
+        "70%"
+      ],
+      "value": {
+        "triggerBase": 0.4,
+        "triggerSpread": 1.47
+      },
+      "range": {
+        "triggerBase": {
+          "min": 0.2,
+          "max": 0.7
+        },
+        "triggerSpread": {
+          "min": 1,
+          "max": 2
+        }
+      },
+      "why": "Trigger statements are narrower than risks and are asked over 30 to 90 days; a guess.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.6 (triggerBase 0.4 ASSUMED; triggerSpread 1.47 = risk-level spread, ASSUMED)",
+        "note": "Assumed."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Base rate 0.3 / 0.45 / 0.7 at risk level",
+          "result": "Cards needed change to 79 / 169 / 199.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S5 (RAN, sens.mjs)"
+        },
+        {
+          "setting": "Trigger base rate changed",
+          "result": "Changes both the room for improvement and how well ACAPS's fixed midpoints fit the outcomes. The trigger-level effect is to be measured by sweep S5.",
+          "tag": "INFERRED",
+          "source": "power-spec §Analysis 4, S5 caveat (INFERRED)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J16",
+      "keys": [
+        "arrivalRisksPerMonth",
+        "arrivalTriggersPerMonth"
+      ],
+      "plain": "How fast new risks arrive on the Risk Radar (per month), and how fast new triggers arrive (per month).",
+      "options": [
+        "2.8 risks a month",
+        "4.1 risks a month",
+        "4.8 risks a month"
+      ],
+      "value": {
+        "arrivalRisksPerMonth": 4.1,
+        "arrivalTriggersPerMonth": 10.75
+      },
+      "range": {
+        "arrivalRisksPerMonth": {
+          "min": 2.8,
+          "max": 4.8
+        },
+        "arrivalTriggersPerMonth": {
+          "min": 8,
+          "max": 13
+        }
+      },
+      "why": "Counted from the dates triggers were entered: 3.27 risks a month over 33 months, 4.08 over the last 12. Triggers: 10.75 a month over the last 12. Months are very uneven (June 2026: 15 risks; six months with none).",
+      "evidence": {
+        "tag": "RAN",
+        "source": "power-spec §2 (RAN, rate.mjs and rate2.mjs, from data/risk-radar.json; creation-order proxy: rank correlation 0.95 with entry date)",
+        "note": "The dates are trigger entry dates, not publication dates. Risks have no creation date, so id order is used as a proxy.",
+        "refs": [
+          "data/risk-radar.json"
+        ]
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "4.1 risks a month",
+          "result": "Comparable risk cards after 12 months at 60%: about 34 (95% range from month-to-month variation: 25 to 47).",
+          "tag": "INFERRED",
+          "source": "power-spec §2 table (INFERRED from RAN arrivals)"
+        },
+        {
+          "setting": "2.8 / 4.1 / 4.8 risks a month",
+          "result": "Months to reach 100 comparable risk cards: 50 / 34 / 29.",
+          "tag": "INFERRED",
+          "source": "power-spec §2 (INFERRED from RAN arrivals)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J17",
+      "keys": [
+        "resolutionLagMonths"
+      ],
+      "plain": "How long a question stays open before it can be scored. A card published in the last 3 months of a window cannot be scored yet.",
+      "options": [
+        "1 month",
+        "3 months",
+        "6 months"
+      ],
+      "value": {
+        "resolutionLagMonths": 3
+      },
+      "range": {
+        "resolutionLagMonths": {
+          "min": 1,
+          "max": 6
+        }
+      },
+      "why": "Our own rule: windows of 30 to 90 days (docs/03).",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "docs/03 (30 to 90 days, DOC); power-spec §2 (3 months, ASSUMED)",
+        "note": "Weak proxy: of risks first entered in early 2026, resolved ones were last updated 0 to 4 months later."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Each extra month of delay",
+          "result": "Removes about 4 new risks a month from a window, which is about 2.5 comparable cards at 60%.",
+          "tag": "INFERRED",
+          "source": "power-spec §2 and §R J17 (INFERRED)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J18",
+      "keys": [
+        "minEffect"
+      ],
+      "plain": "The smallest improvement over ACAPS that would matter to ACAPS programme work. We do not choose it: ACAPS decides. Leave it empty until they do.",
+      "options": [
+        "0.02 Brier points",
+        "0.03 Brier points",
+        "0.05 Brier points"
+      ],
+      "value": {
+        "minEffect": null
+      },
+      "range": {
+        "minEffect": {
+          "min": 0.02,
+          "max": 0.05,
+          "nullable": true
+        }
+      },
+      "why": "It is a value judgement, not a statistical fact.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §R J18 (value judgement; not chosen)",
+        "note": "No evidence: a value judgement left to ACAPS."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "0.02 / 0.03 / 0.05 Brier points over ACAPS",
+          "result": "Cards needed to notice it: 640 / 285 / 100.",
+          "tag": "INFERRED",
+          "source": "power-spec §Analysis 2 (INFERRED, spread 0.18)"
+        },
+        {
+          "setting": "0.02 / 0.03 / 0.05 Brier points over the base rate",
+          "result": "Cards needed: 176 / 111 / about 75 (8 responders per card).",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 1, independent cards (RAN; 0.05 interpolated)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J19",
+      "keys": [
+        "comparator"
+      ],
+      "plain": "How ACAPS's five words (Very Low to Very High) are turned into numbers for the comparison.",
+      "options": [
+        "Middle of each published band (10%, 30.5%, 50.5%, 70.5%, 90.5%)",
+        "Rating divided by 5"
+      ],
+      "value": {
+        "comparator": "midpoint"
+      },
+      "range": {
+        "comparator": {
+          "oneOf": [
+            "midpoint",
+            "ordinal"
+          ]
+        }
+      },
+      "why": "It is the protocol's headline; ACAPS publishes the bands.",
+      "evidence": {
+        "tag": "DOC",
+        "source": "docs/06 (protocol headline); power-spec §R J19",
+        "note": "The two readings are checked against the real data (RAN)."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Rating divided by 5 instead of band midpoints",
+          "result": "Negligible historically: the two readings differ by 0.0003 Brier points on the 104 resolved risks.",
+          "tag": "RAN",
+          "source": "power-spec §R J19 (RAN)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J20",
+      "keys": [
+        "shrinkM",
+        "bandRateUncertainty"
+      ],
+      "plain": "Treating ACAPS's historical hit rate for each band as the truth for ACAPS in the study. The options are to use the measured rates, to blend them with the overall rate, or to draw them with their uncertainty.",
+      "options": [
+        "Use the measured rates",
+        "Blend with the overall rate",
+        "Draw the rates with their uncertainty"
+      ],
+      "value": {
+        "shrinkM": 0,
+        "bandRateUncertainty": false
+      },
+      "range": {
+        "shrinkM": {
+          "min": 0,
+          "max": 5
+        },
+        "bandRateUncertainty": {
+          "oneOf": [
+            false,
+            true
+          ]
+        }
+      },
+      "why": "Reproduces ACAPS's measured Brier score exactly (0.2124 on the 99 rated risks). Bands hold only 3, 14, 44, 30 and 8 risks, so the extremes are noisy.",
+      "evidence": {
+        "tag": "RAN",
+        "source": "power-spec §R J20 and §F7 (RAN)",
+        "note": "shrinkM 0 means no blending; bandRateUncertainty false means the measured rates are used as they are."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "A copy of ACAPS recalibrated to the measured rates",
+          "result": "Gains 0.009 Brier points, so improvements up to about 0.01 could be recalibration alone. Very Low (3 cards) and Very High (8 cards) are the least reliable.",
+          "tag": "RAN",
+          "source": "power-spec §F7 (RAN)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J21",
+      "keys": [
+        "poolMethod",
+        "extremiseD"
+      ],
+      "plain": "How the experts' answers on one card are combined into the panel's answer.",
+      "options": [
+        "Middle value (median)",
+        "Average",
+        "Average of log-odds",
+        "Down-weighting outliers"
+      ],
+      "value": {
+        "poolMethod": "median",
+        "extremiseD": 1
+      },
+      "range": {
+        "poolMethod": {
+          "oneOf": [
+            "median",
+            "mean",
+            "log_odds",
+            "outlier_weighted"
+          ]
+        },
+        "extremiseD": {
+          "min": 1,
+          "max": 2.5
+        }
+      },
+      "why": "The repo's default.",
+      "evidence": {
+        "tag": "DOC",
+        "source": "repo default for aggregate() (code default, DOC); power-spec §A.8",
+        "note": "extremiseD 1 means no sharpening. Section A does not define extremiseD; WP2 must define it before the key is used."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "Average instead of median",
+          "result": "Cards needed 241 instead of 268. Other rules are still to be run.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 4, S8 (RAN, sens.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J22",
+      "keys": [
+        "rule"
+      ],
+      "plain": "How a risk forecast could be built from the panel's trigger forecasts. All three rules are reported; this one is the default.",
+      "options": [
+        "Highest trigger probability (max)",
+        "'At least one fires' (noisy-OR)",
+        "Plain average (mean)"
+      ],
+      "value": {
+        "rule": "mean"
+      },
+      "range": {
+        "rule": {
+          "oneOf": [
+            "max",
+            "noisy_or",
+            "mean"
+          ]
+        }
+      },
+      "why": "They are the simplest rules that need no ACAPS formula (ACAPS says none exists).",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §Analysis 3 (RAN population table, second.mjs)",
+        "note": "Assumed. The rule results are RAN."
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Link strength 0.1 / 0.3 / 0.5 / 0.8",
+          "result": "Ranking accuracy (AUC): ACAPS 0.70; average 0.63 / 0.71 / 0.75 / 0.79; highest 0.61 / 0.68 / 0.73 / 0.78; 'at least one' 0.60 / 0.67 / 0.71 / 0.75. At weak links no rule beats ACAPS's rating.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 3 (RAN, second.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J23",
+      "keys": [
+        "rhoLatent",
+        "bandCounts",
+        "bandHits",
+        "activeMix",
+        "statementsPerRisk",
+        "bandMix"
+      ],
+      "plain": "How strongly a risk's trigger events track whether the risk itself happens (0.3 on our scale). Also the real band counts and hit rates of the 99 rated, resolved risks, and the real counts of active risks and triggers (28 risks, 76 triggers).",
+      "options": [
+        "0.1",
+        "0.3",
+        "0.5",
+        "0.8"
+      ],
+      "value": {
+        "rhoLatent": 0.3,
+        "bandCounts": [
+          3,
+          14,
+          44,
+          30,
+          8
+        ],
+        "bandHits": [
+          1,
+          6,
+          21,
+          25,
+          7
+        ],
+        "activeMix": [
+          0,
+          3,
+          8,
+          15,
+          2
+        ],
+        "statementsPerRisk": {
+          "activeRisks": 28,
+          "activeTriggers": 76
+        },
+        "bandMix": "resolved"
+      },
+      "range": {
+        "rhoLatent": {
+          "min": 0,
+          "max": 0.9
+        },
+        "bandCounts": {
+          "oneOf": [
+            [
+              3,
+              14,
+              44,
+              30,
+              8
+            ]
+          ]
+        },
+        "bandHits": {
+          "oneOf": [
+            [
+              1,
+              6,
+              21,
+              25,
+              7
+            ]
+          ]
+        },
+        "activeMix": {
+          "oneOf": [
+            [
+              0,
+              3,
+              8,
+              15,
+              2
+            ]
+          ]
+        },
+        "statementsPerRisk": {
+          "oneOf": [
+            {
+              "activeRisks": 28,
+              "activeTriggers": 76
+            }
+          ]
+        },
+        "bandMix": {
+          "oneOf": [
+            "resolved",
+            "active"
+          ]
+        }
+      },
+      "why": "Unknown without ACAPS's trigger records; the pilot can estimate it from its own resolved risks. The band counts, hit rates and active counts are measured from the public export, so their ranges are fixed by it.",
+      "evidence": {
+        "tag": "ASSUMED",
+        "source": "power-spec §A.6 (rhoLatent 0.3, ASSUMED); data/risk-radar.json for the measured counts (RAN)",
+        "note": "Assumed. Real data as used: the band mix and hit rates of 99 rated resolved risks (RAN).",
+        "refs": [
+          "data/risk-radar.json"
+        ]
+      },
+      "veto": "ACAPS programme",
+      "ifWrong": [
+        {
+          "setting": "Link 0.8 against 0.1 to 0.3",
+          "result": "Decides whether the trigger-to-risk analysis is worth running at all. At 0.8 and 200 risks the chance of noticing a true ranking gain of 0.09 is 71%; at 28 risks, 14%.",
+          "tag": "RAN",
+          "source": "power-spec §Analysis 3 power table (RAN, second.mjs)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    },
+    {
+      "id": "J24",
+      "keys": [
+        "clamp",
+        "alpha",
+        "analysisReps",
+        "analysisSeed",
+        "releaseFloor",
+        "masterSeed"
+      ],
+      "plain": "Fixed by the existing rules, not judgement calls: answers are whole percents from 1 to 99; the error rate is 5% two-sided; intervals come from 10,000 resamples with seed 7; the release floor is 5 answers. The master seed fixes every random draw of the simulator.",
+      "options": [],
+      "value": {
+        "clamp": [
+          0.01,
+          0.99
+        ],
+        "alpha": 0.05,
+        "analysisReps": 10000,
+        "analysisSeed": 7,
+        "releaseFloor": 5,
+        "masterSeed": 20261107
+      },
+      "range": {
+        "clamp": {
+          "oneOf": [
+            [
+              0.01,
+              0.99
+            ]
+          ]
+        },
+        "alpha": {
+          "oneOf": [
+            0.05
+          ]
+        },
+        "analysisReps": {
+          "oneOf": [
+            10000
+          ]
+        },
+        "analysisSeed": {
+          "oneOf": [
+            7
+          ]
+        },
+        "releaseFloor": {
+          "oneOf": [
+            5
+          ]
+        },
+        "masterSeed": {
+          "min": 0,
+          "max": 4294967295
+        }
+      },
+      "why": "Existing protocol and code.",
+      "evidence": {
+        "tag": "CODE",
+        "source": "docs/02 and docs/06; repo code (clampForecast, paired(), MIN_RELEASE_PANEL_SIZE); power-spec §B.4 for masterSeed",
+        "note": "masterSeed is not in the table in §A.8; it comes from §B.4. It is a run seed: changing it changes the draws, not the design."
+      },
+      "veto": "Owner",
+      "ifWrong": [
+        {
+          "setting": "A change to the protocol",
+          "result": "None, unless the protocol changes.",
+          "tag": "CODE",
+          "source": "docs/02 and docs/06 (protocol)"
+        }
+      ],
+      "review": {
+        "state": "proposed",
+        "by": null,
+        "date": null,
+        "note": null
+      }
+    }
+  ]
+}
