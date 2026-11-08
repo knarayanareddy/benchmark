@@ -608,7 +608,10 @@ export function aggregate(estimates, opts = {}) {
 
   const contestedIqr = opts.contestedIqr ?? DISPATCH_THRESHOLDS.contestedIqr;
   const outlierGap = opts.outlierGap ?? DISPATCH_THRESHOLDS.outlierGap;
-  const reps = opts.reps ?? 2000;
+  // Rule R2 pre-registers 10,000 resamples. This used to default to 2,000 while
+  // bootstrapBrier() and docs/02 said 10,000, so the number a reader saw was
+  // produced by a knob neither registered nor recorded.
+  const reps = opts.reps ?? 10000;
   const seed = opts.seed ?? 42;
   const alpha = opts.alpha ?? 0.05;
 
@@ -753,6 +756,9 @@ export function aggregate(estimates, opts = {}) {
     method,
     weightsMode,
     sharedSeeds,
+    // Provenance travels with the number: a pre-registered interval that does
+    // not say what produced it cannot be checked by a reader.
+    interval: { reps, seed, alpha, method: 'smoothed_bootstrap' },
     extremised: canExtremise,
     extremiseD: appliedD,
     extremiseSuppressedReason:

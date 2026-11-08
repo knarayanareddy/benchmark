@@ -68,7 +68,9 @@ export function objectiveKind(text) {
 export function classifyHeadline({ statement, objective = '' }) {
   // A placeholder window removes the window blocker: dates are the author's to set, not ours.
   const g = gate({ statement, window: { from: '2000-01-01', to: '2000-01-02' }, objective });
-  const blockers = g.blockers.map((b) => `${b.check}: ${b.reason}`);
+  // The placeholder window is in the past, so the gate's window check (C1) would
+  // always fire on it; the window blocker is the author's to resolve, not triage's.
+  const blockers = g.blockers.filter((b) => b.check !== 'window').map((b) => `${b.check}: ${b.reason}`);
   const signal = hasObservableSignal(statement, objective);
   /** @type {string[]} */
   const missing = ['window', 'objective', 'resolution source', 'resolver'];

@@ -76,12 +76,28 @@ test('fake non-date windows and reversed windows fail the window check', () => {
   assert.equal(reversed.ok, false);
   assert.match(reversed.failed.find((f) => f.check === 'window').reason, /before it starts/);
 
-  // ACAPS DD-MM-YYYY dates pass when ordered chronologically
+  // ACAPS DD-MM-YYYY dates pass when ordered chronologically. The clock is pinned
+  // before the window: a window that has already closed is refused (C1).
   const acapsDates = gate({
     statement: 'Food insecurity will affect more than 25% of households in Mali.',
     window: { from: '02-06-2026', to: '02-09-2026' },
-  });
+  }, { now: Date.UTC(2026, 0, 1) });
   assert.equal(acapsDates.ok, true);
+});
+
+test('a window that has already closed, or has no length, is not dispatchable (C1)', () => {
+  const statement = 'Food insecurity will affect more than 25% of households in Mali.';
+  const now = Date.UTC(2026, 10, 8);
+  const closed = gate({ statement, window: { from: '2026-01-01', to: '2026-06-30' } }, { now });
+  assert.equal(closed.dispatchable, false);
+  assert.match(closed.failed.find((f) => f.check === 'window').reason, /already closed/);
+
+  const zero = gate({ statement, window: { from: '2027-03-01', to: '2027-03-01' } }, { now });
+  assert.equal(zero.dispatchable, false);
+  assert.match(zero.failed.find((f) => f.check === 'window').reason, /on or before it starts/);
+
+  const open = gate({ statement, window: { from: '2027-01-01', to: '2027-06-30' } }, { now });
+  assert.equal(open.failed.some((f) => f.check === 'window'), false);
 });
 
 test('unmeasurable directional prose fails observable until a concrete objective is attached', () => {

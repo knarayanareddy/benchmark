@@ -133,7 +133,7 @@ export function hasObservableSignal(statement, objective = '') {
   return MEASURABLE_OR_EVENT.test(scrubbed);
 }
 
-export function gate(card) {
+export function gate(card, opts = {}) {
   const isObj = card !== null && typeof card === 'object';
   const statement = isObj ? card.statement : card;
   if (!String(statement || '').trim()) {
@@ -159,10 +159,18 @@ export function gate(card) {
   const fromTs = isObj ? parseWindowDate(card.window?.from) : null;
   const toTs = isObj ? parseWindowDate(card.window?.to) : null;
   const hasValidDates = fromTs !== null && toTs !== null;
+  // A window that has already closed, or has no length, cannot be forecast
+  // into: it can only be a record of something that happened (C1).
+  const now = opts.now === undefined ? Date.now() : Number(opts.now);
+  if (!Number.isFinite(now)) {
+    throw new RangeError(`gate() option now must be a finite epoch-ms number, got ${JSON.stringify(opts.now)}`);
+  }
   const windowReason = !hasValidDates
     ? 'no explicit resolution window (valid from/to dates required)'
-    : toTs < fromTs
-    ? 'resolution window ends before it starts'
+    : toTs <= fromTs
+    ? 'resolution window ends on or before it starts'
+    : toTs < now
+    ? 'resolution window has already closed — this card cannot be scored prospectively'
     : null;
   results.push(record('window', windowReason === null, windowReason));
 

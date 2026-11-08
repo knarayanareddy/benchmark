@@ -14,8 +14,14 @@ const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src', 
 const FORBIDDEN = [
   { re: /\bdocument\.cookie\b/, why: 'cookie write' },
   { re: /\bfingerprint|canvas\.toDataURL\b/, why: 'device fingerprinting' },
-  { re: /\bnavigator\.sendBeacon\(/, why: 'bypasses the validated write path' },
+  { re: /\bnavigator\.sendBeacon\s*\(/, why: 'bypasses the validated write path' },
 ];
+
+// Network spellings for the pure modules (core, shared). `fetch(` on its own
+// was the whole rule and missed the others: globalThis.fetch, a Node http/https
+// import, a dynamic import of a URL, a WebSocket. Scoped to the pure modules
+// because the service legitimately talks to the network.
+const PURE_NET = /(?:^|[^.\w])fetch\s*\(|\bglobalThis\.fetch\b|\bwindow\.fetch\b|\bself\.fetch\b|\bXMLHttpRequest\b|\bnew\s+WebSocket\b|\bnew\s+EventSource\b|node:(?:https?|net|tls|dns|dgram)\b|import\(\s*['"]https?:/;
 
 const problems = [];
 const walk = (dir) => {
@@ -34,8 +40,9 @@ const check = (p) => {
     if (m) problems.push(`${rel}: ${why}  →  "${m[0]}"`);
   }
   // Pure logic must stay pure.
-  if (/packages\/(core|shared)\//.test(rel) && /fetch\(|XMLHttpRequest/.test(src)) {
-    problems.push(`${rel}: pure module must stay network-free`);
+  if (/packages\/(core|shared)\//.test(rel)) {
+    const net = PURE_NET.exec(src);
+    if (net) problems.push(`${rel}: pure module must stay network-free  →  "${net[0].trim()}"`);
   }
 };
 SCAN.forEach(walk);

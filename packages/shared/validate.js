@@ -23,7 +23,14 @@ export function strict(schema, input = {}) {
 
 /** k-anonymity: cells below k are suppressed before display, not rounded. */
 export function suppress(rows, k = 10) {
-  return rows.map((r) => (r.count < k ? Object.assign({}, r, { count: null, suppressed: true }) : r));
+  // A cell whose count is missing or non-numeric is suppressed, not published:
+  // `undefined < 10` is false, so the naive comparison passed it straight through,
+  // and an uncountable cell is the one most likely to be a person.
+  return rows.map((r) => {
+    const n = Number(r?.count);
+    if (Number.isFinite(n) && n >= k) return r;
+    return Object.assign({}, r, { count: null, suppressed: true });
+  });
 }
 
 /** A rate is never reported without its denominator. */

@@ -214,6 +214,44 @@ export function coarsenToDay(at) {
 }
 
 /**
+ * Internal identifiers seen on this boundary. None may appear as a value in an
+ * emitted payload at any level. The display `name` is deliberately absent from
+ * this list: IDENTIFIED is the level that publishes it.
+ */
+const INTERNAL_ID_FIELDS = Object.freeze(['expertId', 'expert', 'email', 'ip', 'org', 'role', 'sessionToken']);
+
+/**
+ * Backstop for the allowlist: no value in the emitted payload may equal an
+ * identifier the contribution carried. The allowlist is a static list and
+ * identity leaks through *values* as well as keys, so this is checked too.
+ */
+function assertNoIdentityLeak(out, contribution) {
+  const identities = INTERNAL_ID_FIELDS.map((k) => contribution[k])
+    .filter((v) => v !== undefined && v !== null && String(v).trim() !== '')
+    .map((v) => String(v));
+  // A contribution attached to a named expert must never emit that name at a
+  // level that is not IDENTIFIED.
+  if (out.level !== LEVELS.IDENTIFIED && contribution.name !== undefined && contribution.name !== null) {
+    const n = String(contribution.name).trim();
+    if (n) identities.push(n);
+  }
+  if (!identities.length) return out;
+  for (const [key, value] of Object.entries(out)) {
+    if (value === null || typeof value === 'object') continue;
+    // At IDENTIFIED, `by` is the display identity the expert chose to publish
+    // (it falls back to the expert id when no name was given). That is disclosed.
+    if (out.level === LEVELS.IDENTIFIED && key === 'by') continue;
+    const s = String(value);
+    for (const id of identities) {
+      if (s === id) {
+        throw new Error(`identity leaked into "${key}" at level ${out.level} — refusing to emit this payload`);
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * Explicit allowlists for `attribute()`.
  *
  * Never use a blacklist on privacy boundaries: any field added to a profile or
@@ -221,7 +259,12 @@ export function coarsenToDay(at) {
  * otherwise survive into `ANONYMOUS` output by default.
  */
 const CONTENT_FIELDS = Object.freeze([
-  'id',
+  // NOT `id`. A bare `id` is ambiguous between a contribution and a
+  // contributor, and every other module in this repo accepts `id` on items, so
+  // callers supply it for the item and a contributor id rides along into
+  // ANONYMOUS output. Contributions carry `contributionId`; see
+  // assertNoIdentityLeak() for the backstop.
+  'contributionId',
   'cardId',
   'statementId',
   'round',
@@ -270,7 +313,7 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
     kept.by = 'anonymous';
     kept.level = LEVELS.ANONYMOUS;
     kept.fellBack = true;
-    return kept;
+    return assertNoIdentityLeak(kept, contribution);
   }
 
   if (level === LEVELS.ANONYMOUS) {
@@ -278,14 +321,14 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
     const kept = pickAllowed(contribution, CONTENT_FIELDS);
     kept.by = 'anonymous';
     kept.level = LEVELS.ANONYMOUS;
-    return kept;
+    return assertNoIdentityLeak(kept, contribution);
   }
 
   const kept = pickAllowed(contribution, [...CONTENT_FIELDS, ...CONTEXT_FIELDS]);
   if (level === LEVELS.IDENTIFIED) {
     kept.by = name || expertId || 'unknown';
     kept.level = LEVELS.IDENTIFIED;
-    return kept;
+    return assertNoIdentityLeak(kept, contribution);
   }
 
   const preassigned =
@@ -295,7 +338,7 @@ export function attribute(contribution, level = DEFAULT_LEVEL, opts = {}) {
   // Fail closed: no persisted alias and no deployment salt means no pseudonym.
   kept.by = preassigned || aliasFor(expertId, country, opts.salt);
   kept.level = LEVELS.PSEUDONYMOUS;
-  return kept;
+  return assertNoIdentityLeak(kept, contribution);
 }
 
 const ORG_ACRONYMS = [

@@ -241,3 +241,19 @@ test('every transition bumps version, and anonymous rows and public ledger entri
   const [entry] = cardLedger([actioned], 'R1');
   assert.equal(entry.actionedAt, Date.UTC(2026, 10, 6), 'public ledger must not carry the time of day');
 });
+
+test('free text is checked for the author before it is published (S4)', () => {
+  const leaky = newDissent({
+    cardId: 'c1', expert: 'e-1', name: 'Amina Okoro', country: 'TCD', kind: KIND.WINDOW,
+    text: 'Speaking as Amina Okoro, the window is wrong.', level: LEVELS.ANONYMOUS,
+  });
+  assert.ok(leaky.textWarnings.some((w) => /names its author/.test(w)));
+  assert.equal(leaky.publishable, false);
+
+  const clean = newDissent({
+    cardId: 'c1', expert: 'e-1', name: 'Amina Okoro', country: 'TCD', kind: KIND.WINDOW,
+    text: 'The resolution date is set before the event could be observed.', level: LEVELS.ANONYMOUS,
+  });
+  assert.deepEqual(clean.textWarnings, []);
+  assert.equal(clean.publishable, true);
+});

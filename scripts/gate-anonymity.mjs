@@ -46,6 +46,15 @@ for (const lvl of levels) {
   if (JSON.stringify(out).includes('e-SECRET-001')) problems.push(`${lvl}: expertId survives in the payload`);
 }
 
+// 3b: a bare `id` is ambiguous between contribution and contributor, and it
+// used to be on the ANONYMOUS allowlist. A caller supplying one must still be safe.
+const withId = { ...fixture, id: 'e-SECRET-001' };
+for (const lvl of [...levels, 'unrecognised-level']) {
+  const out = attribute(withId, lvl, { salt: 'gate-anonymity-fixture-salt' });
+  if (out.id !== undefined) problems.push(`${lvl}: attribution echoed a bare \`id\` — an expert id can ride into an anonymous payload`);
+  if (JSON.stringify(out).includes('e-SECRET-001')) problems.push(`${lvl}: a bare id carried an expert id into the payload`);
+}
+
 // 4: suppression
 const { published, suppressedCells } = publicable({ a: 9, b: 10 });
 if ('a' in published) problems.push('public output published a count of 9 — suppression is not working');

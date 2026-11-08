@@ -3,9 +3,20 @@
  *
  * The rule this file enforces: no point estimate is ever returned without an
  * interval, and no two methods are ever compared unless they were scored on the
- * same items. At n≈104 the standard error on a Brier score is ~0.04–0.05, which
- * is larger than the gap between ACAPS's rating and any model tried.
- * Comparing them unpaired would be a mistake a juror should catch.
+ * same items. At n≈104 the standard error on a Brier score is ~0.008–0.016
+ * (measured, below), which is about the size of the gaps between methods:
+ * comparing them unpaired would be a mistake a juror should catch.
+ *
+ * MEASURED STANDARD ERRORS at n=104 (`data/power-baseline.json`, written by
+ * `npm run baseline`):
+ *
+ *   constant base-rate predictor   SE of mean Brier 0.0084
+ *   ACAPS rating (band midpoint)   SE of mean Brier 0.0155
+ *   PAIRED difference (ACAPS−floor) SE of difference 0.0157
+ *
+ * An earlier revision of this header said the standard error was "~0.04–0.05".
+ * It was 2–5× too large, and the same sentence was repeated in docs/02. The
+ * numbers gate now reads the figures from the data file and fails on the old one.
  *
  * PROVENANCE — read before quoting these numbers. All are measured by
  * scripts in this repo. Run `npm run ladder` and you get exactly these back.

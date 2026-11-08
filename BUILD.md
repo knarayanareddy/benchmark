@@ -4,7 +4,7 @@
 
 ```
 $ npm run verify
-✓ 1553 unit tests pass
+✓ 1559 unit tests pass
 ✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items, 95% interval 69.4–94.5%)
 ✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
@@ -17,11 +17,11 @@ $ npm run verify
 |---|---|---|---|
 | **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
 | Scoring | `packages/core/src/scoring.js` | **Complete** | Strict `[0, 1]` / `{0, 1, null}` boundary validation, Brier + bootstrap + paired comparison, 14 tests |
-| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + variance-preserving smoothed bootstrap intervals, ≥10-seed Brier skill gate, `releaseAggregate()` (`n ≥ 5`, `<10` order-stat suppression, cohort batching), ACAPS 5×5 bridge, 28 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 15 tests |
+| Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + variance-preserving smoothed bootstrap intervals, ≥10-seed Brier skill gate, `releaseAggregate()` (`n ≥ 5`, `<10` order-stat suppression, cohort batching), ACAPS 5×5 bridge, 29 tests |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 16 tests |
 | Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 7 tests |
-| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, HMAC-keyed aliases, persisted alias assignment, ballot tokens, day coarsening, identifying-detail hints, 29 tests |
-| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless day-coarsened `cardLedger()`, versioned transitions, 7 tests + journey script |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, HMAC-keyed aliases, persisted alias assignment, ballot tokens, day coarsening, identifying-detail hints, 32 tests |
+| Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless day-coarsened `cardLedger()`, versioned transitions, 8 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Keyed primitives | `packages/core/src/hmac.js` | **Complete** | Pure-JS HMAC-SHA-256 so aliases and ballot tokens work in a browser and on a server; checked against `node:crypto` and RFC 4231, 3 tests |
 | Service | `packages/service/src/service.js` | **Built, runs on memory and Postgres** | Invites, roles, release ledger, ballot tokens, persisted aliases, versioned cards and dissents, audit, erase/export, retention. The same flow suite runs on the in-memory store, in-process Postgres and the real `pg` client over the wire, including concurrent writers. 57 tests. See `docs/05-service-and-privacy.md` |

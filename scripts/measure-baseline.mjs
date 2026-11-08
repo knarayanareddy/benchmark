@@ -89,6 +89,31 @@ console.log(
   `paired power      : SD=${pairedSd.toFixed(4)}  MDE(80% power, n=${adopted.length})=${mde104.toFixed(4)}  n(for 0.02)=${nFor002}`
 );
 
+// ── standard errors, measured not asserted ─────────────────────────────────
+// Four documents used to quote "SE ~0.04-0.05 at n=104", 2-5x too large. These
+// are written to data/power-baseline.json so the numbers gate can prove that
+// whatever the prose says is what the data says.
+const seOf = (pairs) => {
+  const items = pairs.map((d) => (d.p - d.y) ** 2);
+  const m = items.reduce((a, b) => a + b, 0) / items.length;
+  const sd = Math.sqrt(items.reduce((a, x) => a + (x - m) ** 2, 0) / (items.length - 1));
+  return sd / Math.sqrt(items.length);
+};
+const power = {
+  n: adopted.length,
+  seConstant: Number(seOf(constant).toFixed(4)),
+  seAcaps: Number(seOf(adopted).toFixed(4)),
+  sePaired: Number((pairedSd / Math.sqrt(adopted.length)).toFixed(4)),
+  pairedSd: Number(pairedSd.toFixed(4)),
+  mde80: Number(mde104.toFixed(4)),
+  nFor002,
+  baseRate: Number(baseRate.toFixed(4)),
+};
+fs.writeFileSync(path.join(ROOT, 'data/power-baseline.json'), JSON.stringify(power, null, 2) + '\n');
+console.log(
+  `standard errors   : constant ${power.seConstant}  ACAPS ${power.seAcaps}  paired ${power.sePaired}  → data/power-baseline.json`
+);
+
 console.log('\ncalibration of the ACAPS rating:');
 calibration(adopted, 5).forEach((b) =>
   console.log(`  predicted ${b.meanPredicted.toFixed(2)} → observed ${b.observedRate.toFixed(2)}   (n=${b.n})`)

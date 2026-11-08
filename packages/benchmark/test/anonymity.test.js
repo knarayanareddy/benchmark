@@ -4,6 +4,7 @@ import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
   resolveLevel, aliasFor, DEFAULT_DEV_SALT, panelAliases, attribute, leaksBy, publicable, PUBLIC,
 } from '@benchmark/core/anonymity';
+import { suppress } from '@benchmark/shared/validate';
 import {
   aggregate,
   releaseAggregate,
@@ -334,4 +335,26 @@ test('removeIdentifyingDetail strips every hinted span (B-04)', () => {
   const out = removeIdentifyingDetail('I work for WFP and I am based in Juba.');
   assert.ok(!/WFP|Juba|I work/.test(out), out);
   assert.equal(removeIdentifyingDetail('The crossing is closed.'), 'The crossing is closed.');
+});
+
+test('a bare id never rides into an anonymous payload (S1)', () => {
+  const c = { id: 'e-SECRET-001', expertId: 'e-SECRET-001', name: 'Test Person', country: 'TCD', text: 'x', cardId: 'c1' };
+  for (const lvl of [...Object.values(LEVELS), 'unrecognised-level']) {
+    const out = attribute(c, lvl, { salt: SALT });
+    assert.equal(out.id, undefined, `${lvl} echoed a bare id`);
+    assert.ok(!JSON.stringify(out).includes('e-SECRET-001'), `${lvl} carried the expert id`);
+  }
+});
+
+test('a value equal to an identifier the contribution carried is refused (S1 backstop)', () => {
+  assert.throws(
+    () => attribute({ expertId: 'e-7', cardId: 'e-7', text: 'x' }, LEVELS.ANONYMOUS),
+    /identity leaked into "cardId"/
+  );
+});
+
+test('a row with no usable count is suppressed by suppress(), never published (C3)', () => {
+  const out = suppress([{ cell: 'a' }, { cell: 'b', count: NaN }, { cell: 'c', count: null }, { cell: 'd', count: 12 }], 10);
+  assert.deepEqual(out.map((r) => r.suppressed === true), [true, true, true, false]);
+  assert.equal(out[3].count, 12);
 });

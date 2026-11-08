@@ -10,7 +10,7 @@ The primary score is the mean squared error between the stated probability and t
 
 ## R2 · Every score carries a bootstrap interval
 
-10,000 resamples over resolved risks. Report the interval beside the point estimate **always**, including — especially — when it is embarrassing. At n ≈ 104 the standard error is on the order of 0.04–0.05, which is larger than any difference between the methods under comparison.
+10,000 resamples over resolved risks. Report the interval beside the point estimate **always**, including — especially — when it is embarrassing. At n = 104 the measured standard error of a Brier score is 0.0084 for the constant base-rate predictor, 0.0155 for ACAPS' rating and 0.0157 for their paired difference (`data/power-baseline.json`, written by `npm run baseline`). An earlier revision of this paragraph said 0.04–0.05; that was 2–5× too large.
 
 ## R3 · Comparisons are paired
 
@@ -80,4 +80,4 @@ The study design ships with the product. The most recent systematic review of di
 | **0.2171** | ACAPS' own probability rating, read off ACAPS' published percentage bands (midpoints; "Very High" = 0.905) — **the bar to beat** |
 | 0.2168 | *sensitivity:* the same rating read as an ordinal (rating ÷ 5, so "Very High" = 1.00). Differs by 0.0003 — the bar does not move with the reading, but 1.00 is not a defensible forecast. |
 | 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar; the two are indistinguishable at n=104** |
-| **0.04–0.05** | Standard error on a Brier score at this n |
+| **0.0084–0.0157** | Measured standard error on a Brier score at this n (earlier revision said 0.04–0.05; that was wrong) |

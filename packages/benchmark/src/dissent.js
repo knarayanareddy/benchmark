@@ -24,6 +24,7 @@ import {
   resolveLevel,
   attribute,
   coarsenToDay,
+  leaksBy,
 } from '@benchmark/core/anonymity';
 import {
   LOOP_KIND,
@@ -56,7 +57,7 @@ export const KIND = Object.freeze({
 /**
  * @param {{
  *   id?: string, cardId: string, expert?: string | null, name?: string, country?: string, kind: string,
- *   text?: string, level?: string, salt?: string, panelAliases?: Map<string, string> | Record<string, string>, now?: number
+ *   text?: string, level?: string, salt?: string, panelAliases?: Map<string, string> | Record<string, string>, peers?: any[], now?: number
  * }} input
  * @returns {Record<string, any>}
  */
@@ -71,6 +72,7 @@ export function newDissent({
   level = DEFAULT_LEVEL,
   salt,
   panelAliases,
+  peers = [],
   now,
 }) {
   if (!(/** @type {string[]} */ (Object.values(KIND))).includes(kind)) {
@@ -92,6 +94,11 @@ export function newDissent({
   const createdAt = now ?? Date.now();
   const dissentId = id ? id.trim() : `d_${crypto.randomUUID()}`;
 
+  // The failure mode nobody tests: pseudonymity that does not pseudonymise. An
+  // alias is only protective if the free text does not name its author, and the
+  // dissent text is the one field the author writes freely.
+  const textWarnings = leaksBy({ expertId: expert, name, country, text }, peers);
+
   return {
     id: dissentId,
     cardId,
@@ -101,6 +108,10 @@ export function newDissent({
     contactable: !isAnonymous && Boolean(expert),
     kind,
     text,
+    textWarnings,
+    // Publication is gated on the warning: an unflagged leaky text may be read
+    // by the analyst, but it does not go to the card until it is rewritten.
+    publishable: textWarnings.length === 0,
     status: STATE.OPEN,
     action: null,
     // Optimistic-concurrency counter: every transition bumps it, and a store

@@ -871,3 +871,15 @@ test('unkeyed estimates are rejected by default; the unsafe mode is explicit opt
   assert.throws(() => dispatchSignals(stuffed), /lacks both expertId and ballotToken/);
   assert.doesNotThrow(() => deduplicateRounds(stuffed, { requireBallotKey: false }));
 });
+
+test('aggregate defaults to 10,000 resamples and records the interval it used (R1)', () => {
+  const est = [
+    { expertId: 'a', p: 0.2, level: LEVELS.PSEUDONYMOUS },
+    { expertId: 'b', p: 0.35, level: LEVELS.PSEUDONYMOUS },
+    { expertId: 'c', p: 0.5, level: LEVELS.PSEUDONYMOUS },
+    { expertId: 'd', p: 0.6, level: LEVELS.PSEUDONYMOUS },
+    { expertId: 'e', p: 0.75, level: LEVELS.PSEUDONYMOUS },
+  ];
+  const r = aggregate(est, { cardId: 'card-1' });
+  assert.deepEqual(r.interval, { reps: 10000, seed: 42, alpha: 0.05, method: 'smoothed_bootstrap' });
+});
