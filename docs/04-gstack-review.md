@@ -595,7 +595,7 @@ That is a false statement in the file whose entire purpose is to make it true.
 4. Add `inSample` to the ladder check (already in `baseline-fit.json`, currently unasserted in prose).
 
 ### R4 — `17%` and `51%` are unverified under a rule that forbids them
-`README.md:53`, `docs/01-one-pager.md:7`, `docs/02:56`, `docs/03:51`, `research/market-landscape.html` ×4. The gate retires the exact string `17% completion` but not `17%`; the figure is a hand-computed 10/60 from the organiser brief, and `51%` (expert dropout) has a reference list in `research/` but no inline marker where it is used. The stated rule allows two states — *measured* or *marked as quoted* — and neither figure is in the second state.
+`README.md:53`, `docs/01-one-pager.md:7`, `docs/02:56`, `docs/03:51`, `research/market-landscape.html` ×4. The gate retires the exact string `17% completion` but not `17%` — an earlier revision of this paragraph quoted it in a way the gate could not see; the figure is a hand-computed 10/60 from the organiser brief, and `51%` (expert dropout) has a reference list in `research/` but no inline marker where it is used. The stated rule allows two states — *measured* or *marked as quoted* — and neither figure is in the second state.
 
 **Fix** Add inline markers (`*(quoted — ACAPS Challenge Brief, §…)*`), or add a `QUOTED` allowlist to `numbers-gate` that requires the marker text adjacent to the figure. Enforce the third state instead of pretending it does not exist.
 

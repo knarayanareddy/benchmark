@@ -3,9 +3,22 @@
  *
  * The rule this file enforces: no point estimate is ever returned without an
  * interval, and no two methods are ever compared unless they were scored on the
- * same items. At n≈104 the standard error on a Brier score is ~0.04–0.05, which
- * is larger than the gap between ACAPS's rating and any model tried.
- * Comparing them unpaired would be a mistake a juror should catch.
+ * same items.
+ *
+ * MEASURED STANDARD ERRORS at n=104 on `data/risk-radar.json` (reproduce with
+ * `npm run ladder`; the bootstrap intervals imply the same figures):
+ *
+ *   constant base-rate predictor   item SD 0.0856   SE of mean Brier 0.0084
+ *   ACAPS rating (ordinal/5)       item SD 0.1874   SE of mean Brier 0.0184
+ *   PAIRED difference (ACAPS−floor) SD 0.1505       SE of difference 0.0148
+ *
+ * An earlier revision of this header said the standard error was "~0.04–0.05".
+ * It is not: it is 2–5× smaller, and the sentence was repeated in docs/02 and
+ * planning/product-audit.html. The conclusion it supported (nothing here is
+ * distinguishable from zero) still holds — but for the right reason, which is
+ * that pairing shrinks the comparison to 0.0148 and 0.0009 is still far inside
+ * that. Quoting an inflated SE would have made the ladder look unreadable
+ * rather than merely underpowered.
  *
  * PROVENANCE — read before quoting these numbers. All three are measured by
  * scripts in this repo. Run `npm run ladder` and you get exactly these back.
@@ -132,10 +145,44 @@ function quantile(sorted, q) {
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
 }
 
+/**
+ * Rule R2, in code: 10,000 resamples, alpha 0.05, seed recorded with the result.
+ * One constant, consumed by `aggregate()` too, so "pre-registered" cannot mean
+ * two different numbers in two files.
+ */
+export const DEFAULT_REPS = 10000;
+export const MIN_REPS = 1000;
+export const DEFAULT_ALPHA = 0.05;
+export const DEFAULT_SEED = 42;
+
+/**
+ * Validate bootstrap options at entry.
+ *
+ * `reps: 0` used to produce NaN bounds that `JSON.stringify` turned into
+ * `{"lo":null,"hi":null}` — indistinguishable from "suppressed", in the one
+ * place the repo says must never happen. NaN is not an interval.
+ */
+export function bootstrapOptions({ reps = DEFAULT_REPS, seed = DEFAULT_SEED, alpha = DEFAULT_ALPHA } = {}) {
+  if (!Number.isInteger(reps) || reps < MIN_REPS) {
+    throw new RangeError(`reps must be an integer >= ${MIN_REPS}, got ${JSON.stringify(reps)}`);
+  }
+  if (!Number.isInteger(seed)) {
+    throw new RangeError(`seed must be an integer, got ${JSON.stringify(seed)}`);
+  }
+  if (typeof alpha !== 'number' || !Number.isFinite(alpha) || !(alpha > 0 && alpha < 1)) {
+    throw new RangeError(`alpha must be a finite number in (0, 1), got ${JSON.stringify(alpha)}`);
+  }
+  return { reps, seed, alpha };
+}
+
 /** Bootstrap CI on the mean Brier. Always return this alongside the score. */
-export function bootstrapBrier(pairs, { reps = 10000, seed = 42, alpha = 0.05 } = {}) {
+export function bootstrapBrier(pairs, opts = {}) {
+  const { reps, seed, alpha } = bootstrapOptions(opts);
   const o = observed(pairs);
-  if (o.length < 2) return { score: null, lo: null, hi: null, n: o.length, note: 'too few' };
+  const interval = { reps, seed, alpha, method: 'discrete_bootstrap' };
+  if (o.length < 2) {
+    return { score: null, lo: null, hi: null, n: o.length, note: 'too few', interval };
+  }
   const items = o.map(brierItem);
   const rnd = mulberry32(seed);
   const means = new Array(reps);
@@ -145,12 +192,20 @@ export function bootstrapBrier(pairs, { reps = 10000, seed = 42, alpha = 0.05 } 
     means[r] = acc / items.length;
   }
   means.sort((a, b) => a - b);
+  const score = mean(items);
+  const lo = quantile(means, alpha / 2);
+  const hi = quantile(means, 1 - alpha / 2);
+  // Identical items give a zero-width interval. That is arithmetically honest
+  // and rhetorically dangerous: "0.010 [0.010, 0.010]" reads as certainty.
+  const degenerate = new Set(items).size === 1;
   return {
-    score: mean(items),
-    lo: quantile(means, alpha / 2),
-    hi: quantile(means, 1 - alpha / 2),
+    score,
+    lo,
+    hi,
     n: items.length,
     reps,
+    interval,
+    note: degenerate ? 'degenerate: every item scored identically — the interval carries no information' : null,
   };
 }
 
@@ -159,21 +214,58 @@ export function bootstrapBrier(pairs, { reps = 10000, seed = 42, alpha = 0.05 } 
  * interval, and whether that interval excludes zero.
  */
 export function paired(aPairs, bPairs, opts = {}) {
+  if (!Array.isArray(aPairs) || !Array.isArray(bPairs)) {
+    throw new TypeError('paired() requires two arrays of labelled items');
+  }
   if (aPairs.length && bPairs.length) {
-    const missing = aPairs.concat(bPairs).filter((d) => d.id === undefined).length;
+    const missing = aPairs.concat(bPairs).filter((d) => d?.id === undefined).length;
     if (missing) throw new Error('paired() requires an id on every item — unlabelled pairing is unsafe');
   }
-  const keyed = new Map(observed(bPairs).map((d) => [d.id, d]));
+  const { reps, seed, alpha } = bootstrapOptions({ seed: opts.seed === undefined ? 7 : opts.seed, ...opts });
+
+  // Duplicate ids on either side silently overwrite in a Map, so a renamed or
+  // duplicated risk shrinks n and moves the point estimate with no signal.
+  const keyed = new Map();
+  for (const d of observed(bPairs)) {
+    if (keyed.has(d.id)) {
+      throw new Error(`paired() received duplicate id ${JSON.stringify(d.id)} on the B side — cannot pair safely`);
+    }
+    keyed.set(d.id, d);
+  }
+
   const diffs = [];
+  const unmatchedA = [];
+  const matchedA = new Set();
   for (const d of observed(aPairs)) {
+    if (matchedA.has(d.id)) {
+      throw new Error(`paired() received duplicate id ${JSON.stringify(d.id)} on the A side — cannot pair safely`);
+    }
+    matchedA.add(d.id);
     const other = keyed.get(d.id);
-    if (!other) continue;
+    if (!other) {
+      unmatchedA.push(d.id);
+      continue;
+    }
     if (d.y !== other.y) throw new Error(`paired() matched ${d.id} across different outcomes`);
     diffs.push(brierItem(d) - brierItem(other));
   }
-  if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: diffs.length, significant: null };
-  const rnd = mulberry32(opts.seed ?? 7);
-  const reps = opts.reps ?? 10000;
+  // Items only on the B side are equally a bug: they were scored for one method
+  // and silently dropped from the comparison.
+  const unmatchedB = [...keyed.keys()].filter((id) => !matchedA.has(id));
+
+  if (opts.onUnmatched !== 'ignore' && (unmatchedA.length || unmatchedB.length)) {
+    throw new Error(
+      `paired() sides do not cover the same items — ${unmatchedA.length} only on A, ` +
+        `${unmatchedB.length} only on B. Pass the same items to both, or set { onUnmatched: 'ignore' } ` +
+        `and read the returned unmatched ids.`
+    );
+  }
+
+  const interval = { reps, seed, alpha, method: 'discrete_bootstrap' };
+  if (diffs.length < 2) {
+    return { diff: null, lo: null, hi: null, n: diffs.length, significant: null, unmatchedA, unmatchedB, interval };
+  }
+  const rnd = mulberry32(seed);
   const means = new Array(reps);
   for (let r = 0; r < reps; r++) {
     let acc = 0;
@@ -181,14 +273,17 @@ export function paired(aPairs, bPairs, opts = {}) {
     means[r] = acc / diffs.length;
   }
   means.sort((x, y) => x - y);
-  const lo = quantile(means, 0.025);
-  const hi = quantile(means, 0.975);
+  const lo = quantile(means, alpha / 2);
+  const hi = quantile(means, 1 - alpha / 2);
   return {
     diff: mean(diffs),
     lo,
     hi,
     n: diffs.length,
     significant: lo > 0 || hi < 0,
+    unmatchedA,
+    unmatchedB,
+    interval,
     note:
       lo > 0
         ? 'A is worse than B (positive diff = higher Brier)'

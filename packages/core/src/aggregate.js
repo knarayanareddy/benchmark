@@ -34,7 +34,15 @@
  * Pure: no storage, no network, no clock.
  */
 
-import { mulberry32, observed, brierItem } from './scoring.js';
+import {
+  mulberry32,
+  observed,
+  brierItem,
+  DEFAULT_REPS,
+  DEFAULT_ALPHA,
+  DEFAULT_SEED,
+  bootstrapOptions,
+} from './scoring.js';
 import { LEVELS, PUBLIC, resolveLevel } from './anonymity.js';
 import { TYPES } from './dispatch.js';
 
@@ -257,12 +265,6 @@ export function deduplicateRounds(estimates, opts = {}) {
     }
     if (round > maxRound) maxRound = round;
 
-    let level = LEVELS.PSEUDONYMOUS;
-    if (raw.level !== undefined) {
-      const resolved = resolveLevel(raw.level);
-      level = resolved.honoured ? resolved.level : LEVELS.ANONYMOUS;
-    }
-
     const rawId = raw.expertId ?? raw.expert;
     const expertId = rawId !== undefined && rawId !== null && String(rawId).trim() !== ''
       ? String(rawId).trim()
@@ -276,6 +278,20 @@ export function deduplicateRounds(estimates, opts = {}) {
 
     const dedupeKey =
       expertId !== null ? `id:${expertId}` : ballotToken !== null ? `ballot:${ballotToken}` : null;
+
+    // Anonymity is never inferred. An ABSENT level used to default to
+    // PSEUDONYMOUS, which made a respondent who was never asked indistinguishable
+    // from one who chose to be contactable — and `dispatchSignals()` then treated
+    // them as a follow-up target, address included. An unrecognised level still
+    // fails closed to ANONYMOUS; a missing one is a caller bug and is rejected.
+    if (raw.level === undefined || raw.level === null) {
+      throw new Error(
+        `estimates[${i}].level is required — anonymity must be chosen explicitly, never inferred ` +
+          `(pass LEVELS.ANONYMOUS / PSEUDONYMOUS / IDENTIFIED)`
+      );
+    }
+    const resolved = resolveLevel(raw.level);
+    const level = resolved.honoured ? resolved.level : LEVELS.ANONYMOUS;
 
     if (dedupeKey === null) {
       if (requireBallotKey) {
@@ -304,6 +320,17 @@ export function deduplicateRounds(estimates, opts = {}) {
   let round2Count = 0;
   for (const rounds of byKey.values()) {
     if (rounds[2] !== undefined) {
+      // R6 defines round 2 as a REVISION of an independent round-1 estimate.
+      // A round-2-only submission never gave the first estimate, so it inflates
+      // round2Count for a revision that never happened and corrupts the very
+      // quantity the design measures (revision vs correction). The unkeyed
+      // branch already rejects this; the keyed branch did not.
+      if (rounds[1] === undefined) {
+        const who = rounds[2].expertId !== null ? `expert "${rounds[2].expertId}"` : 'this ballot';
+        throw new Error(
+          `${who} submitted round 2 without a round 1 — round 2 is a revision of an independent first estimate (Rule R6)`
+        );
+      }
       round2Count++;
       if (rounds[1] !== undefined && rounds[2].p !== rounds[1].p) revisedCount++;
       active.push(rounds[2]);
@@ -429,7 +456,9 @@ export function seedWeights(historyByExpert, expertIds = [], opts = {}) {
     };
   }
 
-  const weights = {};
+  // Prototype-free record: an expert id of `__proto__` used to be swallowed by
+  // the assignment, producing a missing weight and a NaN pool instead of an error.
+  const weights = Object.assign(Object.create(null), {});
   for (let i = 0; i < expertIds.length; i++) {
     weights[expertIds[i]] = rawSkills[i] / skillSum;
   }
@@ -443,6 +472,12 @@ export function seedWeights(historyByExpert, expertIds = [], opts = {}) {
 
 /**
  * Map a probability in [0, 1] to ACAPS' published five-point probability band.
+ *
+ * BOUNDARY CONVENTION: upper-inclusive. ACAPS publishes integer percentages
+ * (0–20, 21–40, …), so 0.20 is "Very Low" and 0.2000001 is "Low". That is a
+ * convention, not a fact, and it is pinned by a table test at
+ * 0.1999 / 0.2 / 0.2001 rather than left to whichever side of `<=` someone
+ * writes next.
  */
 export function probabilityBand(p) {
   assertProbability(p, 'p');
@@ -503,6 +538,14 @@ export function acapsRiskLevel(probOrAggregate, impact) {
     if (probOrAggregate.lo !== undefined && probOrAggregate.hi !== undefined) {
       assertProbability(probOrAggregate.lo, 'aggregate.lo');
       assertProbability(probOrAggregate.hi, 'aggregate.hi');
+      // Swapped bounds are a wiring bug (one array sorted, one not), and they
+      // used to publish a band running backwards: loRiskLevel 'High',
+      // hiRiskLevel 'Low', no error.
+      if (probOrAggregate.lo > probOrAggregate.hi) {
+        throw new RangeError(
+          `aggregate.lo (${probOrAggregate.lo}) must be <= aggregate.hi (${probOrAggregate.hi}) — bounds are inverted`
+        );
+      }
       loRiskLevel = ACAPS_MATRIX[probabilityBand(probOrAggregate.lo).ordinal][imp];
       hiRiskLevel = ACAPS_MATRIX[probabilityBand(probOrAggregate.hi).ordinal][imp];
     }
@@ -570,16 +613,15 @@ export function aggregate(estimates, opts = {}) {
 
   const contestedIqr = opts.contestedIqr ?? DISPATCH_THRESHOLDS.contestedIqr;
   const outlierGap = opts.outlierGap ?? DISPATCH_THRESHOLDS.outlierGap;
-  const reps = opts.reps ?? 2000;
-  const seed = opts.seed ?? 42;
-  const alpha = opts.alpha ?? 0.05;
-
-  if (!Number.isInteger(reps) || reps < 100) {
-    throw new RangeError(`reps must be an integer >= 100, got ${JSON.stringify(reps)}`);
-  }
-  if (typeof alpha !== 'number' || !Number.isFinite(alpha) || alpha <= 0 || alpha >= 1) {
-    throw new RangeError(`alpha must be in (0, 1), got ${JSON.stringify(alpha)}`);
-  }
+  // Rule R2 pre-registers 10,000 resamples. This used to default to 2,000 while
+  // `bootstrapBrier()` defaulted to 10,000 and docs/02 said 10,000 — so the
+  // number a reader saw in the demo was produced by a knob neither registered
+  // nor recorded. One constant now, and it travels with the result.
+  const { reps, seed, alpha } = bootstrapOptions({
+    reps: opts.reps === undefined ? DEFAULT_REPS : opts.reps,
+    seed: opts.seed === undefined ? DEFAULT_SEED : opts.seed,
+    alpha: opts.alpha === undefined ? DEFAULT_ALPHA : opts.alpha,
+  });
 
   const parsedImpact = opts.impact === undefined ? null : parseImpact(opts.impact);
   const { active, roundsUsed, round2Count, revisedCount } = deduplicateRounds(estimates, {
@@ -669,6 +711,7 @@ export function aggregate(estimates, opts = {}) {
   const sampleSd = Math.sqrt(values.reduce((a, v) => a + (v - meanVal) ** 2, 0) / n);
   let lo = estimate;
   let hi = estimate;
+  let degenerate = sampleSd === 0;
 
   if (sampleSd > 0) {
     const shrink = Math.sqrt(Math.max(0, 1 - 1 / n));
@@ -713,6 +756,13 @@ export function aggregate(estimates, opts = {}) {
     method,
     weightsMode,
     sharedSeeds,
+    // Provenance travels with the number: a pre-registered interval that does
+    // not say what produced it cannot be checked by a reader.
+    interval: { reps, seed, alpha, method: 'smoothed_bootstrap' },
+    degenerateInterval: degenerate,
+    intervalNote: degenerate
+      ? 'every panellist gave the same estimate — [lo, hi] is a point, not a range'
+      : null,
     extremised: canExtremise,
     extremiseD: appliedD,
     extremiseSuppressedReason:
@@ -761,6 +811,17 @@ export function releaseAggregate(estimates, opts = {}) {
     throw new RangeError(`minStep must be a positive integer, got ${JSON.stringify(requestedStep)}`);
   }
   const minStep = Math.max(MIN_COHORT_STEP, requestedStep);
+
+  // A snapshot must belong to the card it is compared against. Without this,
+  // a mis-wired caller released another card's number as this card's — silently,
+  // because only `n` was ever inspected.
+  const snapshotCard = opts.previousSnapshot?.cardId;
+  if (opts.cardId !== undefined && snapshotCard !== undefined && snapshotCard !== opts.cardId) {
+    throw new Error(
+      `previousSnapshot belongs to card ${JSON.stringify(snapshotCard)}, not ${JSON.stringify(opts.cardId)} — ` +
+        'a snapshot is only comparable against the card it came from'
+    );
+  }
   const prev = opts.previousSnapshot && !opts.previousSnapshot.suppressed ? opts.previousSnapshot : null;
 
   const requestedMin = opts.minPanel === undefined ? MIN_RELEASE_PANEL_SIZE : opts.minPanel;
@@ -785,9 +846,23 @@ export function releaseAggregate(estimates, opts = {}) {
 
   if (prev !== null && typeof prev.n === 'number') {
     if (base.n < prev.n) {
-      throw new RangeError(
-        `panel size ${base.n} regressed below previousSnapshot.n (${prev.n})`
-      );
+      // A shrinking panel is a normal event: a ballot withdrawn, a duplicate
+      // de-duplicated, a round-1 correction. Throwing turned a privacy guard
+      // into a 500 on the release path, so the previous release is held instead
+      // and the shortfall is reported for a human to look at.
+      return {
+        ...prev,
+        policy,
+        closed,
+        releaseHeld: true,
+        stale: true,
+        heldBackCount: 0,
+        neededForNextBatch: prev.n - base.n,
+        cardId: opts.cardId ?? prev.cardId ?? null,
+        reason:
+          `current panel (${base.n}) is smaller than the last released snapshot (${prev.n}) — ` +
+          'holding the previous release rather than publishing a differencing signal',
+      };
     }
     const delta = base.n - prev.n;
     if (delta < minStep) {
@@ -799,6 +874,7 @@ export function releaseAggregate(estimates, opts = {}) {
         stale: delta > 0,
         heldBackCount: delta,
         neededForNextBatch: delta === 0 ? minStep : minStep - delta,
+        cardId: opts.cardId ?? prev.cardId ?? null,
         reason:
           delta > 0
             ? `holding ${delta} new response(s) until cohort step ${minStep} is reached to prevent sequential differencing`
@@ -833,6 +909,7 @@ export function releaseAggregate(estimates, opts = {}) {
       contested: null,
       outlierCount: null,
       acaps: base.acaps !== null ? acapsRiskLevel({ suppressed: true }, base.acaps.impact) : null,
+      cardId: opts.cardId ?? null,
       policy,
       closed: false,
       releaseHeld: true,
@@ -858,12 +935,14 @@ export function releaseAggregate(estimates, opts = {}) {
     min: maskExtremes ? null : base.min,
     max: maskExtremes ? null : base.max,
     spread: maskExtremes ? null : base.spread,
+    cardId: opts.cardId ?? null,
     policy,
     closed,
     releaseHeld: false,
     stale: false,
     heldBackCount: 0,
     neededForNextBatch: minStep,
+    reason: null,
   };
 }
 

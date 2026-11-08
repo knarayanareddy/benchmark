@@ -3,10 +3,13 @@
  * Measure the baseline — ACAPS's own probability rating, scored as a forecast.
  *
  * This exists because the LADDER in packages/core/src/scoring.js carried
- * acapsRatings = 0.2204 as a quoted number. It is not reproducible from the
- * export in this repo. Every plain reading of "ACAPS's rating as a probability"
- * lands somewhere in 0.2121 – 0.2261, and no combination of outcome definition,
- * scale divisor and missing-value handling reproduces 0.2204.
+ * acapsRatings = 0.2204 as a quoted number. That figure is reproducible from the
+ * export — but as the leave-one-out score of the logistic model, not as any
+ * reading of ACAPS' rating. Every plain reading of "ACAPS's rating as a
+ * probability" lands somewhere in 0.2121 – 0.2261 (printed below, labelled,
+ * with its n). The regression and the analyst had been swapped; an earlier
+ * revision of this header claimed no combination reproduced 0.2204, which
+ * contradicted the paragraph at the bottom of the same script.
  *
  * Rule adopted here and written down so it cannot drift:
  *
@@ -91,6 +94,33 @@ const mde104 = (zTwoSided80Power * pairedSd) / Math.sqrt(adopted.length);
 const nFor002 = Math.ceil(((zTwoSided80Power * pairedSd) / 0.02) ** 2);
 console.log(
   `paired power      : SD=${pairedSd.toFixed(4)}  MDE(80% power, n=${adopted.length})=${mde104.toFixed(4)}  n(for 0.02)=${nFor002}`
+);
+
+// ── standard errors, measured not asserted ─────────────────────────────────
+// Four documents used to quote "SE ~0.04-0.05 at n=104" — 2-5x too large.
+// These are written to data/power-baseline.json so the numbers gate can prove
+// that whatever the prose says is what the data says.
+const sd = (xs) => {
+  const m = xs.reduce((a, b) => a + b, 0) / xs.length;
+  return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / (xs.length - 1));
+};
+const seOf = (pairs) => {
+  const items = pairs.map((d) => (d.p - d.y) ** 2);
+  return sd(items) / Math.sqrt(items.length);
+};
+const power = {
+  n: adopted.length,
+  seConstant: Number(seOf(constant).toFixed(4)),
+  seAcaps: Number(seOf(adopted).toFixed(4)),
+  sePaired: Number((pairedSd / Math.sqrt(adopted.length)).toFixed(4)),
+  pairedSd: Number(pairedSd.toFixed(4)),
+  mde80: Number(mde104.toFixed(4)),
+  nFor002,
+  baseRate: Number(baseRate.toFixed(4)),
+};
+fs.writeFileSync(path.join(ROOT, 'data/power-baseline.json'), JSON.stringify(power, null, 2) + '\n');
+console.log(
+  `standard errors   : constant ${power.seConstant}  ACAPS ${power.seAcaps}  paired ${power.sePaired}  → data/power-baseline.json`
 );
 
 console.log('\ncalibration of the ACAPS rating:');

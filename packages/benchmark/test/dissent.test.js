@@ -18,6 +18,11 @@ import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
 import { LEVELS } from '../../core/src/anonymity.js';
 import { compose, LOOP_KIND } from '../../shared/loop.js';
 
+// PSEUDONYMOUS is the default dissent level and now requires a deployment
+// secret (S3). The salt is passed everywhere a test creates a dissent without
+// an explicit ANONYMOUS level.
+const SALT = 'deploy-secret-2026-tcd-panel';
+
 test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatch() at weekly cap', () => {
   const d0 = newDissent({
     cardId: 'R1043',
@@ -26,6 +31,7 @@ test('five-state dissent lifecycle runs end-to-end and notify() bypasses dispatc
     kind: KIND.TWO_RISKS,
     text: 'Border security and food prices are distinct mechanisms.',
     now: 1000,
+    salt: SALT,
   });
   assert.equal(d0.status, STATE.OPEN);
   assert.equal(d0.level, LEVELS.PSEUDONYMOUS);
@@ -68,7 +74,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 
   // SPLIT with 2 child cards matches compose(LOOP_KIND.SPLIT, { count: 2, deepLinks })
   const split = act(
-    route(newDissent({ cardId: 'R1043', expert: 'e1', country: 'TCD', kind: KIND.TWO_RISKS })),
+    route(newDissent({ cardId: 'R1043', expert: 'e1', country: 'TCD', kind: KIND.TWO_RISKS , salt: SALT })),
     ACTION.SPLIT,
     { newCardIds: ['R1043a', 'R1043b'] }
   );
@@ -79,7 +85,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 
   // REWRITE with new title passes title through to compose(LOOP_KIND.REWRITE, { title })
   const rewritten = act(
-    route(newDissent({ cardId: 'R1067', expert: 'e1', country: 'AFG', kind: KIND.WINDOW })),
+    route(newDissent({ cardId: 'R1067', expert: 'e1', country: 'AFG', kind: KIND.WINDOW , salt: SALT })),
     ACTION.REWRITE,
     { title: 'Armed clashes in Badakhshan exceed 25 ACLED events before 30 June 2027' }
   );
@@ -92,7 +98,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
   // RETIRE and RESOLVE_EARLY match shared/loop.js verbatim
   for (const action of [ACTION.RETIRE, ACTION.RESOLVE_EARLY]) {
     const d = act(
-      route(newDissent({ cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.ALREADY_HAPPENING })),
+      route(newDissent({ cardId: 'R1', expert: 'e1', country: 'SDN', kind: KIND.ALREADY_HAPPENING , salt: SALT })),
       action
     );
     assert.equal(notify(d).body, compose(action).body);
@@ -102,7 +108,7 @@ test('notify() delegates to shared loop.js compose() with zero duplicated copy s
 test('dissent IDs use collision-safe UUIDs rather than a restart-prone counter', () => {
   const ids = new Set(
     Array.from({ length: 100 }, () =>
-      newDissent({ cardId: 'R1043', expert: 'e1', kind: KIND.WINDOW }).id
+      newDissent({ cardId: 'R1043', expert: 'e1', kind: KIND.WINDOW , salt: SALT }).id
     )
   );
   assert.equal(ids.size, 100);
@@ -140,8 +146,8 @@ test('ANONYMOUS and unrecognised-level dissents strip expert ID and never emit o
 });
 
 test('invalid dissent transitions and kinds throw explicit errors, including skipping route() or notify()', () => {
-  assert.throws(() => newDissent({ cardId: 'R1', expert: 'e1', kind: 'bad_kind' }), /unknown dissent kind/);
-  const open = newDissent({ cardId: 'R1', expert: 'e1', kind: KIND.WINDOW });
+  assert.throws(() => newDissent({ cardId: 'R1', expert: 'e1', kind: 'bad_kind' , salt: SALT }), /unknown dissent kind/);
+  const open = newDissent({ cardId: 'R1', expert: 'e1', kind: KIND.WINDOW , salt: SALT });
 
   // B6 regression: OPEN -> ACTIONED skipping route() must fail
   assert.throws(
@@ -212,11 +218,19 @@ test('cardLedger() provides an addressless "you said, we did" loop for ANONYMOUS
   assert.ok(!JSON.stringify(entry).includes('Hidden Person'));
 
   const dismissedOnly = close(
-    route(newDissent({ cardId: 'R1043', expert: 'e2', kind: KIND.WINDOW })),
+    route(newDissent({ cardId: 'R1043', expert: 'e2', kind: KIND.WINDOW , salt: SALT })),
     { reason: 'out_of_scope' }
   );
   const ledger = cardLedger([anonClosed, dismissedOnly], 'R1043');
-  assert.equal(ledger.length, 1, 'unactioned dismissals do not appear as "we did" card changes');
+  // A dismissal IS an outcome: "we looked and did not change it, because …".
+  // Leaving it out made the ledger a highlight reel of accepted objections —
+  // selective silence, in a product whose claim is honesty about uncertainty.
+  assert.equal(ledger.length, 2, 'both the change and the decline close the loop');
+  const declined = ledger.find((e) => e.action === LOOP_KIND.DECLINED);
+  assert.ok(declined, 'the decline is recorded');
+  assert.match(declined.body, /did not change it: out_of_scope/);
+  // …and the decline is still addressless.
+  assert.ok(!JSON.stringify(declined).includes('e2'));
   assert.equal(ledger[0].action, ACTION.RESOLVE_EARLY);
 });
 

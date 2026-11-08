@@ -319,9 +319,13 @@
 
   // Keep E6 and E7 mathematically locked to packages/core/src/aggregate.js via
   // releaseAggregate(..., { closed: true }) — quartiles/extremes stay null below 10.
+  // `level` is required: anonymity is never inferred (S2). Without it this
+  // panel exercised the fail-open branch — an absent level used to become
+  // PSEUDONYMOUS, which made the demo's "anonymous" respondents contactable.
   const SYNTHETIC_PANEL = [0.15, 0.55, 0.60, 0.61, 0.68, 0.72, 0.80].map((p, i) => ({
     expertId: `e${i + 1}`,
     p,
+    level: 'anonymous',
   }));
   const agg = releaseAggregate(SYNTHETIC_PANEL, { closed: true });
   if (!agg.suppressed) {

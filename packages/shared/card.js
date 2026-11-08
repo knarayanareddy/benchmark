@@ -9,6 +9,7 @@
  * Descriptor building and validation are unit-tested. mount() needs a DOM and
  * is verified manually (keyboard-only pass, screen-reader pass, 320px).
  */
+import { trapFocus } from './a11y.js';
 
 export const VARIANTS = Object.freeze(['gate', 'blur', 'card', 'chat', 'quiet']);
 export const ACTION_KINDS = Object.freeze(['primary', 'secondary', 'dismiss']);
@@ -45,6 +46,11 @@ export function validate(d = {}) {
   if (d.primary && d.primary.kind && !ACTION_KINDS.includes(d.primary.kind)) {
     errors.push('primary.kind must be one of ' + ACTION_KINDS.join('|'));
   }
+  // A secondary action, when present, is a button. Without a label it rendered
+  // the literal string "undefined" — visible to the expert, shipped to a demo.
+  if (d.secondary && (typeof d.secondary.label !== 'string' || !d.secondary.label.trim())) {
+    errors.push('secondary action, when present, needs a non-empty label');
+  }
   if (d.body && d.body.length > 420) errors.push('body over 420 chars — will need scrolling');
   return { ok: errors.length === 0, errors };
 }
@@ -70,12 +76,17 @@ export function mount(d, { onOutcome, doc = globalThis.document } = {}) {
   wrap.innerHTML = render(d);
   root.appendChild(wrap);
 
-  const buttons = [...root.querySelectorAll('button')];
   const primary = root.querySelector('[data-act="primary"]');
   const prev = doc.activeElement;
   let outcome = 'timeout';
+  let closed = false;
 
+  // close() is idempotent. A caller that closes on navigation AND on the
+  // quiet-card timer used to report the outcome twice, double-counting the one
+  // metric the product is measured on.
   const close = () => {
+    if (closed) return;
+    closed = true;
     host.remove();
     if (prev && prev.focus) prev.focus();
     if (onOutcome) onOutcome({ outcome, variant: d.variant });
@@ -94,14 +105,16 @@ export function mount(d, { onOutcome, doc = globalThis.document } = {}) {
   if (x) x.addEventListener('click', () => finish('dismiss'));
 
   root.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { finish('dismiss'); return; }
-    if (e.key !== 'Tab' || buttons.length === 0) return;
-    const i = buttons.indexOf(root.activeElement);
-    if (e.shiftKey && i <= 0) { e.preventDefault(); buttons[buttons.length - 1].focus(); }
-    else if (!e.shiftKey && i === buttons.length - 1) { e.preventDefault(); buttons[0].focus(); }
+    if (e.key === 'Escape') finish('dismiss');
   });
+  // One focus trap in the spine, not two: this used to re-implement
+  // a11y.trapFocus line for line, so a fix to one never reached the other.
+  trapFocus(root);
 
-  setTimeout(() => { const f = primary || buttons[0]; if (f) f.focus(); }, 30);
+  setTimeout(() => {
+    const f = primary || root.querySelector('button');
+    if (f) f.focus();
+  }, 30);
 
   if (d.variant === 'quiet') setTimeout(() => { if (host.isConnected) close(); }, 9000);
 

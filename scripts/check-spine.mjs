@@ -34,7 +34,10 @@ for (const f of files.sort()) {
   const h = hash(path.join(dir, f));
   next[f] = h;
   const want = doc.files[f];
-  if (!want) console.log(`  + ${f}  (new, not in fingerprint)`);
+  // A NEW file is drift too. This used to print "+ file (new, not in
+  // fingerprint)" and exit 0, so the spine could grow a file that the other
+  // repo does not have while CI printed a tick.
+  if (!want) { console.log(`  + ${f}  (new, not in fingerprint)`); bad++; }
   else if (want !== h) { console.log(`  ✗ ${f}  drifted`); bad++; }
 }
 for (const f of Object.keys(doc.files)) {

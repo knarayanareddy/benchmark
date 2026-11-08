@@ -25,8 +25,11 @@ import { dispatch, DEFAULT_CAP, TYPES } from '../../core/src/dispatch.js';
 import { LEVELS, PUBLIC } from '../../core/src/anonymity.js';
 import { mulberry32, bootstrapBrier, paired } from '../../core/src/scoring.js';
 
-const mkPanel = (ps, prefix = 'e') =>
-  ps.map((p, i) => ({ expertId: `${prefix}${i + 1}`, p }));
+// Anonymity is never inferred (S2): every estimate declares the level the
+// expert chose. PANEL_LVL is the level these fixtures mean unless stated.
+const PANEL_LVL = LEVELS.PSEUDONYMOUS;
+const mkPanel = (ps, prefix = 'e', level = PANEL_LVL) =>
+  ps.map((p, i) => ({ expertId: `${prefix}${i + 1}`, p, level }));
 
 // ── 1. Core pooling & mandatory uncertainty intervals (Full A1) ─────────────
 
@@ -131,9 +134,9 @@ test('property sweep: boundedness, permutation invariance and complement symmetr
     const complemented = panel.map((x) => ({ ...x, p: 1 - x.p }));
 
     const method = methods[trial % methods.length];
-    const r1 = aggregate(panel, { method, reps: 400, seed: 11 });
-    const rPerm = aggregate(shuffled, { method, reps: 400, seed: 11 });
-    const rComp = aggregate(complemented, { method, reps: 400, seed: 11 });
+    const r1 = aggregate(panel, { method, reps: 1000, seed: 11 });
+    const rPerm = aggregate(shuffled, { method, reps: 1000, seed: 11 });
+    const rComp = aggregate(complemented, { method, reps: 1000, seed: 11 });
 
     // 1. Boundedness (log_odds clamps 0/1 by 1e-6)
     const eps = method === METHODS.LOG_ODDS ? 2e-6 : 1e-12;
@@ -159,7 +162,7 @@ test('property sweep: boundedness, permutation invariance and complement symmetr
 test('panels smaller than 3 are suppressed so no participant can difference an anonymous peer', () => {
   assert.equal(MIN_PANEL_SIZE, 3);
 
-  for (const sub of [[], [{ expertId: 'e1', p: 0.7 }], [
+  for (const sub of [[], [{ expertId: 'e1', p: 0.7, level: PANEL_LVL }], [
     { expertId: 'e1', p: 0.7, level: LEVELS.IDENTIFIED },
     { expertId: 'e2', p: 0.2, level: LEVELS.ANONYMOUS },
   ]]) {
@@ -206,8 +209,8 @@ test('public visibility enforces PUBLIC.minCount = 10 and cannot be lowered', ()
 
 test('no expertId, name, country or declaration ever survives into aggregate() output', () => {
   const rich = [
-    { expertId: 'e-SECRET-01', name: 'Amina Okoro', country: 'TCD', p: 0.40, declaration: { regions: ['TCD'] } },
-    { expertId: 'e-SECRET-02', name: 'Bello Adamu', country: 'TCD', p: 0.55, declaration: { regions: ['TCD'] } },
+    { expertId: 'e-SECRET-01', name: 'Amina Okoro', country: 'TCD', p: 0.40, level: PANEL_LVL, declaration: { regions: ['TCD'] } },
+    { expertId: 'e-SECRET-02', name: 'Bello Adamu', country: 'TCD', p: 0.55, level: PANEL_LVL, declaration: { regions: ['TCD'] } },
     { expertId: 'e-SECRET-03', name: 'Chantal M.', country: 'TCD', p: 0.70, level: LEVELS.ANONYMOUS },
   ];
   const out = aggregate(rich, { impact: 4 });
@@ -341,9 +344,9 @@ test('seedWeights enforces >= 10 shared resolved seeds and weights by Murphy Bri
 
   // Weighted aggregate shifts toward e1 across methods
   const panel = [
-    { expertId: 'e1', p: 0.85 },
-    { expertId: 'e2', p: 0.60 },
-    { expertId: 'e3', p: 0.10 },
+    { expertId: 'e1', p: 0.85, level: PANEL_LVL },
+    { expertId: 'e2', p: 0.60, level: PANEL_LVL },
+    { expertId: 'e3', p: 0.10, level: PANEL_LVL },
   ];
   const weightedMed = aggregate(panel, { seedHistory: tenHistory, method: METHODS.MEDIAN });
   assert.equal(weightedMed.weightsMode, 'brier_skill');
@@ -371,10 +374,10 @@ test('weightedMedian handles exact 0.50 cumulative weight splits including IEEE-
     e4: mkConst(0.25), // w = 0.5
   };
   const panel = [
-    { expertId: 'e1', p: 0.10 },
-    { expertId: 'e2', p: 0.20 },
-    { expertId: 'e3', p: 0.40 },
-    { expertId: 'e4', p: 0.80 },
+    { expertId: 'e1', p: 0.10, level: PANEL_LVL },
+    { expertId: 'e2', p: 0.20, level: PANEL_LVL },
+    { expertId: 'e3', p: 0.40, level: PANEL_LVL },
+    { expertId: 'e4', p: 0.80, level: PANEL_LVL },
   ];
   const r = aggregate(panel, { seedHistory: history, method: METHODS.MEDIAN });
   assert.equal(r.weightsMode, 'brier_skill');
@@ -412,9 +415,9 @@ test('seedWeights obeys R3 (paired items), R4 (unobservable excluded) and R8 (se
   // R8: self-declared confidence / expertise never alters aggregate
   const plain = mkPanel([0.25, 0.50, 0.85]);
   const declared = [
-    { expertId: 'e1', p: 0.25, declaration: { regions: ['SDN'], selfWeight: 100 } },
-    { expertId: 'e2', p: 0.50, declaration: { regions: [], selfWeight: 1 } },
-    { expertId: 'e3', p: 0.85, declaration: { regions: ['SDN'], selfWeight: 1 } },
+    { expertId: 'e1', p: 0.25, level: PANEL_LVL, declaration: { regions: ['SDN'], selfWeight: 100 } },
+    { expertId: 'e2', p: 0.50, level: PANEL_LVL, declaration: { regions: [], selfWeight: 1 } },
+    { expertId: 'e3', p: 0.85, level: PANEL_LVL, declaration: { regions: ['SDN'], selfWeight: 1 } },
   ];
   assert.equal(
     aggregate(plain, { method: METHODS.MEAN }).estimate,
@@ -520,11 +523,11 @@ test('aggregate keeps extremisation off by default and suppresses it on conteste
 test('deduplicateRounds keeps latest round per expert, distinguishes holding vs revising, and enforces Rule R6', () => {
   assert.equal(MAX_ROUNDS, 2);
   const raw = [
-    { expertId: 'e1', p: 0.30, round: 1 },
-    { expertId: 'e2', p: 0.55, round: 1 },
-    { expertId: 'e3', p: 0.72, round: 1 },
-    { expertId: 'e1', p: 0.50, round: 2 }, // revised
-    { expertId: 'e3', p: 0.72, round: 2 }, // held at 72%
+    { expertId: 'e1', p: 0.30, round: 1, level: PANEL_LVL },
+    { expertId: 'e2', p: 0.55, round: 1, level: PANEL_LVL },
+    { expertId: 'e3', p: 0.72, round: 1, level: PANEL_LVL },
+    { expertId: 'e1', p: 0.50, round: 2, level: PANEL_LVL }, // revised
+    { expertId: 'e3', p: 0.72, round: 2, level: PANEL_LVL }, // held at 72%
   ];
   const dedup = deduplicateRounds(raw);
   assert.equal(dedup.active.length, 3);
@@ -550,10 +553,13 @@ test('dispatchSignals feeds dispatch.js cleanly while respecting ANONYMOUS opt-o
   //   e3 (0.65, IDENTIFIED, round 1)   -> non-outlier in round 1 on contested card -> contested
   //   e4 (0.70, PSEUDONYMOUS, round 2) -> already completed round 2 -> no prompt
   //   e5 (0.85, 'unknown-lvl', round 1)-> unknown level fails closed to ANONYMOUS -> MUST NOT be contacted
+  // e4 carries a round-1 estimate too: round 2 is a revision of one (Rule R6),
+  // and a round-2-only submission is now rejected rather than silently counted.
   const estimates = [
     { expertId: 'e1', p: 0.10, round: 1, level: LEVELS.PSEUDONYMOUS },
     { expertId: 'e2', p: 0.15, round: 1, level: LEVELS.ANONYMOUS },
     { expertId: 'e3', p: 0.65, round: 1, level: LEVELS.IDENTIFIED },
+    { expertId: 'e4', p: 0.62, round: 1, level: LEVELS.PSEUDONYMOUS },
     { expertId: 'e4', p: 0.70, round: 2, level: LEVELS.PSEUDONYMOUS },
     { expertId: 'e5', p: 0.85, round: 1, level: 'invalid-privacy-setting' },
   ];
@@ -578,20 +584,20 @@ test('dispatchSignals feeds dispatch.js cleanly while respecting ANONYMOUS opt-o
 
 test('invalid probabilities, rounds, seed histories, impacts and options throw explicit errors', () => {
   // Probabilities outside [0, 1] (e.g. passing 72 instead of 0.72) or non-numbers
-  assert.throws(() => aggregate([{ expertId: 'e1', p: 72 }, { expertId: 'e2', p: 0.5 }, { expertId: 'e3', p: 0.5 }]), RangeError);
-  assert.throws(() => aggregate([{ expertId: 'e1', p: -0.01 }, { expertId: 'e2', p: 0.5 }, { expertId: 'e3', p: 0.5 }]), RangeError);
-  assert.throws(() => aggregate([{ expertId: 'e1', p: Number.NaN }, { expertId: 'e2', p: 0.5 }, { expertId: 'e3', p: 0.5 }]), RangeError);
-  assert.throws(() => aggregate([{ expertId: 'e1', p: '0.5' }, { expertId: 'e2', p: 0.5 }, { expertId: 'e3', p: 0.5 }]), RangeError);
+  assert.throws(() => aggregate([{ expertId: 'e1', p: 72, level: PANEL_LVL }, { expertId: 'e2', p: 0.5, level: PANEL_LVL }, { expertId: 'e3', p: 0.5, level: PANEL_LVL }]), RangeError);
+  assert.throws(() => aggregate([{ expertId: 'e1', p: -0.01, level: PANEL_LVL }, { expertId: 'e2', p: 0.5, level: PANEL_LVL }, { expertId: 'e3', p: 0.5, level: PANEL_LVL }]), RangeError);
+  assert.throws(() => aggregate([{ expertId: 'e1', p: Number.NaN, level: PANEL_LVL }, { expertId: 'e2', p: 0.5, level: PANEL_LVL }, { expertId: 'e3', p: 0.5, level: PANEL_LVL }]), RangeError);
+  assert.throws(() => aggregate([{ expertId: 'e1', p: '0.5', level: PANEL_LVL }, { expertId: 'e2', p: 0.5, level: PANEL_LVL }, { expertId: 'e3', p: 0.5, level: PANEL_LVL }]), RangeError);
   assert.throws(() => aggregate('not-an-array'), TypeError);
 
   // Rounds: Rule R6 allows only 1 or 2; no duplicate same-round votes; no unkeyed round 2
-  assert.throws(() => deduplicateRounds([{ expertId: 'e1', p: 0.5, round: 3 }]), /Rule R6/);
-  assert.throws(() => deduplicateRounds([{ expertId: 'e1', p: 0.5, round: 0 }]), /Rule R6/);
+  assert.throws(() => deduplicateRounds([{ expertId: 'e1', p: 0.5, round: 3, level: PANEL_LVL }]), /Rule R6/);
+  assert.throws(() => deduplicateRounds([{ expertId: 'e1', p: 0.5, round: 0, level: PANEL_LVL }]), /Rule R6/);
   assert.throws(
-    () => deduplicateRounds([{ expertId: 'e1', p: 0.4, round: 1 }, { expertId: 'e1', p: 0.6, round: 1 }]),
+    () => deduplicateRounds([{ expertId: 'e1', p: 0.4, round: 1, level: PANEL_LVL }, { expertId: 'e1', p: 0.6, round: 1, level: PANEL_LVL }]),
     /duplicate estimate/
   );
-  assert.throws(() => deduplicateRounds([{ p: 0.5, round: 2 }]), /without an expertId/);
+  assert.throws(() => deduplicateRounds([{ p: 0.5, round: 2, level: PANEL_LVL }]), /without an expertId/);
 
   // Seed history invariants: minSeeds >= 10, labelled items, consistent outcomes, no duplicate IDs
   assert.throws(() => seedWeights({}, ['e1', 'e2'], { minSeeds: 5 }), RangeError);
@@ -629,7 +635,7 @@ test('bimodal float symmetry holds across all k/100 pairs (k=0..50) and all meth
     const hi = (100 - k) / 100;
     const panel = mkPanel([lo, lo, lo, hi, hi, hi]);
     for (const method of Object.values(METHODS)) {
-      const r = aggregate(panel, { method, reps: 100 });
+      const r = aggregate(panel, { method, reps: 1000 });
       assert.ok(
         Math.abs(r.estimate - 0.5) < 1e-9,
         `k=${k} (${lo}/${hi}) under ${method} drifted from 0.5 to ${r.estimate}`
@@ -652,12 +658,12 @@ test('OutWAgg on bimodal tie preserves track-record Brier skill weights rather t
   ]);
   // Bimodal equidistant panel [0.2, 0.2, 0.2, 0.8, 0.8, 0.8] using { expert } alias
   const panel = [
-    { expert: 'e1', p: 0.20 },
-    { expert: 'e2', p: 0.20 },
-    { expert: 'e3', p: 0.20 },
-    { expert: 'e4', p: 0.80 },
-    { expert: 'e5', p: 0.80 },
-    { expert: 'e6', p: 0.80 },
+    { expert: 'e1', p: 0.20, level: PANEL_LVL },
+    { expert: 'e2', p: 0.20, level: PANEL_LVL },
+    { expert: 'e3', p: 0.20, level: PANEL_LVL },
+    { expert: 'e4', p: 0.80, level: PANEL_LVL },
+    { expert: 'e5', p: 0.80, level: PANEL_LVL },
+    { expert: 'e6', p: 0.80, level: PANEL_LVL },
   ];
   const r = aggregate(panel, { seedHistory: history, method: METHODS.OUTLIER_WEIGHTED });
   assert.equal(r.weightsMode, 'brier_skill');
@@ -675,9 +681,9 @@ test('zero-weight experts neither shift weightedMedian tie midpoints nor collaps
     e3: mkConst(0.80),
   };
   const tiePanel = [
-    { expertId: 'e1', p: 0.05 },
-    { expertId: 'e2', p: 0.60 },
-    { expertId: 'e3', p: 0.80 },
+    { expertId: 'e1', p: 0.05, level: PANEL_LVL },
+    { expertId: 'e2', p: 0.60, level: PANEL_LVL },
+    { expertId: 'e3', p: 0.80, level: PANEL_LVL },
   ];
   const rTie = aggregate(tiePanel, { seedHistory: tieHistory, method: METHODS.MEDIAN });
   assert.ok(Math.abs(rTie.estimate - 0.70) < 1e-12, 'zero-weight e1 must not pull midpoint of e2/e3');
@@ -690,9 +696,9 @@ test('zero-weight experts neither shift weightedMedian tie midpoints nor collaps
     e3: mkConst(0.40),
   };
   const lonePanel = [
-    { expertId: 'e1', p: 0.85 },
-    { expertId: 'e2', p: 0.20 },
-    { expertId: 'e3', p: 0.25 },
+    { expertId: 'e1', p: 0.85, level: PANEL_LVL },
+    { expertId: 'e2', p: 0.20, level: PANEL_LVL },
+    { expertId: 'e3', p: 0.25, level: PANEL_LVL },
   ];
   const rLone = aggregate(lonePanel, { seedHistory: loneHistory, method: METHODS.MEAN });
   assert.equal(rLone.estimate, 0.85);
@@ -716,8 +722,9 @@ test('end-to-end backtest integration: aggregate() outputs pipe cleanly into boo
     const cardEstimates = Array.from({ length: 5 }, (_, j) => ({
       expertId: `exp_${j}`,
       p: Math.min(1, Math.max(0, anchor + (rnd() - 0.5) * 0.2)),
+      level: PANEL_LVL,
     }));
-    const agg = aggregate(cardEstimates, { reps: 200, seed: 7 });
+    const agg = aggregate(cardEstimates, { reps: 1000, seed: 7 });
     assert.equal(agg.suppressed, false);
     acapsPairs.push({ id: b.id, p: anchor, y: b.outcome });
     panelPairs.push({ id: b.id, p: agg.estimate, y: b.outcome });
@@ -819,12 +826,32 @@ test('releaseAggregate() enforces MIN_RELEASE_PANEL_SIZE=5, suppresses <10 order
   assert.equal(snap8.q25, null);
   assert.equal(snap8.max, null);
 
-  // Regressing panel size or invalid policy throws explicitly
-  assert.throws(
-    () => releaseAggregate(p5, { policy: RELEASE_POLICIES.BATCH, previousSnapshot: snap8 }),
-    /regressed/
-  );
+  // A SHRINKING panel is a normal event (retraction, de-duplication, a round-1
+  // correction). It used to throw RangeError on the release path — turning a
+  // privacy guard into a 500. It now holds the previous release and says why.
+  const shrunk = releaseAggregate(p5, { policy: RELEASE_POLICIES.BATCH, previousSnapshot: snap8 });
+  assert.equal(shrunk.releaseHeld, true);
+  assert.equal(shrunk.stale, true);
+  assert.equal(shrunk.estimate, snap8.estimate, 'the previous release is held, not recomputed');
+  assert.match(shrunk.reason, /smaller than the last released snapshot/);
+  assert.equal(shrunk.neededForNextBatch, 3, 'reports the shortfall a human needs to look at');
+
+  // An invalid policy still throws — that is a programmer error, not an event.
   assert.throws(() => releaseAggregate(p5, { policy: 'every_click' }), /unknown release policy/);
+
+  // A snapshot from a different card is also a programmer error: it used to be
+  // accepted whenever n grew, silently releasing another card's number.
+  assert.throws(
+    () => releaseAggregate(p5, { cardId: 'R1043', previousSnapshot: { ...snap8, cardId: 'R1067' } }),
+    /belongs to card/
+  );
+  // …and the same snapshot against its own card is fine.
+  const sameCard = releaseAggregate(p8, {
+    policy: RELEASE_POLICIES.BATCH,
+    cardId: 'R1043',
+    previousSnapshot: { ...snap5, cardId: 'R1043' },
+  });
+  assert.equal(sameCard.cardId, 'R1043');
 });
 
 test('card-scoped ballotToken deduplicates anonymous Round-1/Round-2 ballots without retaining expertId', () => {
@@ -857,7 +884,14 @@ test('card-scoped ballotToken deduplicates anonymous Round-1/Round-2 ballots wit
 
   // requireBallotKey rejects completely unkeyed estimates so anonymous ballot stuffing cannot slip in
   assert.throws(
-    () => aggregate([{ p: 0.5 }, { p: 0.6 }, { p: 0.7 }], { requireBallotKey: true }),
+    () => aggregate(
+      [
+        { p: 0.5, level: LEVELS.ANONYMOUS },
+        { p: 0.6, level: LEVELS.ANONYMOUS },
+        { p: 0.7, level: LEVELS.ANONYMOUS },
+      ],
+      { requireBallotKey: true }
+    ),
     /lacks both expertId and ballotToken/
   );
 });

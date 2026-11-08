@@ -924,7 +924,7 @@
 
   <div class="verdict fail">
     <div class="v">Fatal → fixed</div>
-    <p class="t"><b>A2 · With 104 resolved risks, no Brier difference in this range is statistically distinguishable without a confidence interval.</b> The standard error on a Brier score at n≈104 is on the order of 0.04–0.05. The gap between ACAPS' 0.2168 and the regression's 0.2177 is 0.0009 — far inside the noise of any comparison, which is the whole reason the ladder must be paired. A juror who asks "what is your interval" and gets a shrug has caught the whole submission.</p>
+    <p class="t"><b>A2 · With 104 resolved risks, no Brier difference in this range is statistically distinguishable without a confidence interval.</b> Measured at n≈104: the standard error on the mean Brier is <b>0.0084</b> for the constant base rate and <b>0.0184</b> for ACAPS' rating; the standard error of the <b>paired</b> difference is <b>0.0148</b> (<code>npm run ladder</code>). The gap between ACAPS' 0.2168 and the regression's 0.2177 is 0.0009 — far inside even the paired interval, which is the whole reason the ladder must be paired. An earlier revision put this standard error at 0.04–0.05; that was wrong by 2–5×. A juror who asks "what is your interval" and gets a shrug has caught the whole submission.</p>
   </div>
   <div class="callout evidence" style="margin-top:0">
     <span class="lab">The fix, and it is cheap</span>

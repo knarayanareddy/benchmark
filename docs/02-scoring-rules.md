@@ -10,7 +10,21 @@ The primary score is the mean squared error between the stated probability and t
 
 ## R2 · Every score carries a bootstrap interval
 
-10,000 resamples over resolved risks. Report the interval beside the point estimate **always**, including — especially — when it is embarrassing. At n ≈ 104 the standard error is on the order of 0.04–0.05, which is larger than any difference between the methods under comparison.
+10,000 resamples over resolved risks. Report the interval beside the point estimate **always**, including — especially — when it is embarrassing.
+
+The resample count is not a free parameter: `DEFAULT_REPS = 10_000`, `alpha = 0.05` and the seed are recorded in every payload under `interval`, and the same constant is consumed by `aggregate()`, `releaseAggregate()` and `bootstrapBrier()`. An interval whose resample count is not stated cannot be checked.
+
+**Measured standard errors at n = 104** (`npm run ladder`; the bootstrap intervals imply the same figures, which is the point):
+
+| quantity | item SD | SE of the mean |
+|---|---|---|
+| constant base-rate predictor | 0.0856 | **0.0084** |
+| ACAPS rating (ordinal / 5) | 0.1874 | **0.0184** |
+| **paired** difference (ACAPS − floor) | 0.1505 | **0.0148** |
+
+The paired item SD is **0.1505**, so an 80%-power two-sided test at `n = 104` can only detect a minimum detectable effect of **0.0413** Brier — and reaching 0.02 requires **n ≈ 445** resolved statements (`data/power-baseline.json`, written by `scripts/measure-baseline.mjs`).
+
+An earlier revision of this document said the standard error was "on the order of 0.04–0.05". That was wrong by 2–5×. The conclusion it was used to support — that no gap in the ladder is distinguishable from zero — still holds, but the reason is pairing, not a large unpaired error: the paired difference of 0.0009 sits inside an SE of 0.0148.
 
 ## R3 · Comparisons are paired
 
@@ -58,4 +72,4 @@ The study design ships with the product. The most recent systematic review of di
 | **0.2168** | ACAPS' own probability rating — **the bar to beat** |
 | 0.2171 | *check:* the same rating read off ACAPS' published percentage bands (midpoints). Differs by 0.0003 — the bar does not move with the reading. |
 | 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar** |
-| **0.04–0.05** | Standard error on a Brier score at this n |
+| **0.0084 / 0.0184** | Standard error on a Brier score at this n (base rate / ACAPS rating); **0.0148** paired |

@@ -23,6 +23,7 @@ import {
   DEFAULT_LEVEL,
   resolveLevel,
   attribute,
+  leaksBy,
 } from '../../core/src/anonymity.js';
 import {
   LOOP_KIND,
@@ -63,6 +64,7 @@ export function newDissent({
   level = DEFAULT_LEVEL,
   salt,
   panelAliases,
+  peers = [],
   now,
 }) {
   if (!Object.values(KIND).includes(kind)) {
@@ -74,15 +76,34 @@ export function newDissent({
   const resolved = resolveLevel(level);
   // Fail closed to ANONYMOUS when an unrecognised privacy level is passed.
   const effectiveLevel = resolved.honoured ? resolved.level : LEVELS.ANONYMOUS;
+  const isAnonymous = effectiveLevel === LEVELS.ANONYMOUS;
+
+  // Contactability is a property of the LEVEL the expert chose, never of whether
+  // a field happened to survive the transport. A dropped `expert` on an
+  // IDENTIFIED dissent used to produce contactable:false, which `close()` then
+  // treated as permission to close without ever notifying — silent loss of a
+  // promised follow-up.
+  if (!isAnonymous && (expert === undefined || expert === null || String(expert).trim() === '')) {
+    throw new Error(
+      `a ${effectiveLevel} dissent requires an expert id — refusing to create an uncontactable one ` +
+        '(choose LEVELS.ANONYMOUS if the expert is not to be followed up)'
+    );
+  }
+
   const attributed = attribute(
     { cardId, expertId: expert, name, country, kind, text },
     effectiveLevel,
     { salt, panelAliases }
   );
 
-  const isAnonymous = effectiveLevel === LEVELS.ANONYMOUS;
   const createdAt = now ?? Date.now();
   const dissentId = id ? id.trim() : `d_${crypto.randomUUID()}`;
+
+  // The failure mode nobody tests: pseudonymity that does not pseudonymise.
+  // An alias is only protective if the free text does not name its author, and
+  // the dissent text is the one field the author writes freely. `leaksBy()`
+  // existed and was called by nothing.
+  const textWarnings = leaksBy({ expertId: expert, name, country, text }, peers);
 
   return {
     id: dissentId,
@@ -90,9 +111,13 @@ export function newDissent({
     expert: isAnonymous ? null : (expert ?? null),
     by: attributed.by,
     level: effectiveLevel,
-    contactable: !isAnonymous && Boolean(expert),
+    contactable: !isAnonymous,
     kind,
     text,
+    textWarnings,
+    // Publication is gated on the warning: an unflagged leaky text may be read
+    // by the analyst, but it does not go to the card until it is rewritten.
+    publishable: textWarnings.length === 0,
     status: STATE.OPEN,
     action: null,
     createdAt,
@@ -194,7 +219,11 @@ export function close(dissent, { reason = '', now } = {}) {
       throw new Error('closing an unactioned dissent from state routed requires a non-empty reason');
     }
   } else if (dissent.status === STATE.ACTIONED) {
-    if (dissent.contactable && dissent.expert) {
+    // Derived from the chosen level, not from the stored boolean: a transport
+    // that dropped `expert` must not be able to turn a promised follow-up into
+    // a silent closure.
+    const mustNotify = dissent.level !== LEVELS.ANONYMOUS;
+    if (mustNotify) {
       throw new Error(
         'cannot close actioned dissent for contactable expert before notify()'
       );
@@ -220,9 +249,25 @@ export function close(dissent, { reason = '', now } = {}) {
  * attributes, and composes copy via `packages/shared/loop.js`.
  */
 export function ledgerEntry(dissent) {
-  if (!dissent || !dissent.action) return null;
+  if (!dissent) return null;
   const validStates = [STATE.ACTIONED, STATE.NOTIFIED, STATE.CLOSED];
   if (!validStates.includes(dissent.status)) return null;
+
+  // A dismissal is an outcome. "We looked and did not change it, because …"
+  // is the most common result of any review queue, and leaving it out of the
+  // ledger made the loop look like it only ever agreed with the objector.
+  if (!dissent.action) {
+    if (dissent.status !== STATE.CLOSED || !dissent.closeReason) return null;
+    const declined = compose(LOOP_KIND.DECLINED, { reason: dissent.closeReason });
+    return {
+      cardId: dissent.cardId,
+      kind: dissent.kind,
+      action: LOOP_KIND.DECLINED,
+      body: declined.body,
+      deepLinks: [],
+      actionedAt: dissent.closedAt ?? null,
+    };
+  }
 
   const deepLinks = (dissent.newCardIds || []).map((id) => `/c/${id}`);
   const msg = compose(dissent.action, {

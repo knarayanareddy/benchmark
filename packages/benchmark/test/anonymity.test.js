@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
-  resolveLevel, aliasFor, panelAliases, attribute, leaksBy, publicable, PUBLIC,
+  resolveLevel, aliasForDev, panelAliases, attribute, leaksBy, publicable, PUBLIC,
 } from '../../core/src/anonymity.js';
 import {
   aggregate,
@@ -11,6 +11,9 @@ import {
 } from '../../core/src/aggregate.js';
 
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
+// A pseudonym requires a deployment secret, or a precomputed panel alias map.
+// The public constant used to be the silent default here — that is S3.
+const SALT = 'deploy-secret-2026-tcd-panel';
 
 test('the default is the hedge, not the extreme', () => {
   assert.equal(DEFAULT_LEVEL, LEVELS.PSEUDONYMOUS);
@@ -24,8 +27,8 @@ test('identified attribution keeps the name and drops the internal id', () => {
 });
 
 test('pseudonymous attribution gives a stable alias and drops the name', () => {
-  const a = attribute(A, LEVELS.PSEUDONYMOUS);
-  const b = attribute(A, LEVELS.PSEUDONYMOUS);
+  const a = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const b = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.equal(a.by, b.by, 'the alias must be stable across contributions');
   assert.match(a.by, /^Analyst \d{4}$/);
   assert.equal(a.name, undefined);
@@ -33,8 +36,8 @@ test('pseudonymous attribution gives a stable alias and drops the name', () => {
 });
 
 test('two experts in the same country get different aliases', () => {
-  const x = attribute(A, LEVELS.PSEUDONYMOUS);
-  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS);
+  const x = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.notEqual(x.by, y.by);
 });
 
@@ -91,13 +94,45 @@ test('the warning fires on a panel too small to hide anyone', () => {
 
 test('a clean contribution from a full panel produces no warning', () => {
   const peers = [{ name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }, { name: 'F' }];
-  assert.deepEqual(leaksBy(A, peers), []);
+  // "Clean" means the timestamp is already coarsened, which is what attribute()
+  // does. A raw ISO instant next to a country does not pass — see below.
+  const coarsened = { ...A, at: '2026-11-06' };
+  assert.deepEqual(leaksBy(coarsened, peers), []);
+});
+
+test('country plus a time of day is a warning even on a full panel (S5)', () => {
+  const peers = [{ name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }, { name: 'F' }];
+  // 10:00 in TCD is enough to match a contribution to a meeting or a shift
+  // roster. attribute() coarsens this; leaksBy() catches a caller that did not.
+  const w = leaksBy(A, peers);
+  assert.ok(w.some((x) => /time of day/.test(x)), 'a full ISO instant beside a country must warn');
 });
 
 test('public output suppresses small counts instead of publishing them', () => {
   const { published, suppressedCells } = publicable({ TCD: 7, NER: 12, NGA: 31 });
-  assert.deepEqual(published, { NER: 12, NGA: 31 });
+  assert.deepEqual(Object.entries(published), [['NER', 12], ['NGA', 31]]);
   assert.equal(suppressedCells, 1, 'a count of 7 next to a country name is a person');
+});
+
+test('a cell that cannot be counted is suppressed, never published (S7)', () => {
+  const r = publicable({ A: undefined, B: NaN, C: '3', D: 3, E: 12 });
+  assert.deepEqual(Object.entries(r.published), [['E', 12]]);
+  assert.equal(r.uncountableCells, 3);
+  assert.equal(r.suppressedCells, 4);
+  // The k-anonymity floor may be raised by a caller, never lowered.
+  assert.throws(() => publicable({ A: 3 }, 1), /never lowered/);
+  assert.throws(() => publicable({ A: 3 }, 0), /never lowered/);
+});
+
+test('the anonymous copy promises only what the code does (B6)', () => {
+  const copy = LEVEL_COPY[LEVELS.ANONYMOUS];
+  assert.equal(copy.capability, 'none');
+  // No sealed-record escrow exists, so no copy may claim one.
+  assert.doesNotMatch(copy.toAcaps, /sealed record|moderator can open|only the moderator/i);
+  assert.match(copy.toAcaps, /cannot be traced back/i);
+  // And what it does promise is true of attribute():
+  const out = attribute({ expertId: 'e-1', text: 'x' }, LEVELS.ANONYMOUS);
+  assert.ok(!JSON.stringify(out).includes('e-1'));
 });
 
 test('public anonymity is a rule, not a setting', () => {
@@ -106,8 +141,53 @@ test('public anonymity is a rule, not a setting', () => {
 });
 
 test('alias derivation is deterministic across runs and salts', () => {
-  assert.equal(aliasFor('e-001', 'TCD'), aliasFor('e-001', 'TCD'));
-  assert.notEqual(aliasFor('e-001', 'TCD', 'v2'), aliasFor('e-001', 'TCD', 'v1'));
+  assert.equal(aliasForDev('e-001', 'TCD'), aliasForDev('e-001', 'TCD'));
+  assert.notEqual(aliasForDev('e-001', 'TCD', 'v2'), aliasForDev('e-001', 'TCD', 'v1'));
+});
+
+test('a pseudonym without a deployment salt is refused, not silently derived from the public constant (S3)', () => {
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: 'dev-unsalted' }), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: 'short' }), /deployment salt/);
+  // …and the refusal is not merely cosmetic: no output is produced at all.
+  assert.equal(attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT }).level, LEVELS.PSEUDONYMOUS);
+});
+
+test('an identity field can never ride into an anonymous payload (S1)', () => {
+  // The field allowlist used to include a bare `id`, which every other module
+  // in this repo accepts on items — so a contributor id reached ANONYMOUS output.
+  const withId = { ...A, id: 'e-001', contributionId: 'c-9' };
+  for (const lvl of [LEVELS.ANONYMOUS, 'unrecognised-level']) {
+    const out = attribute(withId, lvl);
+    assert.equal(out.id, undefined, `${lvl} must not echo a bare id`);
+    assert.equal(out.contributionId, 'c-9', 'the contribution id is not an identity');
+    assert.ok(!JSON.stringify(out).includes('e-001'), `${lvl} leaked the expert id`);
+  }
+  // Any value equal to an internal identifier is refused outright.
+  assert.throws(
+    () => attribute({ expertId: 'e-9', text: 'e-9', level: LEVELS.ANONYMOUS }, LEVELS.ANONYMOUS),
+    /identity leaked into "text"/
+  );
+});
+
+test('identified attribution publishes a name, never the internal id as a fallback (B1/S6)', () => {
+  const nameless = attribute({ expertId: 'e-INTERNAL-77', text: 'x' }, LEVELS.IDENTIFIED);
+  assert.equal(nameless.by, 'unnamed contributor');
+  assert.ok(!JSON.stringify(nameless).includes('e-INTERNAL-77'));
+});
+
+test('panelAliases treats __proto__ as an id, not as object internals (S6)', () => {
+  const map = panelAliases(['__proto__', 'e2'], 'TCD', { salt: SALT });
+  assert.deepEqual(Object.keys(map).sort(), ['__proto__', 'e2'].sort());
+  const out = attribute({ expertId: '__proto__', text: 'x' }, LEVELS.PSEUDONYMOUS, { panelAliases: map });
+  assert.equal(typeof out.by, 'string');
+  assert.equal(out.by, map['__proto__']);
+});
+
+test('a pseudonymous timestamp is coarsened to a day, because minutes identify (S5)', () => {
+  const out = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  assert.equal(out.at, '2026-11-06');
+  assert.equal(attribute({ ...A, at: 'not a date' }, LEVELS.PSEUDONYMOUS, { salt: SALT }).at, undefined);
 });
 
 test('every casing of anonymous resolves to the anonymous level', () => {
@@ -162,7 +242,7 @@ test('attribute() enforces an allowlist — email, IP, role and org never leak a
   };
 
   for (const lvl of [...Object.values(LEVELS), 'unrecognised-level']) {
-    const out = attribute(rich, lvl);
+    const out = attribute(rich, lvl, { salt: SALT });
     for (const pii of ['email', 'ip', 'role', 'org', 'sessionToken', 'expertId', 'name']) {
       assert.ok(!(pii in out), `${lvl} leaked disallowed field "${pii}"`);
     }
@@ -203,7 +283,7 @@ test('intervals and small-panel releases resist order-statistic & quartile inver
     [0.12, 0.44, 0.68, 0.91],
     [0.11, 0.29, 0.47, 0.68, 0.89],
   ]) {
-    const raw = aggregate(secret.map((p, i) => ({ expertId: `e${i + 1}`, p })));
+    const raw = aggregate(secret.map((p, i) => ({ expertId: `e${i + 1}`, p, level: LEVELS.ANONYMOUS })));
     assert.notEqual(raw.lo, secret[0], `n=${secret.length}: lo must not equal x_1 (${secret[0]})`);
     assert.notEqual(
       raw.hi,
@@ -221,7 +301,7 @@ test('intervals and small-panel releases resist order-statistic & quartile inver
   ]) {
     for (const policy of Object.values(RELEASE_POLICIES)) {
       const held = releaseAggregate(
-        small.map((p, i) => ({ expertId: `e${i + 1}`, p })),
+        small.map((p, i) => ({ expertId: `e${i + 1}`, p, level: LEVELS.ANONYMOUS })),
         { policy, closed: true }
       );
       assert.equal(held.suppressed, true);

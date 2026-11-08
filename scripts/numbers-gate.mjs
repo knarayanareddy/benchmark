@@ -84,17 +84,68 @@ if (!fs.existsSync(fitPath)) {
   console.log(`✓ ladder matches the fitted artefacts: ${LADDER.naiveFloor} / ${LADDER.acapsRatings} / ${LADDER.fourFieldLogistic}`);
 }
 
+const docsSpec = fs.readFileSync(path.join(ROOT, 'docs/02-scoring-rules.md'), 'utf8');
+
+// ── 1b. the published standard errors and power figures ─────────────────────
+//
+// Four documents quoted "SE ~0.04-0.05 at n=104" for months. Nothing recomputed
+// it, so nothing noticed it was 2-5x too large. `measure-baseline.mjs` now
+// writes data/power-baseline.json, and every prose figure must match it.
+const powerPath = path.join(ROOT, 'data', 'power-baseline.json');
+if (!fs.existsSync(powerPath)) {
+  fail('data/power-baseline.json missing — run: npm run baseline');
+} else {
+  const power = JSON.parse(fs.readFileSync(powerPath, 'utf8'));
+  const PROSE_FIGURES = [
+    ['seConstant', power.seConstant, 'standard error of the constant base-rate predictor'],
+    ['seAcaps', power.seAcaps, 'standard error of the ACAPS rating'],
+    ['sePaired', power.sePaired, 'standard error of the PAIRED difference'],
+    ['pairedSd', power.pairedSd, 'item SD of the paired difference'],
+    ['mde80', power.mde80, '80%-power minimum detectable effect at n=104'],
+  ];
+  for (const [k, value, what] of PROSE_FIGURES) {
+    // Every one of these must appear in docs/02, which is the canonical scoring
+    // spec, or it is a number the spec does not carry.
+    const needle = value.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+    if (!docsSpec.includes(needle)) {
+      fail(`docs/02-scoring-rules.md does not carry the ${what} (${value.toFixed(4)}) measured by measure-baseline.mjs`);
+    }
+  }
+  // The retired claim must not come back anywhere.
+  for (const f of files) {
+    const src = fs.readFileSync(f, 'utf8');
+    const bad = /standard error[^.\n]*0\.04[–-]0\.05/i.test(src) || /SE[^.\n]*0\.04[–-]0\.05/i.test(src);
+    if (bad && !/earlier revision|was wrong|does not survive/i.test(src)) {
+      fail(`${path.relative(ROOT, f)} still claims a Brier standard error of 0.04-0.05 — measured ${power.seConstant} / ${power.seAcaps} / ${power.sePaired} paired`);
+    }
+  }
+  if (power.nFor002 !== 445) {
+    fail(`n needed to detect a 0.02 Brier gain is ${power.nFor002}, but the repo publishes 445`);
+  }
+  console.log(
+    `✓ standard errors match: ${power.seConstant} / ${power.seAcaps} / ${power.sePaired} paired; ` +
+      `MDE ${power.mde80}; n(for 0.02)=${power.nFor002}`
+  );
+}
+
 // ── 2. retired figures in prose ─────────────────────────────────────────────
+//
+// The excusal is per LINE, not per file. It used to be a single regex over the
+// whole document, so one occurrence of the word "retired" anywhere in a file
+// excused every retired figure in that file — a document could say "this figure
+// is retired" in its introduction and then quote 0.2204 as fact for 400 lines.
+const EXCUSE = /(earlier revision|previous revision|retired|was wrong|not reproducible|does not survive|read before quoting|quote only with)/i;
 const hits = [];
 for (const f of files) {
-  const src = fs.readFileSync(f, 'utf8');
+  const lines = fs.readFileSync(f, 'utf8').split('\n');
   for (const [needle, why] of RETIRED) {
-    if (src.includes(needle)) {
-      // The correction notices themselves are allowed to name the old value.
-      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const excused = new RegExp(`(earlier revision|previous revision|retired|was wrong|not reproducible|quoted ${escaped})`, 'i').test(src);
-      if (!excused) hits.push([path.relative(ROOT, f), needle, why]);
-    }
+    lines.forEach((line, idx) => {
+      if (!line.includes(needle)) return;
+      // A correction notice may name the old value on the line that corrects it,
+      // or within the two surrounding lines of context.
+      const window = lines.slice(Math.max(0, idx - 2), idx + 3).join('\n');
+      if (!EXCUSE.test(window)) hits.push([`${path.relative(ROOT, f)}:${idx + 1}`, needle, why]);
+    });
   }
 }
 if (hits.length) {

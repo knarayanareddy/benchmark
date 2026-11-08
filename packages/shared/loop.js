@@ -12,6 +12,10 @@ export const LOOP_KIND = Object.freeze({
   SPLIT: 'split',
   RETIRE: 'retire',
   RESOLVE_EARLY: 'resolve_early',
+  // A decline is a loop-closing outcome too. "We looked and disagreed" used to
+  // leave no trace at all, so the ledger only ever showed accepted objections —
+  // a highlight reel, in a product whose claim is honesty about uncertainty.
+  DECLINED: 'declined',
   ROUTED: 'routed',
   ARRIVED: 'arrived',
 });
@@ -21,6 +25,9 @@ T[LOOP_KIND.REWRITE] = (d) => 'You said the wording was wrong. It has been rewri
 T[LOOP_KIND.SPLIT] = (d) => 'You said this was two risks. It has been split' + (d && d.count ? ' into ' + d.count : '') + '. Here they are.';
 T[LOOP_KIND.RETIRE] = () => 'You said this could not be resolved. It has been retired.';
 T[LOOP_KIND.RESOLVE_EARLY] = () => 'You said this had already happened. It has been resolved early.';
+T[LOOP_KIND.DECLINED] = (d) =>
+  'You raised this. We looked at it and did not change it' +
+  (d && d.reason ? ': ' + d.reason : '.');
 T[LOOP_KIND.ROUTED] = (d) => 'Someone was offered help through you' + (d && d.service ? ' — ' + d.service : '') + '.';
 T[LOOP_KIND.ARRIVED] = (d) => {
   const n = d && d.count != null ? d.count : 0;

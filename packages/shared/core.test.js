@@ -7,6 +7,19 @@ import { longSentences, trapFocus, MAX_SENTENCE_WORDS } from './a11y.js';
 
 /* ---------- card ---------- */
 
+test('a secondary action without a label is refused, not rendered as "undefined" (C12)', () => {
+  assert.throws(
+    () => buildCard({ headline: 'h', primary: { label: 'Go' }, secondary: {} }),
+    /secondary action/
+  );
+  assert.throws(
+    () => buildCard({ headline: 'h', primary: { label: 'Go' }, secondary: { label: '   ' } }),
+    /secondary action/
+  );
+  const ok = buildCard({ headline: 'h', primary: { label: 'Go' }, secondary: { label: 'Not now' } });
+  assert.equal(ok.secondary.label, 'Not now');
+});
+
 test('a valid card builds', () => {
   const c = buildCard({ headline: 'Help exists', primary: { label: 'See help' } });
   assert.equal(c.variant, 'card');
@@ -53,6 +66,15 @@ test('a payload with no unknown keys passes through intact', () => {
   assert.equal(r.payload.i, 'a');
 });
 
+test('a null or array payload returns errors instead of throwing (C14)', () => {
+  // Object.keys(null) is a TypeError: a validator that crashes on its worst
+  // input is not a validator.
+  assert.deepEqual(strict(SCHEMA, null).ok, false);
+  assert.match(strict(SCHEMA, null).errors.join(), /plain object/);
+  assert.deepEqual(strict(SCHEMA, [1]).ok, false);
+  assert.deepEqual(strict(SCHEMA, 'x').ok, false);
+});
+
 test('cells below k are suppressed rather than rounded', () => {
   const out = suppress([{ count: 4 }, { count: 10 }], 10);
   assert.equal(out[0].count, null);
@@ -60,11 +82,36 @@ test('cells below k are suppressed rather than rounded', () => {
   assert.equal(out[1].count, 10);
 });
 
+test('a cell with no count is suppressed, not published (C3)', () => {
+  // `undefined < 10` is false, so the naive comparison passed the cell through
+  // untouched — and an uncountable cell is the one most likely to be a person.
+  for (const row of [{ country: 'TCD' }, { country: 'TCD', count: undefined },
+                     { country: 'TCD', count: null }, { country: 'TCD', count: 'twelve' },
+                     { country: 'TCD', count: Number.NaN }]) {
+    const [out] = suppress([row], 10);
+    assert.equal(out.count, null, `${JSON.stringify(row)} must be suppressed`);
+    assert.equal(out.suppressed, true);
+  }
+  const [missing] = suppress([{ country: 'TCD' }], 10);
+  assert.equal(missing.why, 'no count', 'and it says why, so a zero is not confused with a gap');
+  // A numeric string from a CSV is a count, not a gap.
+  assert.equal(suppress([{ count: '12' }], 10)[0].count, '12');
+  assert.equal(suppress([{ count: '3' }], 10)[0].count, null);
+  // k is validated: 0 would switch the rule off entirely.
+  assert.throws(() => suppress([{ count: 1 }], 0), RangeError);
+});
+
 test('a rate always carries its denominator and flags small n', () => {
   const r = rate(1, 20);
   assert.equal(r.denominator, 20);
   assert.match(r.note, /small denominator/);
   assert.equal(rate(1, 0).value, null);
+});
+
+test('a negative numerator or denominator is refused, not returned as -20% (C13)', () => {
+  assert.throws(() => rate(1, -5), RangeError);
+  assert.throws(() => rate(-1, 5), RangeError);
+  assert.throws(() => rate(Number.NaN, 5), RangeError);
 });
 
 /* ---------- loop ---------- */

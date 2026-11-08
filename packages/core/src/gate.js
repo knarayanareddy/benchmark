@@ -26,6 +26,17 @@
 
 export const CHECKS = ['window', 'observable', 'single', 'no_leak', 'condition'];
 
+/** A resolution window shorter than this cannot be scored ahead of time. */
+export const MIN_WINDOW_DAYS = 1;
+/** Longer than this is not a forecast, it is a wish. */
+export const MAX_WINDOW_DAYS = 400;
+/**
+ * A card needs enough horizon for a panel to respond before it closes. Below
+ * this many days remaining, the release gate (`MIN_RELEASE_PANEL_SIZE = 5`)
+ * cannot fill in time, so the card is created unresolvable.
+ */
+export const MIN_DAYS_TO_FILL_PANEL = 5;
+
 export const SEVERITY = Object.freeze({
   BLOCKER: 'blocker',
   WARNING: 'warning',
@@ -75,6 +86,12 @@ function stripNonQuantityDigits(text) {
   return out;
 }
 
+/**
+ * Parse a resolution date. ISO (`YYYY-MM-DD`, `YYYY-MM`) is unambiguous; the
+ * ACAPS export's `DD-MM-YYYY` is only accepted when the day exceeds 12,
+ * because `01-02-2027` means 1 February to ACAPS and 2 January to most
+ * readers, and silently picking one is how a window moves by eleven months.
+ */
 function parseWindowDate(raw) {
   if (typeof raw !== 'string') return null;
   const s = raw.trim();
@@ -92,13 +109,15 @@ function parseWindowDate(raw) {
     }
     return ts;
   }
-  // ACAPS export DD-MM-YYYY or DD/MM/YYYY
+  // ACAPS export DD-MM-YYYY or DD/MM/YYYY — ambiguous when both parts are <= 12,
+  // so require the day to be unambiguous (13..31).
   m = /^(\d{2})[-/](\d{2})[-/](\d{4})$/.exec(s);
   if (m) {
     const day = Number(m[1]);
     const month = Number(m[2]);
     const year = Number(m[3]);
     if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    if (day <= 12 && month <= 12) return null; // ambiguous DD/MM vs MM/DD
     const ts = Date.UTC(year, month - 1, day);
     const d = new Date(ts);
     if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) {
@@ -122,7 +141,17 @@ export function hasObservableSignal(statement, objective = '') {
   return MEASURABLE_OR_EVENT.test(scrubbed);
 }
 
-export function gate(card) {
+export function gate(card, opts = {}) {
+  const now = opts.now === undefined ? Date.now() : Number(opts.now);
+  if (!Number.isFinite(now)) {
+    throw new RangeError(`gate() option now must be a finite epoch-ms number, got ${JSON.stringify(opts.now)}`);
+  }
+  const maxWindowDays = opts.maxWindowDays === undefined ? MAX_WINDOW_DAYS : opts.maxWindowDays;
+  const minWindowDays = opts.minWindowDays === undefined ? MIN_WINDOW_DAYS : opts.minWindowDays;
+  if (!Number.isFinite(maxWindowDays) || maxWindowDays <= 0) {
+    throw new RangeError(`gate() option maxWindowDays must be a positive number, got ${JSON.stringify(opts.maxWindowDays)}`);
+  }
+
   const isObj = card !== null && typeof card === 'object';
   const statement = isObj ? card.statement : card;
   if (!String(statement || '').trim()) {
@@ -134,11 +163,13 @@ export function gate(card) {
     return {
       ok: false,
       dispatchable: false,
+      scoreable: false,
       problems: ['statement is empty'],
       blockers: [emptyFailure],
       warnings: [],
       failed: [emptyFailure],
       results: [{ check: 'observable', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
+      window: null,
     };
   }
   const t = String(statement || '');
@@ -148,12 +179,34 @@ export function gate(card) {
   const fromTs = isObj ? parseWindowDate(card.window?.from) : null;
   const toTs = isObj ? parseWindowDate(card.window?.to) : null;
   const hasValidDates = fromTs !== null && toTs !== null;
+  const spanDays = hasValidDates ? (toTs - fromTs) / 86400000 : null;
   const windowReason = !hasValidDates
     ? 'no explicit resolution window (valid from/to dates required)'
-    : toTs < fromTs
-    ? 'resolution window ends before it starts'
+    : toTs <= fromTs
+    ? 'resolution window ends on or before it starts'
+    : spanDays < minWindowDays
+    ? `resolution window shorter than ${minWindowDays} day(s) — too short to forecast into`
+    : spanDays > maxWindowDays
+    ? `resolution window longer than ${maxWindowDays} days — not a forecastable card`
+    : toTs < now
+    ? 'resolution window has already closed — this card cannot be scored prospectively'
     : null;
   results.push(record('window', windowReason === null, windowReason));
+
+  // A card created with less runway than the release gate needs to reach a
+  // panel cannot ever be resolved. Advise rather than block: a short-fuse card
+  // is a scheduling mistake, not a malformed forecast, so it is a warning.
+  const daysToClose = hasValidDates && windowReason === null ? (toTs - now) / 86400000 : null;
+  if (daysToClose !== null && daysToClose < MIN_DAYS_TO_FILL_PANEL) {
+    results.push({
+      check: 'window',
+      severity: SEVERITY.WARNING,
+      ok: false,
+      reason:
+        `only ${daysToClose.toFixed(1)} day(s) until the window closes — the release gate needs ` +
+        `${MIN_DAYS_TO_FILL_PANEL}+ days to reach a panel of 5, so this card may be created unresolvable`,
+    });
+  }
 
   // Observable: authoring warning (SEVERITY.WARNING) when neither statement nor
   // objective names a numeric threshold, official classification, or discrete
@@ -190,13 +243,27 @@ export function gate(card) {
   const blockers = failed.filter((f) => f.severity === SEVERITY.BLOCKER);
   const warnings = failed.filter((f) => f.severity === SEVERITY.WARNING);
 
+  // Three distinct questions, deliberately not collapsed (Rule R5):
+  //   ok           — every check passed, warnings included
+  //   dispatchable — no hard structural blocker; the card may be shown
+  //   scoreable    — dispatchable AND resolvable against a written criterion
+  // `observable` is a warning because the lexical rule has a 22% false-warn
+  // rate on real ACLED prose. That is a reason not to *block*, not a reason to
+  // score a card whose resolution nobody wrote down — 101 of 139 scored triggers
+  // in the live export have no objective.
+  const dispatchable = blockers.length === 0;
+
   return {
     ok: failed.length === 0,
-    dispatchable: blockers.length === 0,
+    dispatchable,
+    scoreable: dispatchable && hasObservable,
     blockers,
     warnings,
     failed,
     results,
+    window: hasValidDates
+      ? { from: new Date(fromTs).toISOString().slice(0, 10), to: new Date(toTs).toISOString().slice(0, 10), spanDays }
+      : null,
   };
 }
 

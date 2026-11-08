@@ -57,6 +57,60 @@ test('dissent feedback is never suppressed by the cap', () => {
   assert.equal(fromNotifyShape[2].decision, 'defer', 'fourth regular notification defers at cap');
 });
 
+test('deferrals and suppressions never consume a weekly cap slot (C5)', () => {
+  const one = [{ type: TYPES.new_statement, card, expert: 'e1' }];
+
+  // `dispatch()`'s own output is the natural thing to persist, and it contains
+  // defer rows. Counting them meant three deferrals with nothing ever sent
+  // exhausted a cap of three — the retention mechanism starved itself.
+  const deferrals = Array.from({ length: 3 }, () => ({
+    type: TYPES.new_statement,
+    expert: 'e1',
+    decision: 'defer',
+  }));
+  assert.equal(dispatch(one, { perWeek: 3 }, deferrals)[0].decision, 'send');
+
+  const suppressed = Array.from({ length: 3 }, () => ({
+    type: TYPES.new_statement,
+    expert: 'e1',
+    decision: 'suppress',
+  }));
+  assert.equal(dispatch(one, { perWeek: 3 }, suppressed)[0].decision, 'send');
+
+  // Real sends and delivery timestamps still count.
+  const sends = Array.from({ length: 3 }, () => ({
+    type: TYPES.new_statement,
+    expert: 'e1',
+    decision: 'send',
+    sentAt: 1,
+  }));
+  assert.equal(dispatch(one, { perWeek: 3 }, sends)[0].decision, 'defer');
+
+  const delivered = Array.from({ length: 3 }, () => ({ type: TYPES.new_statement, expert: 'e1', deliveredAt: 1 }));
+  assert.equal(dispatch(one, { perWeek: 3 }, delivered)[0].decision, 'defer');
+
+  // Rows recorded before `decision` existed are sends.
+  const legacy = Array.from({ length: 3 }, () => ({ type: TYPES.new_statement, expert: 'e1' }));
+  assert.equal(dispatch(one, { perWeek: 3 }, legacy)[0].decision, 'defer');
+
+  // A nonsense cap is a programmer error, not a silent clamp.
+  assert.throws(() => dispatch(one, { perWeek: -1 }, []), RangeError);
+});
+
+test('a completion rate above 1 is flagged, not published as "200% complete"', () => {
+  const rows = health([
+    { type: 'sent', domain: 'x' },
+    { type: 'completed', domain: 'x' },
+    { type: 'completed', domain: 'x' },
+  ]);
+  assert.equal(rows[0].rate, 2);
+  assert.equal(rows[0].anomaly, true, 'two completions for one send is a broken event source, not a 200% rate');
+  assert.match(rows[0].anomalyReason, /check the event source/);
+
+  const normal = health([{ type: 'sent', domain: 'y' }, { type: 'completed', domain: 'y' }]);
+  assert.equal(normal[0].anomaly, false);
+});
+
 test('dissent feedback outranks everything else', () => {
   const out = dispatch(
     [

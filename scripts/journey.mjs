@@ -21,12 +21,18 @@ import { dispatch, DEFAULT_CAP, TYPES } from '../packages/core/src/dispatch.js';
 import { LEVELS } from '../packages/core/src/anonymity.js';
 import { compose, LOOP_KIND } from '../packages/shared/loop.js';
 
+// A deployment salt is mandatory for pseudonymous dissent (S3). The journey
+// used to run without one because the module silently fell back to a constant
+// committed to this repository — which meant every alias was precomputable.
+const SALT = 'journey-fixture-deployment-salt-2026';
+
 const d = newDissent({
   cardId: 'R1043',
   expert: 'e_8f21',
   country: 'TCD',
   kind: KIND.TWO_RISKS,
   text: 'This is a drought risk and a displacement risk.',
+  salt: SALT,
 });
 console.log(`1  raised      ${d.id}  state=${d.status}  by="${d.by}"`);
 

@@ -22,15 +22,36 @@ export function matches(card, declaration = {}) {
 }
 
 /**
+ * Was this history row actually delivered to a person?
+ *
+ * `dispatch()`'s own output is the natural thing to persist, and it contains
+ * `defer` and `suppress` rows. Counting those against the cap meant three
+ * deferrals with nothing ever sent exhausted a cap of three — the retention
+ * mechanism starved itself, permanently, on every run.
+ */
+function countsAgainstCap(h) {
+  if (!h || typeof h !== 'object') return false;
+  if (priority(h.type) === TYPES.dissent_actioned) return false; // bypasses the cap by design
+  // A row is a send unless it says otherwise. Rows written before `decision`
+  // existed are recorded sends; rows carrying `defer`/`suppress` are not.
+  if (h.decision === 'defer' || h.decision === 'suppress') return false;
+  if (h.suppressed) return false;
+  return true;
+}
+
+/**
  * @param {object[]} candidates [{type, card, expert, severity}]
  * @param {{perWeek:number}} cap
- * @param {object[]} history  notifications already sent this week
+ * @param {object[]} history  notifications actually sent this week
  */
 export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
   const perWeek = typeof cap === 'number' ? cap : cap.perWeek;
+  if (!Number.isInteger(perWeek) || perWeek < 0) {
+    throw new RangeError(`cap perWeek must be a non-negative integer, got ${JSON.stringify(perWeek)}`);
+  }
   const usedBy = new Map();
   for (const h of history) {
-    if (priority(h.type) === TYPES.dissent_actioned) continue;
+    if (!countsAgainstCap(h)) continue;
     const k = h.expert ?? h.expertId ?? h.to ?? '__unknown__';
     usedBy.set(k, (usedBy.get(k) || 0) + 1);
   }
@@ -78,9 +99,17 @@ export function health(events = [], { minCompletion = 0.2 } = {}) {
     if (e.type === 'completed') row.completed++;
     by.set(k, row);
   }
-  return [...by.values()].map((r) => ({
-    ...r,
-    rate: r.sent ? r.completed / r.sent : null,
-    uncovered: r.sent >= 5 && r.completed / r.sent < minCompletion,
-  }));
+  return [...by.values()].map((r) => {
+    // completions can exceed sends when a card is answered without a
+    // notification (or an event is double-counted). A rate above 1 is not a
+    // rate; flag it instead of publishing "200% completion".
+    const anomaly = r.sent > 0 && r.completed > r.sent;
+    return {
+      ...r,
+      rate: r.sent ? r.completed / r.sent : null,
+      uncovered: r.sent >= 5 && r.completed / r.sent < minCompletion,
+      anomaly,
+      anomalyReason: anomaly ? `${r.completed} completions for ${r.sent} sends — check the event source` : null,
+    };
+  });
 }

@@ -4,7 +4,7 @@
 
 ```
 $ npm run verify
-✓ 101 unit tests pass
+✓ 116 unit tests pass
 ✓ gate audits raw export without fake windows: 0/139 pass raw (no CSV deadline); 49/139 pass all 4 text checks; 3/139 hit structural blockers; 89/139 carry an observable warning (86.2% warn precision on 50 labelled items)
 ✓ five-state dissent loop, shared loop.js copy, de-identified card ledger, cap-bypass dispatch and anonymous opt-out verified
 ```
@@ -15,12 +15,12 @@ $ npm run verify
 
 | Module | File | State | Proof |
 |---|---|---|---|
-| **Shared spine** | `packages/shared/` | **Complete** | 18 tests — card, validation, loop, a11y |
+| **Shared spine** | `packages/shared/` | **Complete** | 22 tests — card, validation, loop, a11y |
 | Scoring | `packages/core/src/scoring.js` | **Complete** | Strict `[0, 1]` / `{0, 1, null}` boundary validation, Brier + bootstrap + paired comparison, 10 tests |
 | Aggregation | `packages/core/src/aggregate.js` | **Complete** | Pooling + variance-preserving smoothed bootstrap intervals, ≥10-seed Brier skill gate, `releaseAggregate()` (`n ≥ 5`, `<10` order-stat suppression, cohort batching), ACAPS 5×5 bridge, 27 tests |
-| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 13 tests |
-| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 6 tests |
-| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, 21 tests |
+| The Gate | `packages/core/src/gate.js` | **Complete** | 5 checks (4 structural blockers + `observable` warning calibrated on 50 labelled items), 14 tests |
+| Dispatch | `packages/core/src/dispatch.js` | **Complete** | Per-expert weekly cap, string/numeric dissent priority, health, 8 tests |
+| Anonymity | `packages/core/src/anonymity.js` | **Complete** | 3 levels, strict allowlist attribution, 9,000-slot / collision-free aliases, order-statistic inversion resistance, 29 tests |
 | Dissent loop | `packages/benchmark/src/dissent.js` | **Complete** | Strict 5-state lifecycle wired to `packages/shared/loop.js`, UUID IDs, contactable-notify guard + addressless `cardLedger()`, 6 tests + journey script |
 | Ingest | `scripts/ingest.py` | **Complete** | 139 blocks / 266 triggers → 104 resolved, matches the benchmark |
 | Interface | — | **Not written** | React + Vite PWA, per `design/BENCHMARK-blueprint.html` §11 |

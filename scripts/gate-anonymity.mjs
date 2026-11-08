@@ -39,17 +39,50 @@ for (const lvl of levels) {
 }
 
 // 3: no internal id survives attribution, at any level
-const fixture = { expertId: 'e-SECRET-001', name: 'Test Person', country: 'TCD', text: 'x', at: 'T' };
+const SALT = 'gate-anonymity-fixture-salt-2026';
+const fixture = { expertId: 'e-SECRET-001', name: 'Test Person', country: 'TCD', text: 'x', at: '2026-11-06T10:00:00Z' };
 for (const lvl of levels) {
-  const out = attribute(fixture, lvl);
+  const out = attribute(fixture, lvl, { salt: SALT });
   if ('expertId' in out) problems.push(`${lvl}: attribution leaks expertId`);
   if (JSON.stringify(out).includes('e-SECRET-001')) problems.push(`${lvl}: expertId survives in the payload`);
 }
 
-// 4: suppression
+// 3b: a bare `id` is ambiguous between contribution and contributor, and it
+// used to be on the ANONYMOUS allowlist. Every other module in this repo
+// accepts `id` on items, so a caller supplying one must still be safe.
+const withId = { ...fixture, id: 'e-SECRET-001' };
+for (const lvl of [...levels, 'unrecognised-level']) {
+  const out = attribute(withId, lvl, { salt: SALT });
+  if (out.id !== undefined) problems.push(`${lvl}: attribution echoed a bare \`id\` — an expert id can ride into an anonymous payload`);
+}
+
+// 3c: a pseudonym derived from a published constant is not a pseudonym.
+for (const bad of [undefined, 'dev-unsalted', 'v1', 'short']) {
+  let threw = false;
+  try { attribute(fixture, LEVELS.PSEUDONYMOUS, { salt: bad }); } catch { threw = true; }
+  if (!threw) problems.push(`PSEUDONYMOUS accepted ${JSON.stringify(bad)} as a deployment salt — aliases are precomputable from the repository`);
+}
+
+// 3d: the copy must not promise a capability the code does not have.
+const anonCopy = LEVEL_COPY[LEVELS.ANONYMOUS];
+if (anonCopy.capability !== 'none') {
+  problems.push(`ANONYMOUS claims capability "${anonCopy.capability}", but no sealed-record escrow exists`);
+}
+if (/sealed record|moderator can open|only the moderator/i.test(anonCopy.toAcaps)) {
+  problems.push('ANONYMOUS copy promises a sealed record that attribute() cannot keep — it strips the identifier');
+}
+
+// 4: suppression — including the counts it cannot prove
 const { published, suppressedCells } = publicable({ a: 9, b: 10 });
 if ('a' in published) problems.push('public output published a count of 9 — suppression is not working');
 if (suppressedCells !== 1) problems.push('suppression did not report the cell it dropped');
+const uncountable = publicable({ a: undefined, b: NaN, c: 12 });
+if ('a' in uncountable.published || 'b' in uncountable.published) {
+  problems.push('public output published a cell with no usable count — the one most likely to be a person');
+}
+let floorLowered = false;
+try { publicable({ a: 3 }, 1); floorLowered = true; } catch { /* expected */ }
+if (floorLowered) problems.push('publicable() allowed the k-anonymity floor to be lowered by its caller');
 if (PUBLIC.attributable !== false) problems.push('public output is marked attributable');
 
 // 5: the default is stated, and is not "identified"

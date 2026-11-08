@@ -7,30 +7,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22' }
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - name: Shared spine integrity
-        run: node scripts/check-spine.mjs
-      - name: Unit tests
-        run: npm run test
-      - name: Privacy gate
-        run: node scripts/gate-privacy.mjs
-      - name: Anonymity Must Have
-        run: node scripts/gate-anonymity.mjs
-      - name: Ingest the real export
+
+      # CI used to re-list every gate by hand. It drifted: the numbers gate and
+      # the privacy gate were both added to package.json before they were added
+      # here, so for two commits CI was green on a tree `npm run verify` rejected.
+      # One entry point, asserted by scripts/check-ci.mjs.
+      - name: Full verification (tests + every gate)
+        run: npm run verify
+
+      - name: Ingest the published export from scratch
         run: python3 scripts/ingest.py
-      - name: Check the export against ACAPS' published 5x5
-        run: node scripts/check-methodology.mjs
-      - name: Gate the real export (acceptance test #9)
-        run: node scripts/gate-export.mjs
-      - name: Measure the baselines (writes data/baseline-fit.json)
-        run: npm run ladder
-      - name: the committed data must match a fresh ingest
+
+      - name: The committed data must match a fresh ingest
         run: git diff --exit-code data/
-      - name: Numbers gate — no unreproducible figure survives
-        run: node scripts/numbers-gate.mjs
-      - name: Dissent loop journey (acceptance test #7)
-        run: node scripts/journey.mjs
+
       - name: Backtest harness
         run: node scripts/backtest.mjs

@@ -1,0 +1,15 @@
+{
+  "name": "@benchmark/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Validation, card assembly and the contribution loop shared by every surface.",
+  "exports": {
+    ".": "./index.js",
+    "./validate": "./validate.js",
+    "./card": "./card.js",
+    "./loop": "./loop.js"
+  },
+  "sideEffects": false,
+  "files": ["*.js"]
+}
