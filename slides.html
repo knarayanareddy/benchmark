@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ground Truth Circle: two slides</title>
+<title>Ground Truth Circle: two slides (v2)</title>
 <style>
   :root{
     --bg:#0f1b2d; --bg2:#14233a; --ink:#f4efe6; --mute:#9fb0c6; --line:#27405f;
@@ -127,15 +127,15 @@
     <div class="kicker">The problem</div>
     <div class="grid">
       <div>
-        <h1>Humanitarian risk ratings are judgments. <em>We rarely learn how well they hold up.</em></h1>
-        <p class="lead">Analysts rate each risk from Very Low to Very High. Years later we know what happened, but there is no routine way to score the ratings, learn from the experts who saw it coming, or tell good judgment from lucky guesses.</p>
+        <h1>In a crisis, the people who know the ground truth are hard to find, <em>hard to weigh, and often cannot speak freely.</em></h1>
+        <p class="lead">Where data is thin and access is limited, expert opinion is often the best signal there is. But it arrives unscored and unweighted, from people who may be at risk for what they say. Analysts cannot tell whose judgment holds up.</p>
         <div class="stats">
-          <div class="stat"><b data-to="139">0</b><span>risks tracked on the ACAPS radar</span></div>
+          <div class="stat"><b data-to="139">0</b><span>risks on the ACAPS radar</span></div>
           <div class="stat"><b data-to="104">0</b><span>have a known outcome</span></div>
           <div class="stat"><b data-to="61" style="color:var(--coral)">0</b><span>materialised</span></div>
           <div class="stat"><b data-to="43" style="color:var(--teal)">0</b><span>did not</span></div>
         </div>
-        <div class="callout">ACAPS's ratings score 0.217 against 0.243 for always guessing the base rate. Better, but only about 1.6 standard errors apart on 104 risks: suggestive, not proven.
+        <div class="callout">The one place we can check: 104 ACAPS risks with known outcomes. Their ratings score 0.217 against 0.243 for always guessing the base rate. Better, but only about 1.6 standard errors apart: suggestive, not proven.
           <small>Brier score, lower is better. Computed from the ACAPS risk radar export in our repo.</small></div>
         <div style="margin-top: 3.2vh; display: flex; gap: 14px; align-items: center;">
           <button class="btn-cta" onclick="event.stopPropagation(); go(1)">
@@ -151,14 +151,7 @@
         <div class="dots" id="dots" aria-hidden="true"></div>
         <div class="legend"><span><i style="background:var(--coral)"></i>materialised (61)</span><span><i style="background:var(--teal)"></i>did not (43)</span><span><i style="background:#34507a"></i>still open or unscored (35)</span></div>
 
-        <div style="margin-top: 2.8vh; display: flex; gap: 14px; align-items: center;">
-          <a href="https://ground-truth-circle.onrender.com/" class="btn-cta" onclick="event.stopPropagation()">
-            Continue to Live Demo ⚡ (ground-truth-circle.onrender.com) →
-          </a>
-          <button class="btn-secondary" onclick="event.stopPropagation(); go(0)">
-            ← Back to Slide 1
-          </button>
-        </div>
+
       </div>
     </div>
     <div class="foot"><span>Ground Truth Circle</span><span class="tag">1 / 2</span></div>
@@ -171,10 +164,10 @@
     <p class="lead">An invitation-only circle of humanitarian experts forecasts short, resolvable questions drawn from ACAPS's own risks.</p>
 
     <div class="steps">
-      <div class="step"><div class="num">1</div><h3>Ask</h3><p>A risk becomes a precise question with a window and a public source that will settle it.</p></div>
+      <div class="step"><div class="num">1</div><h3>Ask</h3><p>A risk becomes a precise question with a window and a public source that will settle it, sent to experts who know that country or theme.</p></div>
       <div class="step"><div class="num">2</div><h3>Estimate, blind</h3><p>Each expert gives a probability before seeing ACAPS's reading or anyone else's.</p></div>
       <div class="step"><div class="num">3</div><h3>See the picture</h3><p>The circle's pooled range, ACAPS's reading and your own mark, side by side. You may revise.</p></div>
-      <div class="step"><div class="num">4</div><h3>Resolve and score</h3><p>When the source settles it, every forecast is scored, so the circle learns who is well calibrated.</p></div>
+      <div class="step"><div class="num">4</div><h3>Resolve and score</h3><p>When the source settles it, each forecast can be scored against the outcome, so reliability is measured, not assumed.</p></div>
     </div>
 
     <div class="pic">
@@ -197,7 +190,7 @@
           <span class="chip">Simulated numbers always labelled</span>
         </div>
 
-        <div style="margin-top: 2.8vh; display: flex; gap: 14px; align-items: center;">
+        <div style="margin-top: 3.2vh; display: flex; gap: 14px; align-items: center;">
           <a href="https://ground-truth-circle.onrender.com/" class="btn-cta" onclick="event.stopPropagation()">
             Continue to Live Demo ⚡ (ground-truth-circle.onrender.com) →
           </a>
@@ -205,6 +198,8 @@
             ← Back to Slide 1
           </button>
         </div>
+
+
       </div>
     </div>
     <div class="foot"><span>Illustrative picture. A power simulation (synthetic) sizes the pilot.</span><span class="tag">2 / 2</span></div>
