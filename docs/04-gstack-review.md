@@ -3,6 +3,13 @@
 **Target** `298db1b` on `arena/1fc69471-benchmark` · Node 22.22.3 · Python 3.11.2
 **Method** Every file in `packages/` and `scripts/` read line by line; `npm run verify` run on the working tree **and** on a fresh `git clone`; `ingest.py` and `ladder` re-run and diffed; then ~70 adversarial probes executed against every exported function. **[run]** = reproduced by executing code. **[read]** = proven by inspection only. Numbers below are outputs, not recollections.
 
+> **Status (2026-11-08).** Remediation has landed. 37 of the 43 findings are
+> fixed and held by a test or a gate; the six that are not are named, with
+> reasons, in [Remediation status](#remediation-status) at the end of this
+> document. `npm run verify` runs 13 gates and 117 tests and is green on a fresh
+> clone. The findings below are preserved as written — they are the evidence, and
+> rewriting them after the fact would destroy the only record of what was wrong.
+
 ---
 
 ## Verdict
