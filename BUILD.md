@@ -86,7 +86,7 @@ $ npm run verify
 | Statistics | `packages/core/src/stats.js` | **Complete** | Wilson intervals and Cohen's kappa against published values, 4 tests |
 | CSV | `packages/core/src/csv.js` | **Complete** | RFC 4180 parser and writer; round-trips the real worklist, 6 tests |
 | Authoring | `packages/core/src/authoring.js` | **Complete** | Triage of every headline and trigger, one card-validation rule shared with the service, a filled-worklist importer, and a two-rater scorer that refuses disagreeing raters, 9 tests |
-| Deployment | `Dockerfile`, `deploy/` | **Built and boot-checked in CI; not deployed** | Compose file for Postgres + service + Caddy (automatic HTTPS). The `docker` workflow builds the image, runs the migration, starts Postgres and the service (not Caddy), and checks `GET /api/config`. Not checked: Caddy and HTTPS, real SSO, backup and restore. The image copies `data/risk-radar.json`; the compose file needs no radar mount. See `docs/07-deploy.md` |
+| Deployment | `Dockerfile`, `deploy/` | **Not verified: CI job added, not green yet** | Compose file for Postgres + service + Caddy (automatic HTTPS). The `docker` workflow builds the image, runs the migration, starts Postgres and the service (not Caddy), and checks `GET /api/config`; its first run failed at the migration step. Not checked: Caddy and HTTPS, real SSO, backup and restore. The image copies `data/risk-radar.json`; the compose file needs no radar mount. See `docs/07-deploy.md` |
 
 ---
 
