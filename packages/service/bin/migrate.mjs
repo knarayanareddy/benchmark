@@ -21,8 +21,8 @@ for (const k of required) {
   if (!env[k]) { console.error(`missing ${k}`); process.exit(2); }
 }
 const { default: pg } = await import('pg');
-const db = new pg.Client({ connectionString: env.OWNER_DATABASE_URL });
-await db.connect();
+// migrate() checks a connection out of a pool; a bare pg.Client cannot be connected twice.
+const db = new pg.Pool({ connectionString: env.OWNER_DATABASE_URL });
 try {
   if (status) {
     const have = (await db.query("select to_regclass('public.schema_migrations') as t")).rows[0].t

@@ -1,6 +1,8 @@
 # Deploying the service
 
-**Status: written, not run.** Docker was not available where this was developed (no daemon), so the `Dockerfile` and `deploy/` files have never been built or executed. What *was* run: the service against a real Postgres wire protocol (the `pg` client), the migration SQL and role grants on a Postgres engine, and the pages in a browser against the Node process. Treat the container files as a starting point to test, not a tested artefact.
+**Status: build, migration, service start-up and the `/api/config` check pass in CI (run 42463970811); Caddy/HTTPS, real SSO and backup/restore are not checked.** A `docker` workflow (`.github/workflows/docker.yml`, on changes to the `Dockerfile`, `deploy/`, or `packages/service/`) builds the image and smoke-tests the stack: Postgres, the migration, then the service from `deploy/docker-compose.yml` (Caddy is not started), checking that `GET /api/config` returns 200 within 60 seconds with exactly the four boolean keys. It also sets a throwaway blind-signing key and checks that `deviceKeys` is true, which proves the key-file mount works. Those secrets are generated on the runner and never committed. The first run found that the migration CLI failed at start-up (`packages/service/bin/migrate.mjs` connected a client, then `migrate()` connected it again); it now uses a pool, and the job passes.
+
+**Not checked by CI:** Caddy and HTTPS (the certificate, the redirect, the 64 KB body limit), sign-in through a real identity provider (CI sets OIDC variables but never signs in), backup and restore, the upgrade path on a database that already holds data, and the risk browser's content (CI does not assert that the radar loads).
 
 ## What you need
 
@@ -26,6 +28,8 @@ Forward-only. There is no `down`: a destructive change ships in two releases, **
 
 ## Optional features
 
+With compose, name the key files in `deploy/.env` (`BLIND_KEY_FILE`, `BREAKGLASS_PUBLIC_KEY_FILE`) as host paths. Compose mounts each read-only into the app container at `/run/secrets/` and points the service at that path. Leave them empty to switch the feature off.
+
 | Feature | Turn on | Leave off and |
 |---|---|---|
 | Device-held anonymous keys | `node packages/service/bin/blind-keygen.mjs > blind-key.pem`, set `BENCHMARK_BLIND_KEY` or `BENCHMARK_BLIND_KEY_FILE` (`deviceKeys` in `/api/config`) | the option is not offered |
@@ -39,7 +43,7 @@ Forward-only. There is no `down`: a destructive change ships in two releases, **
 
 **Demo mode must never run on a real pilot database, and never on a public URL that real experts use.** With `BENCHMARK_DEMO=1` the service seeds a synthetic panel and demo questions into whatever database it is given and lets anyone open an account without an invite. It also registers two moderator credentials for the showcase: random per boot (or exactly two values in `BENCHMARK_DEMO_STAFF_CREDENTIALS`), printed to the server console only and never served over HTTP. They work only when OIDC is not configured (`OIDC_ISSUER` unset). Anyone who can read the console or the log can sign in as a moderator, so keep that log private. With `DATABASE_URL` set the service refuses to start unless `BENCHMARK_DEMO_ALLOW_DATABASE=1` is also set. Demo data is labelled, but only the second-look analysis skips it: it still flows through released aggregates (`docs/05-service-and-privacy.md`), which is why a demo deployment must not share a database with a pilot.
 
-**The risk radar is copied into the container image.** The `Dockerfile` copies `data/risk-radar.json` (the organisers' export, already in the repository) to `/app/data/`, and `.dockerignore` re-includes that one file while excluding the rest of `data/`. The compose file needs no radar mount. To use a different export, set `BENCHMARK_RADAR_FILE` to a path inside the container and mount that file there (for example a read-only bind mount or a Docker secret). The service never serves the file itself. The image has not been built, so the copy is untested.
+**The risk radar is copied into the container image.** The `Dockerfile` copies `data/risk-radar.json` (the organisers' export, already in the repository) to `/app/data/`, and `.dockerignore` re-includes that one file while excluding the rest of `data/`. The compose file needs no radar mount. To use a different export, set `BENCHMARK_RADAR_FILE` to a path inside the container and mount that file there (for example a read-only bind mount or a Docker secret). The service never serves the file itself. CI builds the image but does not check that the copy is there or loads.
 
 Who maintains the sensitive-country list, who moderates the roundtable, and who is the second reviewer of a publication are decisions for ACAPS, not settings (`docs/09-roundtable-and-credit.md`).
 
