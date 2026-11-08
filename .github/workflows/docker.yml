@@ -18,10 +18,11 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      SMOKE_DIR: ${{ runner.temp }}/smoke
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set the scratch directory
+        run: echo "SMOKE_DIR=$RUNNER_TEMP/smoke" >> "$GITHUB_ENV"
 
       - name: Build the image
         timeout-minutes: 15
