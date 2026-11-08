@@ -1,383 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ground Truth Circle — Web Desktop Live Preview & Evaluation Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecting to Ground Truth Circle…</title>
+  <meta http-equiv="refresh" content="0; url=https://ground-truth-circle.onrender.com/">
+  <link rel="canonical" href="https://ground-truth-circle.onrender.com/">
+  <script>
+    const target = "https://ground-truth-circle.onrender.com" + window.location.pathname.replace(/^\/benchmark/, '') + window.location.search + window.location.hash;
+    window.location.replace(target || "https://ground-truth-circle.onrender.com/");
+  </script>
   <style>
     body {
-      background-color: #f6f3ee;
-      color: #1c2430;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
     }
-    .font-serif {
-      font-family: 'Newsreader', Georgia, serif;
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #1f2937;
+      border-top-color: #14b8a6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
     }
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
-    .glow-teal {
-      box-shadow: 0 10px 40px rgba(13, 148, 136, 0.12);
+    a {
+      color: #14b8a6;
+      font-weight: 600;
+      text-decoration: underline;
     }
   </style>
 </head>
-<body class="p-4 sm:p-6 lg:p-8 antialiased selection:bg-teal-700 selection:text-white">
-  <div class="mx-auto max-w-6xl space-y-8">
-
-    <!-- Header Banner -->
-    <header class="rounded-3xl border border-stone-200/90 bg-white p-6 sm:p-8 shadow-sm">
-      <div class="flex flex-wrap items-center justify-between gap-6">
-        <div class="flex items-center gap-4">
-          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-xl font-bold text-white shadow-md shadow-teal-900/20">◉</span>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="rounded-full bg-teal-100 px-3 py-0.5 text-xs font-semibold text-teal-800">ACAPS × HFG #8</span>
-              <span class="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Production Web Desktop Backend Online
-              </span>
-            </div>
-            <h1 class="font-serif text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl mt-1">
-              Ground Truth Circle — Web Desktop Live Preview
-            </h1>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-2.5">
-          <a
-            id="openAppExternalBtn"
-            href="https://54080560902e24.lhr.life/pulse"
-            target="_blank"
-            class="rounded-xl bg-teal-700 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow transition hover:bg-teal-800"
-          >
-            Open Web App in New Tab ↗
-          </a>
-          <a
-            href="GroundTruthCircle.apk"
-            download
-            class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50"
-          >
-            Download APK (6.4 MB) ↓
-          </a>
-        </div>
-      </div>
-
-      <p class="mt-4 text-sm text-slate-600 leading-relaxed max-w-4xl">
-        This is the full web desktop application running with live PostgreSQL database connectivity. Evaluators can test the 90-second Delphi elicitation cards, interactive probability intervals, in-page persona switching across Pulse, My Space, and the 6-post active Roundtable debate (Chad / Sudan border insecurity).
-      </p>
-    </header>
-
-    <!-- SECTION 1: INTERACTIVE DESKTOP BROWSER VIEWPORT FRAME -->
-    <section class="space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>🖥️ Live Desktop Viewport</span>
-            <span class="rounded bg-teal-100 text-teal-800 text-[11px] font-semibold px-2 py-0.5">FULL INTERACTIVE APPLICATION</span>
-          </h2>
-          <p class="text-xs text-slate-500">
-            Interact with the real web application directly below or switch routes via the browser chrome:
-          </p>
-        </div>
-
-        <!-- Quick Route Switches -->
-        <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-medium">
-          <button onclick="navDesktop('/pulse')" class="route-btn active rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold shadow-sm">⚡ Pulse Feed</button>
-          <button onclick="navDesktop('/risks/R1043')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">💬 Roundtable (R1043)</button>
-          <button onclick="navDesktop('/risks')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">📊 Risk Radar</button>
-          <button onclick="navDesktop('/moderator/evolution')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">📈 Evolution</button>
-          <button onclick="navDesktop('/honour')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">🏆 Honour Roll</button>
-          <button onclick="navDesktop('/me')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">👤 My Space</button>
-          <button onclick="navDesktop('/moderator')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">🛡️ Moderator</button>
-        </div>
-      </div>
-
-      <!-- DESKTOP BROWSER CHROME CONTAINER -->
-      <div class="rounded-2xl border border-stone-300/90 bg-white shadow-xl glow-teal overflow-hidden">
-        
-        <!-- Browser Top Bar (Traffic lights + Omnibox) -->
-        <div class="flex items-center justify-between border-b border-stone-200 bg-stone-100/90 px-4 py-2.5 select-none">
-          <div class="flex items-center gap-2">
-            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
-            <span class="h-3 w-3 rounded-full bg-amber-400"></span>
-            <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
-            <div class="ml-2 flex items-center gap-1 text-stone-500">
-              <button onclick="desktopBack()" class="rounded p-1 hover:bg-stone-200 text-xs">←</button>
-              <button onclick="desktopReload()" class="rounded p-1 hover:bg-stone-200 text-xs">↻</button>
-            </div>
-          </div>
-
-          <!-- Omnibox URL Bar -->
-          <div class="flex flex-1 max-w-lg mx-4 items-center justify-between rounded-lg border border-stone-300 bg-white px-3 py-1 text-xs font-mono text-slate-600 shadow-inner">
-            <div class="flex items-center gap-1.5 truncate">
-              <span class="text-emerald-600 font-bold">🔒</span>
-              <span id="omniboxText" class="truncate">https://54080560902e24.lhr.life/pulse</span>
-            </div>
-            <button onclick="openCurrentInNewTab()" class="text-stone-400 hover:text-teal-700 ml-2" title="Open active route in new tab">↗</button>
-          </div>
-
-          <div class="flex items-center gap-2 text-xs">
-            <span class="rounded bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800 text-[10px]">TLS 1.3</span>
-          </div>
-        </div>
-
-        <!-- Desktop Web App Iframe -->
-        <div class="relative w-full h-[820px] bg-[#f6f3ee]">
-          <iframe
-            id="desktopIframe"
-            src="https://54080560902e24.lhr.life/pulse"
-            class="w-full h-full border-0 bg-[#f6f3ee]"
-            title="Ground Truth Circle Desktop Application"
-          ></iframe>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SECTION 2: INTERACTIVE PERSONA SWITCHER SHORTCUTS -->
-    <section class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 class="font-serif text-xl font-bold text-slate-900">
-            Quick Persona Switcher Shortcuts
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Click any persona card below to instantly set the session cookie and load that identity inside the desktop frame:
-          </p>
-        </div>
-        <button
-          onclick="navDesktop('/join?returnTo=/pulse')"
-          class="rounded-xl border border-teal-700 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100"
-        >
-          + Join / Create New Profile
-        </button>
-      </div>
-
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Fatime -->
-        <button
-          onclick="switchPersonaAndNav(2, '/pulse', this)"
-          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
-        >
-          <span class="text-xs font-bold uppercase text-teal-700">Alias · Local NGO</span>
-          <div class="mt-1 font-semibold text-sm text-slate-900">Fatimé Abakar</div>
-          <div class="text-xs text-stone-500">Saffron Otter · Chad</div>
-          <div class="mt-2 text-xs font-medium text-teal-700">Load Pulse Feed →</div>
-        </button>
-
-        <!-- Claire -->
-        <button
-          onclick="switchPersonaAndNav(4, '/me', this)"
-          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
-        >
-          <span class="text-xs font-bold uppercase text-teal-700">On The Stage · Named</span>
-          <div class="mt-1 font-semibold text-sm text-slate-900">Dr. Claire Nguema</div>
-          <div class="text-xs text-stone-500">Tidal Civet · Sahel / Chad</div>
-          <div class="mt-2 text-xs font-medium text-teal-700">Load My Space →</div>
-        </button>
-
-        <!-- Idriss -->
-        <button
-          onclick="switchPersonaAndNav(3, '/risks/R1043', this)"
-          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
-        >
-          <span class="text-xs font-bold uppercase text-teal-700">Sealed · Early Warning</span>
-          <div class="mt-1 font-semibold text-sm text-slate-900">Idriss Mahamat</div>
-          <div class="text-xs text-stone-500">Coral Marten · Chad</div>
-          <div class="mt-2 text-xs font-medium text-teal-700">Load Unlocked Roundtable →</div>
-        </button>
-
-        <!-- Moderator -->
-        <button
-          onclick="switchPersonaAndNav(1, '/moderator', this)"
-          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
-        >
-          <span class="text-xs font-bold uppercase text-teal-700">ACAPS Moderator</span>
-          <div class="mt-1 font-semibold text-sm text-slate-900">ACAPS Moderator</div>
-          <div class="text-xs text-stone-500">Moderator Console &amp; Lab</div>
-          <div class="mt-2 text-xs font-medium text-teal-700">Load Console →</div>
-        </button>
-      </div>
-
-      <div id="switchStatusNotice" class="hidden rounded-xl bg-teal-50 p-2.5 text-xs text-teal-800 font-medium"></div>
-    </section>
-
-    <!-- SECTION 3: QUICK NAVIGATION HUB CARDS -->
-    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div
-        onclick="navDesktop('/me')"
-        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
-      >
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-teal-700">My Space</span>
-          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
-        </div>
-        <div class="mt-1 font-semibold text-sm text-slate-900">Personal Privacy &amp; Calibration</div>
-        <div class="mt-1 text-xs text-slate-500">
-          Manage anonymity levels, edit full profile details, and inspect personal calibration mirror.
-        </div>
-      </div>
-
-      <div
-        onclick="navDesktop('/risks/R1043')"
-        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
-      >
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-teal-700">Roundtable (R1043)</span>
-          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
-        </div>
-        <div class="mt-1 font-semibold text-sm text-slate-900">Structured Debate</div>
-        <div class="mt-1 text-xs text-slate-500">
-          Participate as any expert persona, see unlocked debate, and switch personas inline.
-        </div>
-      </div>
-
-      <div
-        onclick="navDesktop('/pulse')"
-        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
-      >
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-teal-700">Pulse</span>
-          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
-        </div>
-        <div class="mt-1 font-semibold text-sm text-slate-900">Expert Asks &amp; Radar</div>
-        <div class="mt-1 text-xs text-slate-500">
-          90-second cards tailored to each expert's country and thematic domain.
-        </div>
-      </div>
-
-      <div
-        onclick="navDesktop('/moderator')"
-        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
-      >
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase text-teal-700">Moderator Console</span>
-          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
-        </div>
-        <div class="mt-1 font-semibold text-sm text-slate-900">Dispatch &amp; Integrity</div>
-        <div class="mt-1 text-xs text-slate-500">
-          Dispatch lab, dissent loop desk, integrity anomaly radar, and outcome resolution.
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 4: PRODUCT DEMO SHOWCASE FILM -->
-    <section class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>🎬 Product Demo Showcase Film</span>
-            <span class="rounded bg-teal-100 text-teal-800 text-[10px] font-mono px-2 py-0.5 font-bold">1080P · SUNO SPEECH</span>
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Full narrative overview of the Ground Truth Circle protocol &amp; architecture:</p>
-        </div>
-        <span class="text-xs font-mono text-slate-400">Duration: 01:56</span>
-      </div>
-
-      <div class="aspect-video w-full rounded-xl bg-black overflow-hidden shadow-md">
-        <video id="demoVideo" controls poster="s01.png" class="w-full h-full object-contain">
-          <source src="ground-truth-circle-demo.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      </div>
-
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium">
-        <span class="text-[11px] uppercase tracking-wider text-amber-600 font-bold mr-1">Seek:</span>
-        <button onclick="seekVideo(0, this)" class="chap-btn active whitespace-nowrap rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold">0:00 · 1. Dilemma</button>
-        <button onclick="seekVideo(17.5, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:17 · 2. Participation</button>
-        <button onclick="seekVideo(35.4, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:35 · 3. 90s Forecast</button>
-        <button onclick="seekVideo(51.6, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:51 · 4. Consensus</button>
-        <button onclick="seekVideo(67.0, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:07 · 5. Systemic DAG</button>
-        <button onclick="seekVideo(84.2, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:24 · 6. Time Saving</button>
-        <button onclick="seekVideo(100.8, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:40 · 7. Mobile APK</button>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="pt-4 pb-12 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 border-t border-stone-200">
-      <div>
-        Ground Truth Circle · Built for Hackathon for Good #8 (The Hague) · ACAPS Challenge
-      </div>
-      <div class="flex items-center gap-4">
-        <a href="https://github.com/knarayanareddy/benchmark" target="_blank" class="hover:text-slate-900 transition font-medium">GitHub Repository</a>
-        <a href="GroundTruthCircle.apk" download class="hover:text-slate-900 transition font-medium">Download APK (6.4 MB)</a>
-      </div>
-    </footer>
-
-  </div>
-
-  <script>
-    const backendBase = 'https://54080560902e24.lhr.life';
-    const iframe = document.getElementById('desktopIframe');
-    const omnibox = document.getElementById('omniboxText');
-
-    function navDesktop(path) {
-      const url = backendBase + path;
-      iframe.src = url;
-      omnibox.textContent = url;
-      document.getElementById('openAppExternalBtn').href = url;
-
-      // Update route buttons styling
-      document.querySelectorAll('.route-btn').forEach(btn => {
-        btn.className = 'route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100';
-      });
-      const matchingBtn = [...document.querySelectorAll('.route-btn')].find(b => b.getAttribute('onclick')?.includes(path));
-      if (matchingBtn) {
-        matchingBtn.className = 'route-btn active rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold shadow-sm';
-      }
-    }
-
-    function desktopReload() {
-      iframe.contentWindow.location.reload();
-    }
-
-    function desktopBack() {
-      try {
-        iframe.contentWindow.history.back();
-      } catch (e) {
-        navDesktop('/pulse');
-      }
-    }
-
-    function openCurrentInNewTab() {
-      window.open(omnibox.textContent, '_blank');
-    }
-
-    async function switchPersonaAndNav(id, targetPath, btn) {
-      const notice = document.getElementById('switchStatusNotice');
-      notice.classList.remove('hidden');
-      notice.textContent = `Switching persona to ID ${id} and loading ${targetPath}…`;
-
-      try {
-        await fetch(`${backendBase}/api/session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expertId: id }),
-          credentials: 'include'
-        });
-      } catch (err) {
-        console.warn('Direct fetch note:', err);
-      }
-
-      navDesktop(targetPath);
-      setTimeout(() => {
-        notice.classList.add('hidden');
-      }, 2500);
-    }
-
-    // Video Seek
-    const video = document.getElementById('demoVideo');
-    function seekVideo(sec, btn) {
-      video.currentTime = sec;
-      video.play();
-      document.querySelectorAll('.chap-btn').forEach(b => {
-        b.className = 'chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100';
-      });
-      btn.className = 'chap-btn active whitespace-nowrap rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold';
-    }
-  </script>
+<body>
+  <div class="spinner"></div>
+  <h2 style="margin: 0 0 10px 0; font-size: 20px;">Connecting to Ground Truth Circle on Render…</h2>
+  <p style="color: #9ca3af; font-size: 14px; max-width: 400px; margin: 0 0 20px 0;">
+    Forwarding to the live production server and PostgreSQL database.
+  </p>
+  <p style="font-size: 13px;">
+    If you are not redirected automatically, <a href="https://ground-truth-circle.onrender.com/">click here to enter Ground Truth Circle</a>.
+  </p>
 </body>
 </html>
