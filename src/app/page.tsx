@@ -35,11 +35,11 @@ export default async function Home() {
   const experts = w.experts.filter((e) => !e.isModerator);
   const open = w.questions.filter((q) => q.status === "open");
   const byName = (n: string) =>
-    w.experts.find((e) => e.realName.startsWith(n))!;
-  const fat = byName("Fatimé"),
-    idr = byName("Idriss"),
-    cla = byName("Dr. Claire"),
-    mod = w.experts.find((e) => e.isModerator)!;
+    w.experts.find((e) => e.realName && e.realName.toLowerCase().includes(n.toLowerCase())) || w.experts[0];
+  const fat = byName("Fat") || w.experts[0],
+    idr = byName("Idr") || w.experts[0],
+    cla = byName("Claire") || w.experts[0],
+    mod = w.experts.find((e) => e.isModerator) || w.experts[0];
   const dissents = w.dissents.length;
   const linksCount = w.cardLinks.length;
   return (
