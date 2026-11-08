@@ -13,6 +13,11 @@
  *     5. `condition` — catches statements of actor intent rather than
  *        observable external conditions.
  *
+ *   `ok` vs `dispatchable`: `ok` is true only when every check passes (warnings
+ *   included); `dispatchable` is true when no BLOCKER failed, so a card with
+ *   only an `observable` warning is `ok: false, dispatchable: true`.
+ *   An empty statement fails a separate `statement` blocker, not `observable`.
+ *
  *   Authoring warning (`ok: false`, `dispatchable: true` when only warnings fire):
  *     2. `observable` — lexical heuristic flagging statements that carry
  *        neither a numeric threshold (excluding calendar dates and proper-noun
@@ -24,6 +29,8 @@
  *        (measured by `evaluateObservable()` on 50 labelled corpus items).
  */
 
+import { wilson } from './stats.js';
+
 export const CHECKS = ['window', 'observable', 'single', 'no_leak', 'condition'];
 
 export const SEVERITY = Object.freeze({
@@ -33,6 +40,7 @@ export const SEVERITY = Object.freeze({
 
 export const CHECK_SEVERITY = Object.freeze({
   window: SEVERITY.BLOCKER,
+  statement: SEVERITY.BLOCKER,
   observable: SEVERITY.WARNING,
   single: SEVERITY.BLOCKER,
   no_leak: SEVERITY.BLOCKER,
@@ -48,6 +56,9 @@ const LEAK = [
   /\bto be revised\b/gi,
   /\bcontinued deterioration\b/gi,
   /\blikely to escalate\b/gi,
+  // Presupposes the trend ("is poised to deteriorate") without naming a threshold.
+  /\b(?:poised|projected|forecast|anticipated|predicted|bound|set|likely|certain|sure|due)\s+to\s+(?:worsen|deteriorate|escalate|intensify|spike|surge|rise|increase|decline|collapse|spread)\b/gi,
+  /\b(?:already|increasingly|steadily|rapidly)\s+(?:worsening|escalating|intensifying|deepening|spreading|collapsing)\b/gi,
 ];
 
 const INTENT = [/\bwill continue to\b/i, /\bintends?\b/i, /\bplans? to\b/i, /\baims? to\b/i];
@@ -127,7 +138,7 @@ export function gate(card) {
   const statement = isObj ? card.statement : card;
   if (!String(statement || '').trim()) {
     const emptyFailure = {
-      check: 'observable',
+      check: 'statement',
       severity: SEVERITY.BLOCKER,
       reason: 'statement is empty',
     };
@@ -138,7 +149,7 @@ export function gate(card) {
       blockers: [emptyFailure],
       warnings: [],
       failed: [emptyFailure],
-      results: [{ check: 'observable', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
+      results: [{ check: 'statement', severity: SEVERITY.BLOCKER, ok: false, reason: 'statement is empty' }],
     };
   }
   const t = String(statement || '');
@@ -262,6 +273,10 @@ export function evaluateObservable(examples) {
     warnRecall: totalNeedsObjective ? tpWarn / totalNeedsObjective : null,
     falseWarnRate: n - totalNeedsObjective > 0 ? fpWarn / (n - totalNeedsObjective) : null,
     accuracy: (tpWarn + tnPass) / n,
+    // 95% Wilson intervals: at n=50 a headline proportion is only good to about +/-12 points.
+    warnPrecisionCI: totalWarns ? wilson(tpWarn, totalWarns) : null,
+    warnRecallCI: totalNeedsObjective ? wilson(tpWarn, totalNeedsObjective) : null,
+    falseWarnRateCI: n - totalNeedsObjective > 0 ? wilson(fpWarn, n - totalNeedsObjective) : null,
     disagreements,
   };
 }

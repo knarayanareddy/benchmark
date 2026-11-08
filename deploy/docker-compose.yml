@@ -1,0 +1,72 @@
+# A single-host deployment: Postgres + the service + Caddy for automatic HTTPS.
+# Not tested in CI. Read docs/07-deploy.md before using it.
+#
+#   cp deploy/.env.example deploy/.env      # fill in every value
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d db
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm migrate
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d app caddy
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: owner
+      POSTGRES_PASSWORD: ${OWNER_DB_PASSWORD:?set OWNER_DB_PASSWORD}
+      POSTGRES_DB: benchmark
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U owner -d benchmark"]
+      interval: 5s
+      retries: 10
+    networks: [internal]
+
+  migrate:
+    build: ..
+    profiles: ["tools"]
+    command: ["node", "packages/service/bin/migrate.mjs"]
+    environment:
+      OWNER_DATABASE_URL: postgres://owner:${OWNER_DB_PASSWORD}@db:5432/benchmark
+      ROSTER_DB_PASSWORD: ${ROSTER_DB_PASSWORD:?set ROSTER_DB_PASSWORD}
+      ANSWERS_DB_PASSWORD: ${ANSWERS_DB_PASSWORD:?set ANSWERS_DB_PASSWORD}
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [internal]
+
+  app:
+    build: ..
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://bm_answers:${ANSWERS_DB_PASSWORD}@db:5432/benchmark
+      ROSTER_DATABASE_URL: postgres://bm_roster:${ROSTER_DB_PASSWORD}@db:5432/benchmark
+      BENCHMARK_MIGRATE: "0"
+      BENCHMARK_BALLOT_SECRET: ${BENCHMARK_BALLOT_SECRET:?set BENCHMARK_BALLOT_SECRET}
+      BENCHMARK_ALIAS_SECRET: ${BENCHMARK_ALIAS_SECRET:?set BENCHMARK_ALIAS_SECRET}
+      # Optional features. Leave empty to switch them off; the consent text then says so.
+      BENCHMARK_BLIND_KEY_FILE: ${BLIND_KEY_FILE:-}
+      BENCHMARK_BREAKGLASS_PUBLIC_KEY_FILE: ${BREAKGLASS_PUBLIC_KEY_FILE:-}
+      OIDC_ISSUER: ${OIDC_ISSUER:?set OIDC_ISSUER}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:?set OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: https://${DOMAIN:?set DOMAIN}/api/staff/oidc/callback
+      STAFF_ROLES: ${STAFF_ROLES:?set STAFF_ROLES}
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [internal]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on: [app]
+    networks: [internal]
+
+volumes:
+  dbdata:
+  caddydata:
+networks:
+  internal:

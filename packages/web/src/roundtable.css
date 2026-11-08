@@ -1,0 +1,14 @@
+/* Roundtable thread (expert) and moderation queue (staff). Uses the variables and classes in styles.css. */
+.thread { margin-top: .9rem; }
+.thread-list, .thread-replies { list-style: none; margin: 0; padding: 0; }
+.thread-post { padding: .75rem 0; border-top: 1px solid var(--stone-200); }
+.thread-replies { margin-left: 1.5rem; padding-left: .9rem; border-left: 2px solid var(--teal-200); }
+.thread-post p { margin: .35rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.thread-meta { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; font-size: .85rem; color: var(--ink-3); }
+.thread-form { margin-top: 1rem; }
+.thread-form select:disabled { background: var(--stone-100); color: var(--ink-3); }
+.thread-counter { font-size: .85rem; color: var(--ink-3); margin: .3rem 0 0; }
+.thread-post .muted, .thread-mine .muted { display: block; margin-top: .25rem; }
+.thread-mine { margin-top: .6rem; }
+.moderation-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: .4rem 0; }
+.moderation-note textarea { min-height: 3.5rem; }

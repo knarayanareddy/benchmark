@@ -6,7 +6,7 @@ import {
   gate,
   decontaminate,
   evaluateObservable,
-} from '../../core/src/gate.js';
+} from '@benchmark/core/gate';
 
 const win = { from: '2026-11-01', to: '2027-04-30' };
 
@@ -170,3 +170,24 @@ test('evaluateObservable() measures precision and false-warn rate across 50 labe
   assert.ok(audit.disagreements.some((d) => d.id === 'R1067' && d.kind === 'false_warn'));
 });
 
+
+test('an empty statement fails the dedicated statement check, not observable (B-20)', () => {
+  const r = gate({ statement: '', window: win });
+  assert.equal(r.dispatchable, false);
+  assert.ok(r.blockers.some((b) => b.check === 'statement'));
+  assert.ok(!r.failed.some((f) => f.check === 'observable'));
+});
+
+test('no_leak catches trend-presupposing phrasings beyond the original eight (B-20)', () => {
+  for (const s of [
+    'Displacement is poised to deteriorate across the north, exceeding 500,000 by June.',
+    'Food insecurity is set to worsen, passing IPC Phase 4 in three districts.',
+    'Cases are projected to spike above 2,000 per week.',
+    'Violence is already escalating in the east, with over 100 deaths per month.',
+  ]) {
+    const r = gate({ statement: s, window: win });
+    assert.ok(r.blockers.some((b) => b.check === 'no_leak'), s);
+  }
+  const hazard = gate({ statement: 'Escalating clashes between armed groups lead to over 100,000 displaced.', window: win });
+  assert.ok(!hazard.blockers.some((b) => b.check === 'no_leak'), 'hazard framing is not an outcome leak');
+});

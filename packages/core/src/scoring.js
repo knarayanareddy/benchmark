@@ -7,21 +7,27 @@
  * is larger than the gap between ACAPS's rating and any model tried.
  * Comparing them unpaired would be a mistake a juror should catch.
  *
- * PROVENANCE — read before quoting these numbers. All three are measured by
+ * PROVENANCE — read before quoting these numbers. All are measured by
  * scripts in this repo. Run `npm run ladder` and you get exactly these back.
  *
- *   naiveFloor   0.2425   scripts/measure-baseline.mjs        n=104
- *   acapsRatings 0.2168   scripts/measure-baseline.mjs        n=104
- *   logistic     0.2177   scripts/fit-baseline.mjs (LOO-CV)   n=104
+ *   naiveFloor    0.2425   scripts/measure-baseline.mjs        n=104
+ *   acapsRatings  0.2171   scripts/measure-baseline.mjs        n=104  HEADLINE: band midpoints
+ *   acapsOrdinal  0.2168   scripts/measure-baseline.mjs        n=104  sensitivity: rating / 5
+ *   logistic      0.2177   scripts/fit-baseline.mjs (LOO-CV)   n=104
+ *
+ * Why the midpoint is the headline: ACAPS publishes the percentage bands behind
+ * its scale (Very High = 81-100). Reading the ordinal as rating/5 scores "Very
+ * High" as a 100% forecast, which no analyst means and which is infinitely
+ * overconfident under a log score. The two readings differ by 0.0003 Brier.
  *
  * WHAT THIS LADDER SAYS — the opposite of what an earlier revision claimed.
  *
- * Lower Brier is better. 0.2177 > 0.2168. The regression is fractionally WORSE
- * than the analyst, and the paired difference (0.0009) is nowhere near
+ * Lower Brier is better. 0.2177 > 0.2171. The regression is fractionally WORSE (and indistinguishable)
+ * than the analyst, and the paired difference (0.0007) is nowhere near
  * distinguishable from zero. So the honest sentence is: a logistic regression
  * on ACAPS' own structured fields is statistically indistinguishable from
  * ACAPS' judgement, and neither is meaningfully distinguishable from the base
- * rate at n=104. ACAPS clears the floor by 0.0257; the model does not clear
+ * rate at n=104. ACAPS clears the floor by 0.0255 (paired interval spans zero); the model does not clear
  * ACAPS at all.
  *
  * TWO CORRECTIONS TO THE RECORD, both found by writing the scripts:
@@ -46,14 +52,16 @@
 
 export const LADDER = Object.freeze({
   naiveFloor: 0.2425, // measured, n=104  [0.2259, 0.2592]
-  acapsRatings: 0.2168, // measured, n=104  [0.1815, 0.2540]  ← ACAPS is BETTER
+  acapsRatings: 0.2171, // measured, n=104  [0.1872, 0.2492]  band midpoints (headline) ← ACAPS is BETTER
+  acapsOrdinal: 0.2168, // measured, n=104  [0.1815, 0.2540]  rating / 5 (sensitivity check)
   fourFieldLogistic: 0.2177, // measured, LOO-CV, n=104  [0.1783, 0.2600] — despite the name, 2 fields
 });
 
 /** Where each rung came from. Displayed in the product; not decoration. */
 export const LADDER_PROVENANCE = Object.freeze({
   naiveFloor: 'measured — scripts/measure-baseline.mjs',
-  acapsRatings: 'measured — scripts/measure-baseline.mjs',
+  acapsRatings: 'measured — scripts/measure-baseline.mjs (band midpoints)',
+  acapsOrdinal: 'measured — scripts/measure-baseline.mjs (rating / 5, sensitivity)',
   fourFieldLogistic: 'measured out-of-sample — scripts/fit-baseline.mjs',
 });
 
@@ -71,13 +79,15 @@ export function mulberry32(seed) {
   };
 }
 
+const show = (v) => (typeof v === 'number' ? String(v) : JSON.stringify(v));
+
 function validatePair(d, label = 'item') {
   if (!d || typeof d !== 'object') {
     throw new TypeError(`${label} must be an object with { p, y }`);
   }
   if (typeof d.p !== 'number' || !Number.isFinite(d.p) || d.p < 0 || d.p > 1) {
     throw new RangeError(
-      `${label}.p must be a finite probability in [0, 1], got ${JSON.stringify(d.p)}`
+      `${label}.p must be a finite probability in [0, 1], got ${show(d.p)}`
     );
   }
   if (d.y !== 0 && d.y !== 1 && d.y !== null && d.y !== undefined) {
@@ -163,6 +173,16 @@ export function paired(aPairs, bPairs, opts = {}) {
     const missing = aPairs.concat(bPairs).filter((d) => d.id === undefined).length;
     if (missing) throw new Error('paired() requires an id on every item — unlabelled pairing is unsafe');
   }
+  for (const [label, arr] of [['first', aPairs], ['second', bPairs]]) {
+    const seen = new Set();
+    for (const d of arr) {
+      if (seen.has(d.id)) {
+        throw new Error(`paired() received duplicate id ${JSON.stringify(d.id)} in the ${label} array — one item cannot be counted twice`);
+      }
+      seen.add(d.id);
+    }
+  }
+  const allIds = new Set(aPairs.concat(bPairs).map((d) => d.id));
   const keyed = new Map(observed(bPairs).map((d) => [d.id, d]));
   const diffs = [];
   for (const d of observed(aPairs)) {
@@ -171,7 +191,9 @@ export function paired(aPairs, bPairs, opts = {}) {
     if (d.y !== other.y) throw new Error(`paired() matched ${d.id} across different outcomes`);
     diffs.push(brierItem(d) - brierItem(other));
   }
-  if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: diffs.length, significant: null };
+  const n_unique = diffs.length;
+  const n_dropped = allIds.size - n_unique;
+  if (diffs.length < 2) return { diff: null, lo: null, hi: null, n: n_unique, n_unique, n_dropped, significant: null };
   const rnd = mulberry32(opts.seed ?? 7);
   const reps = opts.reps ?? 10000;
   const means = new Array(reps);
@@ -187,7 +209,9 @@ export function paired(aPairs, bPairs, opts = {}) {
     diff: mean(diffs),
     lo,
     hi,
-    n: diffs.length,
+    n: n_unique,
+    n_unique,
+    n_dropped,
     significant: lo > 0 || hi < 0,
     note:
       lo > 0

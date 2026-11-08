@@ -2,14 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LEVELS, DEFAULT_LEVEL, LEVEL_COPY, ALIAS_SPACE,
-  resolveLevel, aliasFor, panelAliases, attribute, leaksBy, publicable, PUBLIC,
-} from '../../core/src/anonymity.js';
+  resolveLevel, aliasFor, DEFAULT_DEV_SALT, panelAliases, attribute, leaksBy, publicable, PUBLIC,
+} from '@benchmark/core/anonymity';
 import {
   aggregate,
   releaseAggregate,
   RELEASE_POLICIES,
-} from '../../core/src/aggregate.js';
+} from '@benchmark/core/aggregate';
 
+const SALT = 'test-deployment-salt-not-for-prod';
 const A = { expertId: 'e-001', name: 'Amina Okoro', country: 'TCD', text: 'The crossing at Adré is the tell.', at: '2026-11-06T10:00:00Z' };
 
 test('the default is the hedge, not the extreme', () => {
@@ -24,8 +25,8 @@ test('identified attribution keeps the name and drops the internal id', () => {
 });
 
 test('pseudonymous attribution gives a stable alias and drops the name', () => {
-  const a = attribute(A, LEVELS.PSEUDONYMOUS);
-  const b = attribute(A, LEVELS.PSEUDONYMOUS);
+  const a = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const b = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.equal(a.by, b.by, 'the alias must be stable across contributions');
   assert.match(a.by, /^Analyst \d{4}$/);
   assert.equal(a.name, undefined);
@@ -33,8 +34,8 @@ test('pseudonymous attribution gives a stable alias and drops the name', () => {
 });
 
 test('two experts in the same country get different aliases', () => {
-  const x = attribute(A, LEVELS.PSEUDONYMOUS);
-  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS);
+  const x = attribute(A, LEVELS.PSEUDONYMOUS, { salt: SALT });
+  const y = attribute({ ...A, expertId: 'e-002', name: 'Bello Adamu' }, LEVELS.PSEUDONYMOUS, { salt: SALT });
   assert.notEqual(x.by, y.by);
 });
 
@@ -106,8 +107,27 @@ test('public anonymity is a rule, not a setting', () => {
 });
 
 test('alias derivation is deterministic across runs and salts', () => {
-  assert.equal(aliasFor('e-001', 'TCD'), aliasFor('e-001', 'TCD'));
-  assert.notEqual(aliasFor('e-001', 'TCD', 'v2'), aliasFor('e-001', 'TCD', 'v1'));
+  assert.equal(aliasFor('e-001', 'TCD', SALT), aliasFor('e-001', 'TCD', SALT));
+  assert.notEqual(aliasFor('e-001', 'TCD', 'deploy-secret-v2'), aliasFor('e-001', 'TCD', 'deploy-secret-v1'));
+});
+
+test('pseudonyms fail closed: no salt, no persisted alias, no pseudonym (B-02)', () => {
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: DEFAULT_DEV_SALT }), /deployment salt/);
+  assert.throws(() => attribute(A, LEVELS.PSEUDONYMOUS, { salt: 'short' }), /deployment salt/);
+  assert.throws(() => aliasFor('e-001', 'TCD'), /deployment salt/);
+  assert.throws(() => aliasFor('e-001', 'TCD', DEFAULT_DEV_SALT), /deployment salt/);
+  // A persisted alias needs no salt — that is the intended production path.
+  assert.equal(attribute(A, LEVELS.PSEUDONYMOUS, { panelAliases: { [A.expertId]: 'Analyst 4242' } }).by, 'Analyst 4242');
+  // No other level needs a salt.
+  assert.doesNotThrow(() => attribute(A, LEVELS.IDENTIFIED));
+  assert.doesNotThrow(() => attribute(A, LEVELS.ANONYMOUS));
+});
+
+test('publicable() validates its input shape and defaults to an object (B-20)', () => {
+  assert.deepEqual(publicable(), { published: {}, suppressedCells: 0 });
+  assert.throws(() => publicable([1, 2, 3]), TypeError);
+  assert.throws(() => publicable(null), TypeError);
 });
 
 test('every casing of anonymous resolves to the anonymous level', () => {
@@ -162,7 +182,7 @@ test('attribute() enforces an allowlist — email, IP, role and org never leak a
   };
 
   for (const lvl of [...Object.values(LEVELS), 'unrecognised-level']) {
-    const out = attribute(rich, lvl);
+    const out = attribute(rich, lvl, { salt: SALT });
     for (const pii of ['email', 'ip', 'role', 'org', 'sessionToken', 'expertId', 'name']) {
       assert.ok(!(pii in out), `${lvl} leaked disallowed field "${pii}"`);
     }
@@ -251,3 +271,67 @@ test('intervals and small-panel releases resist order-statistic & quartile inver
 });
 
 
+
+import crypto from 'node:crypto';
+import {
+  assignAliases, ballotToken, coarsenToDay, identifyingHints, removeIdentifyingDetail,
+} from '@benchmark/core/anonymity';
+
+test('aliases are keyed: the same roster under a different secret gives different aliases (B-02)', () => {
+  const ids = Array.from({ length: 30 }, (_, i) => `e${i}`);
+  const a = ids.map((id) => aliasFor(id, 'SDN', 'secret-number-one'));
+  const b = ids.map((id) => aliasFor(id, 'SDN', 'secret-number-two'));
+  assert.notDeepEqual(a, b);
+  for (const alias of a) {
+    const n = Number(alias.split(' ')[1]);
+    assert.ok(n >= 1000 && n < 1000 + ALIAS_SPACE);
+  }
+});
+
+test('assignAliases never renames an existing expert, even under a rotated salt (B-02)', () => {
+  const first = assignAliases({}, ['e1', 'e2', 'e3'], 'SDN', { salt: 'secret-number-one' });
+  assert.equal(Object.keys(first.added).length, 3);
+  const second = assignAliases(first.aliases, ['e1', 'e2', 'e3', 'e4'], 'SDN', { salt: 'secret-number-TWO' });
+  for (const id of ['e1', 'e2', 'e3']) assert.equal(second.aliases[id], first.aliases[id], `${id} was renamed`);
+  assert.deepEqual(Object.keys(second.added), ['e4'], 'only the new expert is added');
+  assert.equal(new Set(Object.values(second.aliases)).size, 4, 'no collisions');
+  assert.throws(() => assignAliases({}, ['e1'], 'SDN', {}), /deployment salt/);
+});
+
+test('ballot tokens are per card and per expert, keyed, and refuse a public secret (B-03)', () => {
+  const t = ballotToken('ballot-secret-1234', 'R1', 'e1');
+  assert.match(t, /^[0-9a-f]{64}$/);
+  assert.equal(t, ballotToken('ballot-secret-1234', 'R1', 'e1'));
+  assert.notEqual(t, ballotToken('ballot-secret-1234', 'R2', 'e1'), 'unlinkable across cards');
+  assert.notEqual(t, ballotToken('ballot-secret-1234', 'R1', 'e2'));
+  assert.notEqual(t, ballotToken('another-secret-5678', 'R1', 'e1'));
+  assert.equal(t, crypto.createHmac('sha256', 'ballot-secret-1234').update('ballot:v1:R1:e1').digest('hex'));
+  assert.throws(() => ballotToken(DEFAULT_DEV_SALT, 'R1', 'e1'), /deployment salt/);
+  assert.throws(() => ballotToken(undefined, 'R1', 'e1'), /deployment salt/);
+});
+
+test('coarsenToDay drops the time of day and accepts ms, Date and ISO input (B-04)', () => {
+  const want = { day: '2026-11-06', ms: Date.UTC(2026, 10, 6) };
+  assert.deepEqual(coarsenToDay('2026-11-06T23:59:59.999Z'), want);
+  assert.deepEqual(coarsenToDay(new Date('2026-11-06T00:00:01Z')), want);
+  assert.deepEqual(coarsenToDay(Date.UTC(2026, 10, 6, 13, 7)), want);
+  assert.throws(() => coarsenToDay('not a date'), TypeError);
+});
+
+test('leaksBy flags organisation, job title, first-person, uniqueness and self-location (B-04, B-20)', () => {
+  const kinds = (text) => new Set(identifyingHints(text).map((h) => h.kind));
+  assert.ok(kinds('WFP is moving trucks').has('organisation'));
+  assert.ok(kinds('The country director said no').has('role'));
+  assert.ok(kinds('I work on the Abyei file').has('first_person'));
+  assert.ok(kinds('I am the only analyst there').has('unique'));
+  assert.ok(kinds('I am based in Juba').has('place'));
+  const w = leaksBy({ text: 'As the country director for WFP in Juba, I work on the only crossing.' }, []);
+  assert.ok(w.length >= 4);
+  assert.deepEqual(leaksBy({ text: 'The crossing at Adré is the tell.' }, []), [], 'a place that is the subject of the forecast is not flagged');
+});
+
+test('removeIdentifyingDetail strips every hinted span (B-04)', () => {
+  const out = removeIdentifyingDetail('I work for WFP and I am based in Juba.');
+  assert.ok(!/WFP|Juba|I work/.test(out), out);
+  assert.equal(removeIdentifyingDetail('The crossing is closed.'), 'The crossing is closed.');
+});

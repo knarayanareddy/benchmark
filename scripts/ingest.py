@@ -9,7 +9,7 @@ Python's csv module is correct, battle-tested, and free. Use it.
 
 Output: data/risk-radar.json — the only form the JS scripts read.
 """
-import csv, json, os, re, sys
+import csv, datetime, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -29,6 +29,55 @@ HEADER_RE = re.compile(
     r"^(Trigger ID|Title|Description|Sources|Completion rate|Completion rate history|Quantitative objective to meet 100%|Trend|Trend history|Date entered|Last update):[ \t]*(.*)",
     re.M,
 )
+
+def iso_from_dmy(d, m, y):
+    """dd/mm/yyyy or dd-mm-yyyy (day first) to ISO yyyy-mm-dd; None when not a real date."""
+    try:
+        return datetime.date(int(y), int(m), int(d)).isoformat()
+    except ValueError:
+        return None
+
+def iso_of_dmy_text(s):
+    m = re.fullmatch(r"(\d{2})-(\d{2})-(\d{4})", s or "")
+    return iso_from_dmy(*m.groups()) if m else None
+
+HISTORY_LINE = re.compile(r"^[ \t]*(\d{2})-(\d{2})-(\d{4}):[ \t]*(.*?)[ \t]*$", re.M)
+PERCENT = re.compile(r"^(\d{1,3})%$")
+
+def parse_history(raw, percent):
+    """'dd-mm-yyyy: value' lines in file order. A line with no value is dropped (nothing to plot)."""
+    out = []
+    for m in HISTORY_LINE.finditer(raw or ""):
+        value = m.group(4)
+        date = iso_from_dmy(m.group(1), m.group(2), m.group(3))
+        if not value or date is None:
+            continue
+        if percent:
+            pm = PERCENT.match(value)
+            if not pm:
+                continue
+            value = int(pm.group(1))
+        out.append({"date": date, "value": value})
+    return out
+
+UPDATE_HEADER = re.compile(r"^UPDATE (\d{2})/(\d{2})/(\d{4})[ \t]*$", re.M | re.I)
+
+def parse_rationale_updates(raw):
+    """Entries headed 'UPDATE dd/mm/yyyy' (day first). Text before the first header is kept with date None."""
+    text = (raw or "").strip()
+    if not text:
+        return []
+    headers = list(UPDATE_HEADER.finditer(text))
+    if not headers:
+        return [{"date": None, "text": text}]
+    out = []
+    head = text[:headers[0].start()].strip()
+    if head:
+        out.append({"date": None, "text": head})
+    for idx, m in enumerate(headers):
+        end = headers[idx + 1].start() if idx + 1 < len(headers) else len(text)
+        out.append({"date": iso_from_dmy(*m.groups()), "text": text[m.end():end].strip()})
+    return out
 
 def parse_triggers(raw):
     if not raw:
@@ -56,6 +105,10 @@ def parse_triggers(raw):
             "trend": fields.get("trend", ""),
             "dateEntered": fields.get("date_entered", ""),
             "lastUpdate": fields.get("last_update", ""),
+            "dateEnteredISO": iso_of_dmy_text(fields.get("date_entered", "")),
+            "lastUpdateISO": iso_of_dmy_text(fields.get("last_update", "")),
+            "completionHistory": parse_history(fields.get("completion_rate_history", ""), percent=True),
+            "trendHistory": parse_history(fields.get("trend_history", ""), percent=False),
         })
     return parsed
 
@@ -87,6 +140,8 @@ for r in rows:
         "triggerList": trig_list,
         "triggerCount": len(trig_list),
         "rationale": (r.get("Rationale") or "").strip(),
+        "riskTrend": (r.get("Risk trend") or "").strip() or None,
+        "rationaleUpdates": parse_rationale_updates(r.get("Rationale update")),
     })
 
 os.makedirs(os.path.join(ROOT, "data"), exist_ok=True)

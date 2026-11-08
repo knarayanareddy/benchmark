@@ -23,12 +23,13 @@ import {
   DEFAULT_LEVEL,
   resolveLevel,
   attribute,
-} from '../../core/src/anonymity.js';
+  coarsenToDay,
+} from '@benchmark/core/anonymity';
 import {
   LOOP_KIND,
   compose,
   latency,
-} from '../../shared/loop.js';
+} from '@benchmark/shared/loop';
 
 export const STATE = Object.freeze({
   OPEN: 'open',
@@ -52,6 +53,13 @@ export const KIND = Object.freeze({
   INTENT_NOT_CONDITION: 'intent_not_condition',
 });
 
+/**
+ * @param {{
+ *   id?: string, cardId: string, expert?: string | null, name?: string, country?: string, kind: string,
+ *   text?: string, level?: string, salt?: string, panelAliases?: Map<string, string> | Record<string, string>, now?: number
+ * }} input
+ * @returns {Record<string, any>}
+ */
 export function newDissent({
   id,
   cardId,
@@ -65,7 +73,7 @@ export function newDissent({
   panelAliases,
   now,
 }) {
-  if (!Object.values(KIND).includes(kind)) {
+  if (!(/** @type {string[]} */ (Object.values(KIND))).includes(kind)) {
     throw new Error(`unknown dissent kind: ${kind}`);
   }
   if (id !== undefined && (typeof id !== 'string' || !id.trim())) {
@@ -95,11 +103,18 @@ export function newDissent({
     text,
     status: STATE.OPEN,
     action: null,
-    createdAt,
+    // Optimistic-concurrency counter: every transition bumps it, and a store
+    // must write only `where id = ? and version = ?`.
+    version: 0,
+    createdAt: isAnonymous ? coarsenToDay(createdAt).ms : createdAt,
   };
 }
 
 /** Route an open dissent into an analyst review queue. */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ queue?: string, now?: number }} [opts]
+ */
 export function route(dissent, { queue = 'analyst', now } = {}) {
   if (!dissent || dissent.status !== STATE.OPEN) {
     throw new Error(`cannot route dissent in state ${dissent?.status}`);
@@ -107,6 +122,7 @@ export function route(dissent, { queue = 'analyst', now } = {}) {
   return {
     ...dissent,
     status: STATE.ROUTED,
+    version: (dissent.version ?? 0) + 1,
     queue,
     routedAt: now ?? Date.now(),
   };
@@ -116,8 +132,13 @@ export function route(dissent, { queue = 'analyst', now } = {}) {
  * Analyst acts on a routed dissent (`STATE.ROUTED -> STATE.ACTIONED`).
  * Rejects unrouted (`STATE.OPEN`) dissents so queue triage cannot be bypassed.
  */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {string} action
+ * @param {{ newCardIds?: string[], title?: string, note?: string, now?: number }} [opts]
+ */
 export function act(dissent, action, { newCardIds = [], title = '', note = '', now } = {}) {
-  if (!Object.values(ACTION).includes(action)) {
+  if (!(/** @type {string[]} */ (Object.values(ACTION))).includes(action)) {
     throw new Error(`unknown action: ${action}`);
   }
   if (!dissent || dissent.status !== STATE.ROUTED) {
@@ -129,6 +150,7 @@ export function act(dissent, action, { newCardIds = [], title = '', note = '', n
     ...dissent,
     action,
     status: STATE.ACTIONED,
+    version: (dissent.version ?? 0) + 1,
     title: String(title || ''),
     note,
     newCardIds,
@@ -144,6 +166,11 @@ export function act(dissent, action, { newCardIds = [], title = '', note = '', n
  * opted into `ANONYMOUS` (`contactable: false`), preventing accidental
  * re-identification. Emits both `expert` and `to` so `dispatch()` recognises
  * the recipient and never suppresses `dissent_actioned` at the weekly cap.
+ */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ now?: number }} [opts]
+ * @returns {Record<string, any> | null}
  */
 export function notify(dissent, { now } = {}) {
   if (!dissent || dissent.status !== STATE.ACTIONED) return null;
@@ -165,7 +192,7 @@ export function notify(dissent, { now } = {}) {
     body: msg.body,
     deepLinks: msg.deepLinks,
     honesty: msg.honesty,
-    _next: { ...dissent, status: STATE.NOTIFIED, notifiedAt: now ?? Date.now() },
+    _next: { ...dissent, status: STATE.NOTIFIED, version: (dissent.version ?? 0) + 1, notifiedAt: now ?? Date.now() },
   };
 }
 
@@ -180,9 +207,13 @@ export function notify(dissent, { now } = {}) {
  *     directly since outbound notifications are suppressed for safety.
  *   - `STATE.NOTIFIED` closes cleanly.
  */
+/**
+ * @param {Record<string, any>} dissent
+ * @param {{ reason?: string, now?: number }} [opts]
+ */
 export function close(dissent, { reason = '', now } = {}) {
   if (!dissent || typeof dissent !== 'object') {
-    throw new Error(`cannot close dissent in state ${dissent?.status}`);
+    throw new Error('cannot close a missing dissent');
   }
   const trimmedReason = typeof reason === 'string' ? reason.trim() : '';
 
@@ -206,6 +237,7 @@ export function close(dissent, { reason = '', now } = {}) {
   return {
     ...dissent,
     status: STATE.CLOSED,
+    version: (dissent.version ?? 0) + 1,
     closeReason: trimmedReason,
     closedAt: now ?? Date.now(),
   };
@@ -237,7 +269,9 @@ export function ledgerEntry(dissent) {
     action: dissent.action,
     body: msg.body,
     deepLinks: msg.deepLinks,
-    actionedAt: dissent.actionedAt ?? null,
+    // Day-coarsened: a millisecond timestamp lets a dissenter (or a peer who
+    // was online) match a public entry to a submission.
+    actionedAt: dissent.actionedAt == null ? null : coarsenToDay(dissent.actionedAt).ms,
   };
 }
 

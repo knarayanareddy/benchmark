@@ -78,14 +78,14 @@ timed in a user study).
 | Figure | Value | What it means |
 |---|---|---|
 | Naive floor | 0.2425 | Predicting the constant base rate (58.7%) on every row |
-| **ACAPS' own judgement** | **0.2168** | **The incumbent. It is the best of the three.** |
+| **ACAPS' own judgement** | **0.2171** | **The incumbent. It is the best of the three.** |
 | Logistic regression on the same fields, out of sample | 0.2177 | The model. It does *not* beat the experts. |
 
-Lower is better. **0.2177 > 0.2168 — the regression is worse.** The honest claim is not "a model beat ACAPS." It is:
+Lower is better. **0.2177 > 0.2171 — the regression is nominally worse, by 0.0007, and indistinguishable.** The honest claim is not "a model beat ACAPS." It is:
 
 > **ACAPS' judgement clears the base rate, and no model we can build gets past ACAPS' judgement.**
 
-Both gaps — **0.0257** from the floor to ACAPS, **0.0009** from ACAPS to the model — sit inside a bootstrap interval that spans zero at n=104. So the real finding is subtler and more useful than the one we started with: **expert judgement on this corpus carries a signal that is real but sits just under the noise floor of the sample.** Any panel has to beat a bar that is already near the limit of what 104 observations can distinguish. That is why the test must be paired — same risks, two methods — and why every number here carries an interval.
+Both gaps — **0.0255** from the floor to ACAPS, **0.0007** from ACAPS to the model — sit inside a bootstrap interval that spans zero at n=104. So the real finding is subtler and more useful than the one we started with: **expert judgement on this corpus carries a signal that is real but sits just under the noise floor of the sample.** Any panel has to beat a bar that is already near the limit of what 104 observations can distinguish. That is why the test must be paired — same risks, two methods — and why every number here carries an interval.
 
 The in-sample fit scores **0.1965**. We do not quote it. It is the model being graded on risks it was fitted to, and its optimism (**0.021**) is larger than the entire effect the product is trying to measure. A number that flatters us by more than the thing we are measuring is not evidence. It is a trap that a juror should catch us setting, and we would rather set it in the open.
 

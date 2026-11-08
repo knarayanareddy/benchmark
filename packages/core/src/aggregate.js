@@ -3,7 +3,7 @@
  * always with its uncertainty interval, small-panel privacy guard, and ACAPS
  * Risk Level mapping.
  *
- * Scope discipline (see design/04-adoption-review.md and docs/02-scoring-rules.md):
+ * Scope discipline (see docs/04-adoption-review.md and docs/02-scoring-rules.md):
  *
  *   FULL:
  *     - Pooling on single-probability cards: median (default), linear mean,
@@ -84,6 +84,35 @@ export const ACAPS_BANDS = Object.freeze([
 ]);
 
 /**
+ * Midpoint of ACAPS' published percentage band for each rating. This is how ACAPS's own
+ * reading is SCORED and analysed. It is not a starting point for experts: Round 1 is blind
+ * (rule R9), so no expert sees it before locking an answer:
+ *   Very Low 0-20 -> 0.10 · Low 21-40 -> 0.305 · Medium 41-60 -> 0.505
+ *   High 61-80 -> 0.705 · Very High 81-100 -> 0.905
+ * "Very High" is NOT 1.00: no analyst means a certain event, and a certain
+ * forecast is infinitely overconfident under a log score.
+ */
+export const BAND_PERCENT = Object.freeze({
+  'Very Low': Object.freeze([0, 20]),
+  Low: Object.freeze([21, 40]),
+  Medium: Object.freeze([41, 60]),
+  High: Object.freeze([61, 80]),
+  'Very High': Object.freeze([81, 100]),
+});
+export const BAND_MIDPOINT = Object.freeze(
+  Object.fromEntries(Object.entries(BAND_PERCENT).map(([k, [a, b]]) => [k, (a + b) / 200]))
+);
+
+/** Forecasts are clamped to this range before scoring (protocol rule R9). */
+export const FORECAST_CLAMP = Object.freeze({ min: 0.01, max: 0.99 });
+export function clampForecast(p) {
+  if (typeof p !== 'number' || !Number.isFinite(p) || p < 0 || p > 1) {
+    throw new RangeError(`forecast must be a finite number in [0, 1], got ${typeof p === 'number' ? String(p) : JSON.stringify(p)}`);
+  }
+  return Math.min(FORECAST_CLAMP.max, Math.max(FORECAST_CLAMP.min, p));
+}
+
+/**
  * Verbatim 5x5 Probability (ordinal 1..5) x Impact (1..5) matrix from
  * organiser/acaps/risk-methodology.md.
  */
@@ -95,9 +124,11 @@ export const ACAPS_MATRIX = Object.freeze({
   1: Object.freeze({ 1: 'Low', 2: 'Low', 3: 'Low', 4: 'Low', 5: 'Medium' }),
 });
 
+const show = (v) => (typeof v === 'number' ? String(v) : JSON.stringify(v));
+
 function assertProbability(p, label = 'probability') {
   if (typeof p !== 'number' || !Number.isFinite(p) || p < 0 || p > 1) {
-    throw new RangeError(`${label} must be a finite number in [0, 1], got ${JSON.stringify(p)}`);
+    throw new RangeError(`${label} must be a finite number in [0, 1], got ${show(p)}`);
   }
 }
 
@@ -216,7 +247,7 @@ function poolOnce(values, baseWeights, method) {
 export function extremise(p, { d = 1.0 } = {}) {
   assertProbability(p, 'p');
   if (typeof d !== 'number' || !Number.isFinite(d) || d <= 0) {
-    throw new RangeError(`extremise factor d must be a finite number > 0, got ${JSON.stringify(d)}`);
+    throw new RangeError(`extremise factor d must be a finite number > 0, got ${show(d)}`);
   }
   if (d === 1) return p;
   if (p === 0 || p === 1 || p === 0.5) return p;
@@ -237,7 +268,9 @@ export function deduplicateRounds(estimates, opts = {}) {
   if (!Array.isArray(estimates)) {
     throw new TypeError('estimates must be an array');
   }
-  const requireBallotKey = Boolean(opts.requireBallotKey);
+  // Safe by default: an estimate with neither expertId nor ballotToken cannot be
+  // de-duplicated, so it is rejected. Pass `requireBallotKey: false` to opt out.
+  const requireBallotKey = opts.requireBallotKey !== false;
   const byKey = new Map();
   const unkeyed = [];
   let maxRound = 1;
@@ -280,7 +313,7 @@ export function deduplicateRounds(estimates, opts = {}) {
     if (dedupeKey === null) {
       if (requireBallotKey) {
         throw new Error(
-          `estimates[${i}] lacks both expertId and ballotToken (required when requireBallotKey=true)`
+          `estimates[${i}] lacks both expertId and ballotToken (rejected unless requireBallotKey=false is passed explicitly)`
         );
       }
       if (round > 1) {
@@ -323,7 +356,7 @@ export function deduplicateRounds(estimates, opts = {}) {
 
 /**
  * Compute track-record weights from resolved binary seed items, gated at >= 10
- * shared resolved seeds (Eggstaff et al. 2014; Clemen 2008; design/04-adoption-review.md).
+ * shared resolved seeds (Eggstaff et al. 2014; Clemen 2008; docs/04-adoption-review.md).
  *
  * Uses Murphy (1973) proper Brier skill over the uninformative p=0.5 benchmark
  * (Brier = 0.25) on the IDENTICAL shared seed items across all participating
@@ -543,6 +576,11 @@ export function acapsRiskLevel(probOrAggregate, impact) {
  *   3. Mandatory interval ([lo, hi] bootstrap CI + [q25, q75] empirical IQR).
  *   4. Zero internal expert IDs or names in the returned object.
  */
+/**
+ * @param {any[]} estimates
+ * @param {Record<string, any>} [opts]
+ * @returns {Record<string, any>}
+ */
 export function aggregate(estimates, opts = {}) {
   const method = opts.method === undefined ? DEFAULT_METHOD : opts.method;
   if (!Object.values(METHODS).includes(method)) {
@@ -563,7 +601,7 @@ export function aggregate(estimates, opts = {}) {
 
   const extremiseD = opts.extremiseD === undefined ? 1.0 : opts.extremiseD;
   if (typeof extremiseD !== 'number' || !Number.isFinite(extremiseD) || extremiseD <= 0) {
-    throw new RangeError(`extremiseD must be a finite number > 0, got ${JSON.stringify(extremiseD)}`);
+    throw new RangeError(`extremiseD must be a finite number > 0, got ${show(extremiseD)}`);
   }
   const suppressExtremiseOnContested =
     opts.suppressExtremiseOnContested === undefined ? true : Boolean(opts.suppressExtremiseOnContested);
@@ -589,6 +627,7 @@ export function aggregate(estimates, opts = {}) {
 
   // Fail closed when panel size is too small to hide individual positions.
   if (n < effectiveMin) {
+    /** @type {Record<string, any>} */
     const suppressedResult = {
       suppressed: true,
       estimate: null,
@@ -696,6 +735,7 @@ export function aggregate(estimates, opts = {}) {
     hi = Math.max(estimate, quantileSorted(boot, 1 - alpha / 2));
   }
 
+  /** @type {Record<string, any>} */
   const out = {
     suppressed: false,
     estimate,
@@ -748,6 +788,11 @@ export function aggregate(estimates, opts = {}) {
  *      withholds all interim statistics until `closed: true`; `batch` pins
  *      `previousSnapshot` until `>= MIN_COHORT_STEP` (`3`) new respondents arrive
  *      and masks `min`/`max`/`spread` while open.
+ */
+/**
+ * @param {any[]} estimates
+ * @param {Record<string, any>} [opts]
+ * @returns {Record<string, any>}
  */
 export function releaseAggregate(estimates, opts = {}) {
   const policy = opts.policy === undefined ? RELEASE_POLICIES.ON_CLOSE : opts.policy;
@@ -880,7 +925,7 @@ export function dispatchSignals(estimates, opts = {}) {
   const agg = aggregate(estimates, opts);
   if (agg.suppressed) return [];
 
-  const { active } = deduplicateRounds(estimates);
+  const { active } = deduplicateRounds(estimates, { requireBallotKey: opts.requireBallotKey });
   const sorted = active.map((a) => a.p).sort((a, b) => a - b);
   const med = quantileSorted(sorted, 0.5);
   const outlierGap = opts.outlierGap ?? DISPATCH_THRESHOLDS.outlierGap;

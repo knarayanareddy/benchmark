@@ -1,0 +1,29 @@
+{
+  "name": "@benchmark/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The expert and staff apps: React, built by Vite, installable and usable offline (a PWA). The service serves the built files.",
+  "license": "MIT",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@benchmark/core": "*"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "fake-indexeddb": "^6.2.7",
+    "jsdom": "^31.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

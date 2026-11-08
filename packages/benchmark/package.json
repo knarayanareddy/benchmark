@@ -1,0 +1,10 @@
+{
+  "name": "@benchmark/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Stateful domain flows: the five-state dissent lifecycle.",
+  "license": "MIT",
+  "exports": { "./*": "./src/*.js" },
+  "dependencies": { "@benchmark/core": "*", "@benchmark/shared": "*" }
+}

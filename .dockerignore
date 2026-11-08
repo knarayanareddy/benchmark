@@ -1,0 +1,14 @@
+node_modules
+.git
+archive
+data/*
+!data/risk-radar.json
+mockups
+organiser
+docs
+scripts
+**/test
+.env
+.env.*
+packages/web/dist
+packages/web/node_modules

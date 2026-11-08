@@ -14,7 +14,7 @@ The primary score is the mean squared error between the stated probability and t
 
 ## R3 · Comparisons are paired
 
-Same risks, two methods. The errors are correlated, so a paired difference has far more power than comparing two independent scores. A paired comparison of the panel against ACAPS' 0.2168 is the *only* honest way to state the gap.
+Same risks, two methods. The errors are correlated, so a paired difference has far more power than comparing two independent scores. A paired comparison of the panel against ACAPS' 0.2171 is the *only* honest way to state the gap. Only the 28 Active risks carry an ACAPS rating, so a prospective head-to-head is at risk level; the trigger statements are scored against outcomes and a base rate (see `docs/06-protocol.md`).
 
 ## R4 · Unobservable ≠ miss
 
@@ -30,15 +30,37 @@ Round one: independent. Round two: the distribution is shown — **never who sai
 
 ## R7 · No public leaderboard
 
-Panel scores are public. Individual scores are private to the expert and the analyst. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
+**Amended 7 Nov 2026.** No per-person score is visible to staff. A private "my record" view for each expert, for themself only, is planned and not built.
 
-## R8 · Weighting by track record, never by self-declaration
+Panel scores are public. There is no public leaderboard, and no per-person score is shown to staff. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
 
-The Declaration screen (regions × themes) decides **who gets told**. It does not decide **how much weight their estimate carries**. Weighting comes from realised calibration on statements they were previously notified about. People are reliably overconfident about what they know, and the confidence errors correlate — which makes a self-weighted panel look tight and be wrong.
+> **Superseded (7 Nov 2026):** Panel scores are public. Individual scores are private to the expert and the analyst. A leaderboard converts experts into competitors and degrades the calibration that made the number worth collecting.
 
-## R9 · The model baseline is computed before elicitation
+## R8 · Equal weight for every answer; the Declaration decides only who is asked
 
-The expert adjusts a number rather than inventing one. This is a design rule with a scoring consequence: it makes the expert's contribution measurable as a *deviation* from a known baseline, which is the quantity the whole product is trying to estimate.
+**Amended 7 Nov 2026.** No track-record weighting in any aggregate. The Declaration decides who is asked, never how much an answer counts.
+
+The Declaration screen (countries, regions, themes) decides **who gets asked**. It does not decide **how much weight their estimate carries**, and no released aggregate weights an estimate by the expert's track record or by their self-declaration. The pure core still contains a track-record function, `seedWeights()` in `packages/core/src/aggregate.js`, which is reachable only through an optional `seedHistory` argument that no service route or screen passes. Removing it is a code change, not made by this rule.
+
+> **Superseded (7 Nov 2026):** The Declaration screen (regions × themes) decides **who gets told**. It does not decide **how much weight their estimate carries**. Weighting comes from realised calibration on statements they were previously notified about. People are reliably overconfident about what they know, and the confidence errors correlate — which makes a self-weighted panel look tight and be wrong.
+
+## R9 · Round 1 is blind
+
+**Amended 7 Nov 2026.** The earlier text of this rule said the baseline is computed *before* elicitation so that "the expert adjusts a number rather than inventing one", and cards opened on ACAPS's band midpoint. That was a mistake. A pre-filled number anchors the answer (Tversky & Kahneman 1974), and it anchored it on the very thing the study compares the panel against. A panel that starts from ACAPS's rating can only be shown to resemble ACAPS.
+
+The rule now:
+
+- **In Round 1 an expert sees no ACAPS rating, no panel result and no pre-filled number.** The slider has no thumb position and Submit stays off until they have put a number down (slider or typed, whole numbers 1–99). This is enforced on the server as well as in the page: no inbox, card, status or list payload an expert can reach carries ACAPS's reading, and tests fail if one does (`packages/service/test/blind-round1.test.js`).
+- **ACAPS's own reading is still stored on the card** (`acaps_p`, `acaps_band`) because it is the thing the panel is scored against. It is for scoring and analysis. A risk ACAPS never rated has no reading and is not given an invented one (11 of the 139 have none).
+- **The first answer is the primary one.** The Round-1 result is ledgered when the round closes and cannot change afterwards, however much Round 2 revises. Round 2 shows an expert the panel distribution and their own first answer, never ACAPS's rating. By default Round 2 carries no ACAPS marker. The marker is an opt-in switch (`BENCHMARK_SHOW_ACAPS_ROUND2=1`) that needs a protocol amendment, because with it on every Round-2 expert sees ACAPS's band, which makes the revision toward ACAPS and the second-look measurements uninformative. It is a secondary, separately scored measurement.
+- **Showing ACAPS's reasoning after lock-in is a separate, later decision** (a randomised "second look"), not part of this rule. If it is built, it is an experimental arm and its effect is measured, never assumed neutral.
+
+What this costs, stated honestly: the original argument was that an adjustable number is faster than inventing one, and task length drives dropout. Blind answers will take longer than a nudge of a slider. Time per answer and completion are therefore measured in the pilot rather than assumed.
+
+Two rules remain from the old R9, with the same reasons:
+
+- **Score ACAPS on the band midpoint, not the ordinal.** ACAPS publishes the percentage bands behind its scale (Very Low 0–20 · Low 21–40 · Medium 41–60 · High 61–80 · Very High 81–100); its reading is the midpoint (0.10 / 0.305 / 0.505 / 0.705 / 0.905). Reading the ordinal as rating ÷ 5 would make "Very High" a certain forecast, which no analyst means and which is infinitely overconfident under a log score. `BAND_MIDPOINT` in `packages/core/src/aggregate.js` is the single source.
+- **Clamp every forecast to [0.01, 0.99] before scoring.** `clampForecast()` is applied when an estimate is submitted, so no stored probability is ever 0 or 1.
 
 ## R10 · Publish the protocol, not just the score
 
@@ -54,8 +76,8 @@ The study design ships with the product. The most recent systematic review of di
 | **104** | Resolved risks (61 materialised, 43 not), and therefore scoreable |
 | **266** | Date-stamped trigger statements across those 139 risks |
 | **~17%** | Response rate when ACAPS surveyed 60+ experts (10 replied) — the behaviour baseline |
-| **73%** | Share of scored triggers with no written resolution criterion (101 of 139) |
-| **0.2168** | ACAPS' own probability rating — **the bar to beat** |
-| 0.2171 | *check:* the same rating read off ACAPS' published percentage bands (midpoints). Differs by 0.0003 — the bar does not move with the reading. |
-| 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar** |
+| **73%** | Share of triggers with a completion rate whose "Quantitative objective" field is empty (101 of 139). An empty field is not a resolution criterion. |
+| **0.2171** | ACAPS' own probability rating, read off ACAPS' published percentage bands (midpoints; "Very High" = 0.905) — **the bar to beat** |
+| 0.2168 | *sensitivity:* the same rating read as an ordinal (rating ÷ 5, so "Very High" = 1.00). Differs by 0.0003 — the bar does not move with the reading, but 1.00 is not a defensible forecast. |
+| 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar; the two are indistinguishable at n=104** |
 | **0.04–0.05** | Standard error on a Brier score at this n |

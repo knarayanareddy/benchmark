@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dispatch, TYPES, matches, health } from '../../core/src/dispatch.js';
+import { dispatch, TYPES, matches, health } from '@benchmark/core/dispatch';
 
 const card = { region: 'ML', theme: 'food' };
 
@@ -8,7 +8,19 @@ test('the declaration gates who is told', () => {
   assert.equal(matches(card, { regions: ['ML'] }), true);
   assert.equal(matches(card, { regions: ['SD'] }), false);
   assert.equal(matches(card, { regions: ['SD'], themes: ['food'] }), false, 'region miss must win');
-  assert.equal(matches(card, {}), true, 'empty declaration means everything');
+  assert.equal(matches(card, {}), false, 'an empty Declaration must not mean "tell me everything" (B-13)');
+  assert.equal(matches(card, { regions: [], themes: [], countries: [] }), false);
+  assert.equal(matches(card, {}, { all: true }), true, 'matching everything is an explicit moderator choice');
+  assert.equal(matches({ ...card, country: 'MLI' }, { countries: ['MLI'] }), true);
+  assert.equal(matches({ ...card, country: 'MLI' }, { countries: ['SDN'] }), false);
+});
+
+test('a question with no theme or region is not hidden by a declared theme or region', () => {
+  const bare = { country: 'MLI' };
+  assert.equal(matches(bare, { countries: ['MLI'], themes: ['health'] }), true);
+  assert.equal(matches(bare, { countries: ['MLI'], regions: ['Sahel & West/Central Africa'] }), true);
+  assert.equal(matches(bare, { countries: ['SDN'], themes: ['health'] }), false, 'the country still gates');
+  assert.equal(matches({ country: 'MLI', theme: 'food' }, { countries: ['MLI'], themes: ['health'] }), false, 'a classified question still needs the theme');
 });
 
 test('the weekly cap is enforced and never exceeded', () => {

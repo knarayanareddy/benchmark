@@ -28,7 +28,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bootstrapBrier, paired, observed } from '../packages/core/src/scoring.js';
+import { bootstrapBrier, paired } from '@benchmark/core/scoring';
+import { BAND_MIDPOINT } from '@benchmark/core/aggregate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const blocks = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/risk-radar.json'), 'utf8'));
@@ -37,7 +38,6 @@ const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
 // Missing means missing, not zero. `Number(v) || 0` silently codes an absent
 // intensity as "very low hazard", which is a substantive claim about the risk
 // that the analyst never made. Use add-one imputation on the observed mean.
-const num = (v) => (Number(v) || 0) / 5;
 const SCALE = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 
 // The four fields a model can see without reading the sentence.
@@ -46,13 +46,10 @@ const SCALE = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
 // indicator column so the model can tell imputed from real.
 const meanOr = (vals) => { const k = vals.filter((v) => v !== null); return k.length ? k.reduce((a, v) => a + v, 0) / k.length : 0; };
 const PROB = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
-const LEVEL = { Low: 1, Medium: 3, High: 5 };
 const rawIntensity = (b) => (Number(b.intensity) ? Number(b.intensity) / 5 : null);
 const rawProb = (b) => (PROB[b.probability] ? PROB[b.probability] / 5 : null);
-const rawLevel = (b) => (LEVEL[b.riskLevel] ? LEVEL[b.riskLevel] / 5 : null);
 const M_INT = meanOr(resolved.map(rawIntensity));
 const M_PROB = meanOr(resolved.map(rawProb));
-const M_LEV = meanOr(resolved.map(rawLevel));
 
 // COLLINEARITY, established from the data and recorded so nobody re-adds it:
 // Risk Level matches a pure function of Probability on 128/128 rows where both
@@ -127,12 +124,13 @@ const loo = rows.map((r, i) => {
   return { id: r.id, p: predict(b, r.x), y: r.y };
 });
 
-const acaps = resolved.map((b) => ({
-  id: b.id,
-  p: SCALE[b.probability] ? SCALE[b.probability] / 5 : resolved.reduce((a, x) => a + x.outcome, 0) / resolved.length,
-  y: b.outcome,
-}));
 const base = resolved.reduce((a, b) => a + b.outcome, 0) / resolved.length;
+// HEADLINE: ACAPS' rating read off its own published percentage bands (midpoints,
+// "Very High" = 0.905). SENSITIVITY: the ordinal n/5 reading ("Very High" = 1.00),
+// kept because earlier documents quoted it. A certain forecast is infinitely
+// overconfident under a log score, so the midpoint is the defensible headline.
+const acaps = resolved.map((b) => ({ id: b.id, p: BAND_MIDPOINT[b.probability] ?? base, y: b.outcome }));
+const acapsOrdinal = resolved.map((b) => ({ id: b.id, p: SCALE[b.probability] ? SCALE[b.probability] / 5 : base, y: b.outcome }));
 const constant = resolved.map((b) => ({ id: b.id, p: base, y: b.outcome }));
 
 const fmt = (r) =>
@@ -147,7 +145,8 @@ console.log(`beta                       : [${beta.map((v) => v.toFixed(3)).join(
 
 console.log('Brier scores:');
 console.log('  constant (base rate)             ', fmt(bootstrapBrier(constant)));
-console.log('  ACAPS rating /5                  ', fmt(bootstrapBrier(acaps)));
+console.log('  ACAPS rating, band midpoints     ', fmt(bootstrapBrier(acaps)), '   <- headline');
+console.log('  ACAPS rating, ordinal /5         ', fmt(bootstrapBrier(acapsOrdinal)), '   <- sensitivity');
 console.log('  logistic, IN-SAMPLE  (optimistic)', fmt(bootstrapBrier(inSample)));
 console.log('  logistic, LOO-CV     (the bar)   ', fmt(bootstrapBrier(loo)));
 console.log();
@@ -156,6 +155,7 @@ console.log('paired comparisons (same 104 risks):');
 cmp(inSample, constant, 'in-sample vs constant');
 cmp(loo, constant, 'LOO-CV vs constant');
 cmp(loo, acaps, 'LOO-CV vs ACAPS rating');
+cmp(loo, acapsOrdinal, 'LOO-CV vs ACAPS (ordinal)');
 console.log();
 
 const gap = bootstrapBrier(acaps).score - bootstrapBrier(loo).score;
@@ -168,6 +168,6 @@ console.log('than a number nobody can recompute.');
 
 fs.writeFileSync(
   path.join(ROOT, 'data', 'baseline-fit.json'),
-  JSON.stringify({ n: rows.length, beta, brier: { constant: bootstrapBrier(constant).score, baseRate: base, inSample: bootstrapBrier(inSample).score, loo: bootstrapBrier(loo).score, acaps: bootstrapBrier(acaps).score } }, null, 2)
+  JSON.stringify({ n: rows.length, beta, brier: { constant: bootstrapBrier(constant).score, baseRate: base, inSample: bootstrapBrier(inSample).score, loo: bootstrapBrier(loo).score, acaps: bootstrapBrier(acaps).score, acapsOrdinal: bootstrapBrier(acapsOrdinal).score } }, null, 2)
 );
 console.log('\nwritten: data/baseline-fit.json');

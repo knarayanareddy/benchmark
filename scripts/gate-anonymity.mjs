@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   LEVELS, LEVEL_COPY, DEFAULT_LEVEL, attribute, publicable, PUBLIC,
-} from '../packages/core/src/anonymity.js';
+} from '@benchmark/core/anonymity';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const problems = [];
@@ -41,7 +41,7 @@ for (const lvl of levels) {
 // 3: no internal id survives attribution, at any level
 const fixture = { expertId: 'e-SECRET-001', name: 'Test Person', country: 'TCD', text: 'x', at: 'T' };
 for (const lvl of levels) {
-  const out = attribute(fixture, lvl);
+  const out = attribute(fixture, lvl, { salt: 'gate-anonymity-fixture-salt' });
   if ('expertId' in out) problems.push(`${lvl}: attribution leaks expertId`);
   if (JSON.stringify(out).includes('e-SECRET-001')) problems.push(`${lvl}: expertId survives in the payload`);
 }

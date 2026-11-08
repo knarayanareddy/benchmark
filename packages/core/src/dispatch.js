@@ -13,18 +13,33 @@ export const TYPES = Object.freeze({
 
 export const DEFAULT_CAP = Object.freeze({ perWeek: 3, instantOnlyAbove: TYPES.outlier });
 
-export function matches(card, declaration = {}) {
+/**
+ * Does this card fall inside the expert's Declaration?
+ *
+ * An EMPTY Declaration matches NOTHING: skipping it must not mean "tell me
+ * everything", or the weekly cap becomes the only relevance filter. Matching
+ * every card is a separate, explicit choice (`{ all: true }`) reserved for
+ * moderators. Within a non-empty Declaration an undeclared dimension is a
+ * wildcard, a declared one must hit.
+ */
+export function matches(card, declaration = {}, { all = false } = {}) {
+  if (all === true) return true;
+  const countries = declaration.countries || [];
   const regions = declaration.regions || [];
   const themes = declaration.themes || [];
-  const regionHit = regions.length === 0 || regions.includes(card.region);
-  const themeHit = themes.length === 0 || themes.includes(card.theme);
-  return regionHit && themeHit;
+  if (countries.length === 0 && regions.length === 0 && themes.length === 0) return false;
+  const countryHit = countries.length === 0 || countries.includes(card.country);
+  // A question that was not given a region or a theme cannot be narrowed by it: a person who ticked "health" is
+  // not hidden from a question nobody classified.
+  const regionHit = regions.length === 0 || !card.region || regions.includes(card.region);
+  const themeHit = themes.length === 0 || !card.theme || themes.includes(card.theme);
+  return countryHit && regionHit && themeHit;
 }
 
 /**
- * @param {object[]} candidates [{type, card, expert, severity}]
+ * @param {Array<Record<string, any>>} candidates [{type, card, expert, severity}]
  * @param {{perWeek:number}} cap
- * @param {object[]} history  notifications already sent this week
+ * @param {Array<Record<string, any>>} history  notifications already sent this week
  */
 export function dispatch(candidates = [], cap = DEFAULT_CAP, history = []) {
   const perWeek = typeof cap === 'number' ? cap : cap.perWeek;

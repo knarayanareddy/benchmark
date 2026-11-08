@@ -1,0 +1,14 @@
+/* The question page: resolution disclosure, how sure, why, basis, stake. Uses the variables in styles.css. */
+.q-time { margin-left: .4rem; font-size: .82rem; }
+.resolution { margin: .6rem 0 .8rem; padding: .7rem 1rem; border: 1px solid var(--stone-200); border-radius: .85rem; background: var(--stone-50); }
+.resolution summary { cursor: pointer; font-weight: 600; color: var(--ink-2); }
+.resolution p { margin: .5rem 0 0; font-size: .93rem; }
+.q-context { margin-top: 1.2rem; }
+.q-context h4 { margin: 1.1rem 0 .5rem; font: 600 1.02rem/1.3 var(--sans); color: var(--ink); }
+.q-context textarea { min-height: 5rem; }
+.q-coi { display: flex; gap: .6rem; align-items: flex-start; margin-top: 1.1rem; font-weight: 400; }
+.q-coi input { margin-top: .25rem; flex: none; }
+.q-identity { margin-top: 1rem; padding: .8rem 1rem; border: 1px solid var(--stone-200); border-radius: .85rem; background: #fff; }
+.q-identity p { margin: .15rem 0; }
+.q-foot { margin-top: .9rem; text-align: center; }
+button.lock { width: 100%; min-height: 3.1rem; font-size: 1.05rem; }

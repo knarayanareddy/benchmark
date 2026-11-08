@@ -23,8 +23,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { LADDER } from '../packages/core/src/scoring.js';
-import { gate, evaluateObservable } from '../packages/core/src/gate.js';
+import { LADDER } from '@benchmark/core/scoring';
+import { gate, evaluateObservable } from '@benchmark/core/gate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
@@ -71,6 +71,7 @@ if (!fs.existsSync(fitPath)) {
   const checks = [
     ['naiveFloor', fit.brier.constant],
     ['acapsRatings', fit.brier.acaps],
+    ['acapsOrdinal', fit.brier.acapsOrdinal],
     ['fourFieldLogistic', fit.brier.loo],
   ];
   for (const [k, measured] of checks) {
@@ -81,7 +82,7 @@ if (!fs.existsSync(fitPath)) {
   if (LADDER.fourFieldLogistic < LADDER.acapsRatings) {
     fail('LADDER claims the regression beat ACAPS — it does not. Fix the claim, not the test.');
   }
-  console.log(`✓ ladder matches the fitted artefacts: ${LADDER.naiveFloor} / ${LADDER.acapsRatings} / ${LADDER.fourFieldLogistic}`);
+  console.log(`✓ ladder matches the fitted artefacts: ${LADDER.naiveFloor} / ${LADDER.acapsRatings} (ordinal ${LADDER.acapsOrdinal}) / ${LADDER.fourFieldLogistic}`);
 }
 
 // ── 2. retired figures in prose ─────────────────────────────────────────────
@@ -116,6 +117,7 @@ const counts = {
   active: blocks.filter((b) => b.status === 'Active').length,
   triggers: allTriggers.length,
   scoredTriggers: scoredTriggers.length,
+  activeTriggers: blocks.filter((b) => b.status === 'Active').reduce((n, b) => n + (b.triggerList || []).length, 0),
   unwrittenObjective: scoredTriggers.filter((t) => !t.objective).length,
   noTriggers: blocks.filter((b) => (b.triggerCount ?? 0) === 0).length,
   noProbability: blocks.filter((b) => !b.probability).length,
@@ -129,6 +131,7 @@ const EXPECT = {
   active: 28,
   triggers: 266,
   scoredTriggers: 139,
+  activeTriggers: 76,
   unwrittenObjective: 101,
   noTriggers: 31,
   noProbability: 11,
@@ -150,7 +153,45 @@ const TEST_MAP = [
   ['packages/core/src/aggregate.js', 'packages/benchmark/test/aggregate.test.js'],
   ['packages/core/src/gate.js', 'packages/benchmark/test/gate.test.js'],
   ['packages/core/src/dispatch.js', 'packages/benchmark/test/dispatch.test.js'],
+  ['packages/core/src/taxonomy.js', 'packages/benchmark/test/taxonomy.test.js'],
+  ['packages/core/src/radar.js', 'packages/benchmark/test/radar.test.js'],
+  ['packages/core/src/pulse.js', 'packages/benchmark/test/pulse.test.js'],
+  ['packages/core/src/timeline.js', 'packages/benchmark/test/timeline.test.js'],
+  ['packages/core/src/series.js', 'packages/benchmark/test/series.test.js'],
+  ['packages/core/src/grid.js', 'packages/benchmark/test/grid.test.js'],
+  ['packages/core/src/links.js', 'packages/benchmark/test/links.test.js'],
   ['packages/core/src/anonymity.js', 'packages/benchmark/test/anonymity.test.js'],
+  ['packages/core/src/hmac.js', 'packages/benchmark/test/hmac.test.js'],
+  ['packages/service/src/service.js', 'packages/service/test/flow.test.js'],
+  ['packages/service/src/http.js', 'packages/service/test/http.test.js'],
+  ['packages/service/src/oidc.js', 'packages/service/test/oidc.test.js'],
+  ['packages/service/src/migrate.js', 'packages/service/test/migrate.test.js'],
+  ['packages/service/test/breakglass.test.js', 'packages/service/test/breakglass.test.js'],
+  ['packages/service/test/device.test.js', 'packages/service/test/device.test.js'],
+  ['packages/service/test/blind-round1.test.js', 'packages/service/test/blind-round1.test.js'],
+  ['packages/core/src/secondlook.js', 'packages/benchmark/test/secondlook.test.js'],
+  ['packages/service/test/secondlook.test.js', 'packages/service/test/secondlook.test.js'],
+  ['packages/core/src/blind.js', 'packages/benchmark/test/blind.test.js'],
+  ['packages/core/src/roundtable.js', 'packages/benchmark/test/roundtable.test.js'],
+  ['packages/core/src/publication.js', 'packages/benchmark/test/publication.test.js'],
+  ['packages/core/src/sensitive.js', 'packages/benchmark/test/sensitive.test.js'],
+  ['packages/core/src/onboarding.js', 'packages/benchmark/test/onboarding.test.js'],
+  ['packages/service/test/roundtable.test.js', 'packages/service/test/roundtable.test.js'],
+  ['packages/service/test/publication.test.js', 'packages/service/test/publication.test.js'],
+  ['packages/service/test/radar.test.js', 'packages/service/test/radar.test.js'],
+  ['packages/service/test/profile.test.js', 'packages/service/test/profile.test.js'],
+  ['packages/service/test/pulse.test.js', 'packages/service/test/pulse.test.js'],
+  ['packages/service/test/demo.test.js', 'packages/service/test/demo.test.js'],
+  ['packages/service/src/evolution.js', 'packages/service/test/evolution.test.js'],
+  ['packages/service/test/hardening.test.js', 'packages/service/test/hardening.test.js'],
+  ['packages/service/test/answer-context.test.js', 'packages/service/test/answer-context.test.js'],
+  ['packages/service/test/port-data.test.js', 'packages/service/test/port-data.test.js'],
+  ['packages/service/test/release-access.test.js', 'packages/service/test/release-access.test.js'],
+  ['packages/core/src/stats.js', 'packages/benchmark/test/stats.test.js'],
+  ['packages/core/src/csv.js', 'packages/benchmark/test/csv.test.js'],
+  ['packages/core/src/authoring.js', 'packages/benchmark/test/authoring.test.js'],
+  ['packages/service/test/ui.test.js', 'packages/service/test/ui.test.js'],
+  ['packages/service/db/migrations/', 'packages/service/test/schema.test.js'],
   ['packages/benchmark/src/dissent.js', 'packages/benchmark/test/dissent.test.js'],
 ];
 
@@ -162,18 +203,66 @@ for (const [modLabel, relTest] of TEST_MAP) {
     fail(`missing test file ${relTest} mapped to ${modLabel}`);
     continue;
   }
-  const run = spawnSync(process.execPath, ['--test', full], {
+  const run = spawnSync(process.execPath, ['--test', '--test-reporter=tap', full], {
     cwd: ROOT,
     encoding: 'utf8',
   });
   const m = /^# tests (\d+)$/m.exec(run.stdout || '');
   if (run.status !== 0 || !m) {
-    fail(`could not measure test count from ${relTest} (exit=${run.status})`);
+    // Say WHY: the names of the failing tests and the tail of the output, so a flaky test is diagnosable.
+    const out = `${run.stdout || ''}${run.stderr || ''}`;
+    const failing = [...out.matchAll(/^not ok \d+ - (.+)$/gm)].map((x) => x[1]).slice(0, 5);
+    fail(`could not measure test count from ${relTest} (exit=${run.status}${run.signal ? `, signal ${run.signal}` : ''})${failing.length ? `; failing: ${failing.join(' | ')}` : ''}\n${out.trim().split('\n').slice(-12).join('\n')}`);
     continue;
   }
   const n = Number(m[1]);
   perModuleTests.set(modLabel, n);
   totalTests += n;
+}
+
+// The React apps are tested with vitest, which reports its own counts.
+const WEB_MAP = [
+  ['packages/web/src/lib/', 'packages/web/src/lib/lib.test.js'],
+  ['packages/web/src/expert/', 'packages/web/src/expert/expert.test.jsx'],
+  ['packages/web/src/staff/', 'packages/web/src/staff/staff.test.jsx'],
+  ['packages/web/src/expert/roundtable.test.jsx', 'packages/web/src/expert/roundtable.test.jsx'],
+  ['packages/web/src/staff/roundtable.test.jsx', 'packages/web/src/staff/roundtable.test.jsx'],
+  ['packages/web/src/expert/credit.test.jsx', 'packages/web/src/expert/credit.test.jsx'],
+  ['packages/web/src/staff/credit.test.jsx', 'packages/web/src/staff/credit.test.jsx'],
+  ['packages/web/src/credits/credits.test.jsx', 'packages/web/src/credits/credits.test.jsx'],
+  ['packages/web/src/expert/profile.test.jsx', 'packages/web/src/expert/profile.test.jsx'],
+  ['packages/web/src/expert/pulse.test.jsx', 'packages/web/src/expert/pulse.test.jsx'],
+  ['packages/web/src/expert/question.test.jsx', 'packages/web/src/expert/question.test.jsx'],
+  ['packages/web/src/expert/picture.test.jsx', 'packages/web/src/expert/picture.test.jsx'],
+  ['packages/web/src/expert/questionpage.test.jsx', 'packages/web/src/expert/questionpage.test.jsx'],
+  ['packages/web/src/expert/signout.test.jsx', 'packages/web/src/expert/signout.test.jsx'],
+  ['packages/web/src/lib/context.test.js', 'packages/web/src/lib/context.test.js'],
+  ['packages/web/src/lib/signout.test.js', 'packages/web/src/lib/signout.test.js'],
+  ['packages/web/src/expert/risks.test.jsx', 'packages/web/src/expert/risks.test.jsx'],
+  ['packages/web/src/staff/dispatch.test.jsx', 'packages/web/src/staff/dispatch.test.jsx'],
+  ['packages/web/src/demo.test.jsx', 'packages/web/src/demo.test.jsx'],
+  ['packages/web/src/expert/join.test.jsx', 'packages/web/src/expert/join.test.jsx'],
+  ['packages/web/src/components/chips.test.jsx', 'packages/web/src/components/chips.test.jsx'],
+  ['packages/web/src/staff/evolution.test.jsx', 'packages/web/src/staff/evolution.test.jsx'],
+  ['packages/web/src/components/stepchart.test.jsx', 'packages/web/src/components/stepchart.test.jsx'],
+  ['packages/web/src/components/timeline.test.jsx', 'packages/web/src/components/timeline.test.jsx'],
+];
+{
+  const out = path.join(ROOT, 'packages/web/.vitest-count.json');
+  const run = spawnSync('npx', ['vitest', 'run', '--reporter=json', `--outputFile=${out}`], { cwd: path.join(ROOT, 'packages/web'), encoding: 'utf8' });
+  if (run.status !== 0 || !fs.existsSync(out)) {
+    fail(`could not run the web tests to count them (exit=${run.status})`);
+  } else {
+    const rep = JSON.parse(fs.readFileSync(out, 'utf8'));
+    fs.rmSync(out);
+    for (const [modLabel, rel] of WEB_MAP) {
+      const f = rep.testResults.find((r) => r.name.endsWith(rel.replace('packages/web/', '')));
+      const n = f ? f.assertionResults.length : 0;
+      if (!f || n === 0) { fail(`vitest reported no tests for ${rel}`); continue; }
+      perModuleTests.set(modLabel, n);
+      totalTests += n;
+    }
+  }
 }
 
 const readmeSrc = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');

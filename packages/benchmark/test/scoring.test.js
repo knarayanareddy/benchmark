@@ -1,14 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { brier, bootstrapBrier, paired, calibration, observed, LADDER, REGRESSION_BEATS_ACAPS } from '../../core/src/scoring.js';
+import { brier, bootstrapBrier, paired, calibration, observed, LADDER, REGRESSION_BEATS_ACAPS } from '@benchmark/core/scoring';
 
 const mk = (p, y, id) => ({ p, y, id });
 const det = Array.from({ length: 104 }, (_, i) => mk(0.7, i % 3 === 0 ? 1 : 0, i));
 
 // This test used to assert `fourFieldLogistic < acapsRatings` under the title
 // "model beats ACAPS". Both the direction and the claim were wrong: the
-// regression scores 0.2177 out of sample against ACAPS's 0.2168. The ladder is
+// regression scores 0.2177 out of sample against ACAPS's 0.2171. The ladder is
 // now pinned to what the scripts actually produce, and the ordering it asserts
 // is the one that flatters nobody.
 test('the ladder is recorded, and it says the regression did not beat ACAPS', () => {
@@ -106,3 +106,44 @@ test('scoring boundary rejects out-of-range probabilities and non-binary outcome
   assert.deepEqual(observed([{ p: 0.5, y: null }, { p: 0.5, y: undefined }]), []);
 });
 
+
+test('paired throws on duplicate ids instead of inflating n (B-07, probe P9b)', () => {
+  const a = [{ id: 1, p: 0.9, y: 0 }, { id: 1, p: 0.9, y: 0 }];
+  const b = [{ id: 1, p: 0.1, y: 0 }];
+  assert.throws(() => paired(a, b), /duplicate id 1 in the first array/);
+  assert.throws(() => paired(b, a), /duplicate id 1 in the second array/);
+});
+
+test('paired reports n_unique and n_dropped so an array mismatch is visible (B-07)', () => {
+  const a = det.map((d) => ({ ...d, p: 0.5 }));
+  const b = det.slice(0, 100).map((d) => ({ ...d, p: 0.6 }));
+  const r = paired(a, b);
+  assert.equal(r.n, 100);
+  assert.equal(r.n_unique, 100);
+  assert.equal(r.n_dropped, 4);
+  const tiny = paired([{ id: 'x', p: 0.5, y: 1 }], [{ id: 'y', p: 0.5, y: 1 }]);
+  assert.equal(tiny.n_unique, 0);
+  assert.equal(tiny.n_dropped, 2);
+});
+
+test('a non-finite probability is reported as NaN, not null (B-20)', () => {
+  assert.throws(() => brier([{ p: Number.NaN, y: 1 }]), /got NaN/);
+});
+
+test('both ACAPS readings reproduce from the data; the headline is the band midpoint (B-09)', async () => {
+  const { BAND_MIDPOINT, clampForecast } = await import('@benchmark/core/aggregate');
+  const blocks = JSON.parse(fs.readFileSync(new URL('../../../data/risk-radar.json', import.meta.url), 'utf8'));
+  const resolved = blocks.filter((b) => b.outcome === 0 || b.outcome === 1);
+  const base = resolved.reduce((a, b) => a + b.outcome, 0) / resolved.length;
+  const ORD = { 'Very Low': 1, Low: 2, Medium: 3, High: 4, 'Very High': 5 };
+  const mid = brier(resolved.map((b) => ({ p: BAND_MIDPOINT[b.probability] ?? base, y: b.outcome }))).score;
+  const ord = brier(resolved.map((b) => ({ p: ORD[b.probability] ? ORD[b.probability] / 5 : base, y: b.outcome }))).score;
+  assert.equal(mid.toFixed(4), LADDER.acapsRatings.toFixed(4));
+  assert.equal(ord.toFixed(4), LADDER.acapsOrdinal.toFixed(4));
+  assert.deepEqual(BAND_MIDPOINT, { 'Very Low': 0.1, Low: 0.305, Medium: 0.505, High: 0.705, 'Very High': 0.905 });
+  assert.ok(BAND_MIDPOINT['Very High'] < 1, '"Very High" is never a certain forecast');
+  assert.equal(clampForecast(1), 0.99);
+  assert.equal(clampForecast(0), 0.01);
+  assert.equal(clampForecast(0.4), 0.4);
+  assert.throws(() => clampForecast(1.2), RangeError);
+});

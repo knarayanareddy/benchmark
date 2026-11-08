@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src'].map((d) => path.join(ROOT, d));
+const SCAN = ['packages/shared', 'packages/core/src', 'packages/benchmark/src', 'packages/service/src'].map((d) => path.join(ROOT, d));
 
 const FORBIDDEN = [
   { re: /\bdocument\.cookie\b/, why: 'cookie write' },
@@ -17,7 +17,7 @@ const FORBIDDEN = [
   { re: /\bnavigator\.sendBeacon\(/, why: 'bypasses the validated write path' },
 ];
 
-let problems = [];
+const problems = [];
 const walk = (dir) => {
   if (!fs.existsSync(dir)) return;
   for (const f of fs.readdirSync(dir, { withFileTypes: true })) {

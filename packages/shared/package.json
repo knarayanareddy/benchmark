@@ -1,0 +1,10 @@
+{
+  "name": "@benchmark/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The shared spine (card, validate, loop, a11y). Integrity-checked by scripts/check-spine.mjs against a fingerprint, because it is copied into a sister repository.",
+  "license": "MIT",
+  "exports": { ".": "./index.js", "./*": "./*.js" },
+  "sideEffects": false
+}

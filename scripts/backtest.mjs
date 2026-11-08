@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bootstrapBrier, paired, calibration, LADDER } from '../packages/core/src/scoring.js';
+import { bootstrapBrier, paired, calibration, LADDER } from '@benchmark/core/scoring';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');
@@ -51,5 +51,5 @@ calibration(panelPlusIntensity, 4).forEach((b) =>
 console.log('\nreference ladder:');
 console.log(`  naive floor           ${LADDER.naiveFloor}`);
 console.log(`  ACAPS judgement       ${LADDER.acapsRatings}`);
-console.log(`  structured logistic   ${LADDER.fourFieldLogistic}   ← out of sample; loses to ACAPS`);
+console.log(`  structured logistic   ${LADDER.fourFieldLogistic}   ← out of sample; nominally behind ACAPS, indistinguishable`);
 console.log('\n⚠ synthetic predictor — this proves the harness, not the panel.');

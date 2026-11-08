@@ -20,7 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SEVERITY, gate, evaluateObservable } from '../packages/core/src/gate.js';
+import { SEVERITY, gate, evaluateObservable } from '@benchmark/core/gate';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const file = path.join(ROOT, 'data/risk-radar.json');

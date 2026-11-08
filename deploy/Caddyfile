@@ -1,0 +1,9 @@
+# Caddy obtains and renews the certificate and sets X-Forwarded-For / -Proto, which the service trusts
+# (BENCHMARK_TRUST_PROXY=1). The service sets HSTS and the security headers itself.
+{$DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 64KB
+	}
+	reverse_proxy app:8080
+}

@@ -1,0 +1,56 @@
+/* ── Pulse, the question page and the side cards (the prototype's layout, in our styles) ── */
+body:has(.pulse-page) main { max-width: 72rem; }
+body:has(.question-page) main { max-width: 48rem; }
+.pulse-waiting { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; justify-content: space-between; }
+.pulse-grid { display: grid; gap: 1.5rem; }
+@media (min-width: 64rem) { .pulse-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+.pulse-main { display: grid; gap: 1.25rem; align-content: start; min-width: 0; }
+.pulse-head .page-sub { margin: .3rem 0 0; }
+.pulse-page .card { margin: 0; }
+.pulse-page h2 { font: 600 1.25rem/1.3 var(--serif); margin: 0 0 .3rem; }
+.pulse-page section.pulse-section { display: grid; gap: .75rem; margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
+.pulse-section > h2 + p { margin: 0 0 .4rem; }
+.pulse-badge { display: inline-block; margin-left: .35rem; padding: .05rem .4rem; border-radius: 999px; background: var(--amber-300); color: var(--amber-900); font: 700 .7rem/1.4 var(--sans); }
+
+.pulse-ask { border-color: var(--teal-200); }
+.pulse-ask .pills { margin-bottom: .5rem; }
+.pulse-ask h3 { font: 600 1.125rem/1.35 var(--serif); margin: 0; }
+.pulse-when, .pulse-when-block { font-size: .75rem; color: var(--stone-500); }
+.pulse-when-block { display: block; margin-top: .2rem; }
+.pulse-reasons { margin-top: .5rem; border-radius: .5rem; background: var(--stone-50); padding: .5rem .75rem; font-size: .75rem; color: #57534e; }
+.pulse-answer { margin-top: .75rem; min-height: 2.25rem; padding: .55rem 1rem; font-size: .875rem; }
+
+.pulse-caught-title { font: 600 1.125rem/1.3 var(--sans); color: var(--ink); }
+.pulse-radar-item { display: block; width: 100%; min-height: 0; margin: 0; padding: .75rem; border: 1px solid var(--stone-200); border-radius: .75rem; background: #fff; color: var(--ink); box-shadow: none; font: 400 .875rem/1.45 var(--sans); text-align: left; }
+.pulse-radar-item:hover:not(:disabled) { background: #fff; border-color: var(--teal-600); color: var(--ink); }
+.pulse-transparency { font-size: .875rem; color: var(--ink-3); }
+.pulse-transparency summary { cursor: pointer; }
+.pulse-transparency p { margin: .4rem 0 0; }
+
+.pulse-side { display: grid; gap: 1rem; align-content: start; min-width: 0; }
+.pulse-kicker { font: 600 .75rem/1.3 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--stone-500); }
+.pulse-big { margin-top: .25rem; font: 600 1.875rem/1.2 var(--serif); color: var(--teal-800); }
+.pulse-big span { font-size: 1rem; color: var(--stone-500); }
+.pulse-side-text { margin: .5rem 0 0; font-size: .875rem; color: var(--ink-3); }
+.pulse-standing { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; margin-top: .4rem; font-size: .875rem; color: var(--ink-3); }
+.pulse-standing .pill { margin: 0; }
+.pulse-page button.pulse-open { margin-top: .5rem; padding: 0; min-height: 0; color: var(--teal-700); font-size: .875rem; text-decoration: underline; background: transparent; border-color: transparent; }
+
+.question-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: 1rem; font-size: .875rem; color: var(--stone-500); }
+.question-crumbs .pill { margin: 0; }
+.question-page button.question-back { padding: 0; min-height: 0; color: var(--stone-500); font-size: .875rem; text-decoration: none; }
+.question-page button.question-back:hover:not(:disabled) { color: var(--ink); text-decoration: underline; }
+/* The breadcrumb row above already names the country, theme and kind, so the card's own copy of those pills is not repeated. */
+.question-page > .question > .pills { display: none; }
+
+.risk-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .4rem .9rem; align-items: end; margin-bottom: 1.25rem; }
+.risk-filters .field label { margin-top: .6rem; }
+.risk-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.risk-row { background: #fff; border: 1px solid var(--stone-200); border-radius: .9rem; padding: .8rem 1rem; }
+.risk-title { font: 600 1rem/1.3 var(--serif); color: var(--ink); text-align: left; padding: 0; }
+.risk-detail h2 { font: 600 1.35rem/1.25 var(--serif); margin: .5rem 0 .75rem; }
+.risk-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem 1.1rem; margin: 1rem 0; }
+.risk-facts dt { color: var(--ink-3); font-size: .9rem; }
+.risk-facts dd { margin: 0; }
+
+.back { margin-bottom: .9rem; }
