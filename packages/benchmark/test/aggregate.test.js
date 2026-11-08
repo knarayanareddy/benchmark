@@ -222,6 +222,33 @@ test('no expertId, name, country or declaration ever survives into aggregate() o
 
 // ── 3. ACAPS Probability × Impact → Risk Level bridge (Full A3) ─────────────
 
+test('the band boundary at 0.2 is pinned, and stated as a convention (D3)', () => {
+  // ACAPS publishes integer percentages, so "20%" is inclusive of 0.2 here.
+  // This is our convention and it was untested: a silent flip would move
+  // every card sitting exactly on a boundary into the band below.
+  const cases = [
+    [0, 'Very Low'],
+    [0.1999, 'Very Low'],
+    [0.2, 'Very Low'],
+    [0.2001, 'Low'],
+    [0.4, 'Low'],
+    [0.4001, 'Medium'],
+    [0.6, 'Medium'],
+    [0.6001, 'High'],
+    [0.8, 'High'],
+    [0.8001, 'Very High'],
+    [0.999, 'Very High'],
+    [1, 'Very High'],
+  ];
+  for (const [p, label] of cases) {
+    const band = probabilityBand(p);
+    assert.equal(band.label, label, `p=${p} must band as ${label}`);
+    assert.equal(band.boundary, 'upper-inclusive', 'the convention must travel with the answer');
+    const [lo, hi] = band.range;
+    assert.ok(p >= lo && p <= hi, `p=${p} must lie inside its own range ${lo}-${hi}`);
+  }
+});
+
 test('probabilityBand aligns with ACAPS percentage bands, midpoints and /5 ordinals', () => {
   const cases = [
     [0.00, 'Very Low', 1],

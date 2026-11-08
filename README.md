@@ -2,10 +2,10 @@
 
 A single-question elicitation card (designed for a ninety-second target budget on a phone) that turns each of ACAPS' own risk statements into a probability — plus a dispatch layer that puts the right question in front of the right expert, and a dissent channel that routes objections back into the language of the risk rather than only its number.
 
-**Status: runnable scaffold and pre-registered evaluation design, not a deployed product.** The pure core, the shared spine, the gate, the dissent loop and 116 tests are real and green, and they run against the real 139-risk export. The interface, persistence and auth layers are not built — see [`BUILD.md`](BUILD.md). No human panel has been run yet; surrounding HTML design files specify the proposed system, not completed empirical trial results.
+**Status: runnable scaffold and pre-registered evaluation design, not a deployed product.** The pure core, the shared spine, the gate, the dissent loop and 117 tests are real and green, and they run against the real 139-risk export. The interface, persistence and auth layers are not built — see [`BUILD.md`](BUILD.md). No human panel has been run yet; surrounding HTML design files specify the proposed system, not completed empirical trial results.
 
 ```bash
-npm run verify     # 116 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
+npm run verify     # 117 tests, anonymity gate, privacy gate, numbers gate, export gate, baselines, dissent journey
 npm run ladder     # regenerates the three baseline figures from data/
 ```
 

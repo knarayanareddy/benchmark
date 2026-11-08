@@ -31,6 +31,17 @@ if (!/npm run test|node --test/.test(verify)) {
   problems.push('verify does not run the unit tests');
 }
 
+// G6: `node --test packages/*/test/*.test.js` relies on the *shell* expanding
+// the glob. cmd.exe does not, so on Windows the documented command tests
+// nothing and exits 0. Node >=20 discovers test files itself.
+const testCmd = pkg.scripts.test || '';
+if (/[a-z]\/\*/.test(testCmd)) {
+  problems.push(`\`npm test\` is \`${testCmd}\` — a shell-expanded glob, which silently matches nothing on Windows; use \`node --test\``);
+}
+if (!pkg.workspaces) {
+  problems.push('package.json declares no workspaces, but packages/* are separate packages');
+}
+
 // The list in the CI file must not contradict verify by naming a gate that is
 // absent from package.json.
 for (const m of ci.matchAll(/run:\s*npm (?:run )?([\w:-]+)/g)) {

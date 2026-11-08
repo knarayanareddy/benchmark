@@ -483,11 +483,25 @@ export function probabilityBand(p) {
   assertProbability(p, 'p');
   for (const band of ACAPS_BANDS) {
     if (p <= band.max) {
-      return { label: band.label, ordinal: band.ordinal, range: [band.min, band.max] };
+      // `boundary` is stated, not implied. ACAPS publishes integer percentages
+      // (0-20, 21-40), so exactly 0.2 is a convention on our side, not a fact
+      // on theirs — a caller that renders the range must be able to say which
+      // side of it the value falls on without reading this loop.
+      return {
+        label: band.label,
+        ordinal: band.ordinal,
+        range: [band.min, band.max],
+        boundary: 'upper-inclusive',
+      };
     }
   }
   const last = ACAPS_BANDS[ACAPS_BANDS.length - 1];
-  return { label: last.label, ordinal: last.ordinal, range: [last.min, last.max] };
+  return {
+    label: last.label,
+    ordinal: last.ordinal,
+    range: [last.min, last.max],
+    boundary: 'upper-inclusive',
+  };
 }
 
 function parseImpact(impact) {

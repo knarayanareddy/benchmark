@@ -17,9 +17,33 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
+
+// D1: two byte-identical exports, only one of them read. `ingest.py` reads
+// data/, so refreshing the organiser copy would leave every gate green on a
+// stale file. Assert they match instead of assuming they do.
+const exportPaths = [
+  path.join(ROOT, 'data/risk-radar-export.csv'),
+  path.join(ROOT, 'organiser/acaps/data/risk-radar-export.csv'),
+].filter((f) => fs.existsSync(f));
+if (exportPaths.length === 2) {
+  const hash = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  const [a, b] = exportPaths.map(hash);
+  if (a !== b) {
+    console.error(
+      `\n✗ the two committed exports have diverged (${a.slice(0, 8)} vs ${b.slice(0, 8)}).\n` +
+        '  ingest.py reads data/ only, so the published figures would be measured\n' +
+        '  against a stale export while every gate stayed green.'
+    );
+    process.exit(1);
+  }
+} else if (exportPaths.length === 1) {
+  console.error(`\n✗ only one of the two declared exports exists — ${path.relative(ROOT, exportPaths[0])}`);
+  process.exit(1);
+}
 const blocks = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'risk-radar.json'), 'utf8'));
 
 const P = { 'Very High': 5, High: 4, Medium: 3, Low: 2, 'Very Low': 1 };

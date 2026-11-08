@@ -705,3 +705,111 @@ console.log(suppress([{country:'TCD'}],10));"
 **Not run** Any browser QA — there is no interface and the mockup cannot be loaded without a server (B1). Node 20 (CI's version) — local is 22; nothing used is newer than ES2020, but that is inference, not evidence. SMTP/webhook delivery and a real multi-week panel — they do not exist.
 
 **Deliberately out of scope** Prose in `research/` and `design/` beyond link and figure checks; the organiser's read-only ACAPS material; whether the underlying market and forecasting-literature claims are true (that is `/plan-ceo-review`, and `docs/03` already answers it honestly).
+
+---
+
+## Remediation status
+
+Every finding below was re-run after the fix. "Fixed" means a **test or gate
+fails** if the behaviour comes back — not that the line looks different.
+
+Gate evidence, on `HEAD` after remediation:
+
+```
+✓ shared spine intact — 7 files match the fingerprint
+✓ 117 tests (22 shared + 10 scoring + 28 aggregate + 14 gate + 29 anonymity + 8 dispatch + 6 dissent), 0 fail
+✓ anonymity gate — 3 levels, each explained, suppression at 10, wired into 7 modules
+✓ privacy gate — no cookie, fingerprint or unvalidated write path; pure modules stay pure
+✓ ladder matches the fitted artefacts: 0.2425 / 0.2168 / 0.2177
+✓ standard errors match: 0.0084 / 0.0184 / 0.0148 paired; MDE 0.0413; n(for 0.02)=445
+✓ no retired figures in 59 files
+✓ counts match: 139 blocks / 104 resolved / 28 active / 266 triggers
+✓ 97/125 against 5x5, 128/128 pure function of Probability, 19/19 deterministic cells
+✓ demo serves over HTTP: index + 3 ES modules (traversal blocked)
+✓ CI runs `npm run verify` (7 scripts, 14 package scripts)
+```
+
+### Ship blockers
+
+| ID | Status | How it is now held |
+|---|---|---|
+| **B1** no interface, demo unopenable | **Fixed** | `scripts/serve.mjs` + `npm run serve`; `scripts/serve-smoke.mjs` asserts index + three ES modules serve over HTTP and that traversal is blocked. A page that falls back to `<noscript>` can no longer pass. |
+| **B2** no persistence | **Not fixed — out of scope** | Genuine architectural gap, correctly out of scope for a design repo. Flagged, not papered over. |
+| **B3** no auth boundary | **Partly** | The anonymity module no longer trusts a caller: salt is mandatory (S3), `attribute()` strips `id` (S1), level is required (S2). The wider auth boundary remains an open design item. |
+| **B4** no transport, `perWeek` has no week | **Not fixed** | `countsAgainstCap()` is now correct (C5), but there is still no clock-anchored window. Documented as an open decision. |
+| **B5** no prospective resolution workflow | **Not fixed** | Product gap; nothing to test. |
+| **B6** "sealed record" copy | **Fixed** | `LEVEL_COPY.ANONYMOUS.capability !== 'none'` fails the anonymity gate, and the gate refuses copy promising "sealed record / moderator can open". The copy now describes what `attribute()` does. |
+
+### Identity and privacy
+
+| ID | Status | How it is now held |
+|---|---|---|
+| **S1** bare `id` into ANONYMOUS | **Fixed** | Removed from the allowlist; gate asserts `out.id === undefined` at every level *and* for an unrecognised level; test for an internal id in the payload. |
+| **S2** missing level fails open | **Fixed** | `level` is required; `aggregate()` refuses a block without one. The demo's `SYNTHETIC_PANEL` was level-less and was exercising the fail-open branch — now `level: 'anonymous'`. |
+| **S3** public dev salt | **Fixed** | No salt (or `'dev-unsalted'`, `'v1'`, `'short'`) throws `/deployment salt/`; gate asserts all four. The journey script itself was running unsalted — that is how the hole survived. |
+| **S4** `leaksBy()` wired to nothing | **Fixed** | `newDissent()` calls it and stores `textWarnings` + `publishable`. New rule: country + time of day warns even on a full panel. |
+| **S5** second-precision timestamp | **Fixed** | `attribute()` coarsens to the day; gate asserts no `HH:MM` survives; the `leaksBy()` warning catches a bypassing caller. |
+| **S6** object-as-map hazards | **Fixed** | `__proto__` alias key covered by test; `Object.entries` in assertions. |
+| **S7** uncountable cells published | **Fixed** | `publicable()` suppresses `undefined`/`NaN`/absent and reports `uncountableCells`; gate asserts it and that the k-floor cannot be lowered by a caller. |
+
+### Correctness
+
+| ID | Status | How it is now held |
+|---|---|---|
+| **C1** window already closed | **Fixed** | `gate()` refuses past windows at a fixed `now`; tests for closed, zero-length, reversed, 50-year and tight-runway windows. |
+| **C2** R5 not enforced at dispatch | **Fixed** | `dispatchable` vs `scoreable` split, tested. |
+| **C3** `suppress()` fails open | **Fixed** | Non-numeric/`NaN`/`null`/absent counts suppress; `suppress(...,0)` throws `RangeError`; numeric strings still pass. |
+| **C4** `releaseAggregate()` throws on shrinkage | **Fixed** | Level check moved after the ballot-key check so the specific error is not shadowed; regression test. |
+| **C5** deferrals count against cap | **Fixed** | Inverted: a row counts **unless** `defer`/`suppress`/`suppressed`/`dissent_actioned`; legacy rows without `decision` count as sends. Regression test with 3 deferrals → `send`. |
+| **C6** declined dissent leaves no trace | **Fixed** | Dismissals now appear in the ledger as `LOOP_KIND.DECLINED` with the reason. |
+| **C7** identified dissent uncontactable | **Fixed** | Identified level without an expert id throws. |
+| **C8** `paired()` drops unmatched | **Fixed** | Reports `unmatchedA`/`unmatchedB`. |
+| **C9** bad bootstrap options → `NaN` | **Fixed** | `reps` 0/1/999, `alpha` `NaN`/0, non-integer `seed` all throw. |
+| **C10** `lo ≤ hi` unchecked | **Fixed** | Asserted in `acapsRiskLevel()`. |
+| **C11** round-2-only accepted | **Fixed** | Refused with a specific message. |
+| **C12** card renders `undefined` | **Fixed** | Secondary-label validation (test); `close()` idempotent. |
+| **C13** `health()` rate 2 | **Fixed** | `anomaly`/`anomalyReason`; `rate()` rejects negative/`NaN`. |
+| **C14** `strict(schema, null)` throws | **Fixed** | Returns errors for `null`, `[1]`, `'x'`. |
+| **C15** zero-width intervals at n ≤ 3 | **Fixed** | Flagged rather than returned as informative. |
+
+### Reproducibility and claims
+
+| ID | Status | How it is now held |
+|---|---|---|
+| **R1** 2,000 vs pre-registered 10,000 | **Fixed** | Release path is 10,000 with an explicit `reps` recorded in `interval`; `bootstrapBrier` still allows a lower count only when asked. |
+| **R2** "SE ≈ 0.04–0.05" wrong by 2–5× | **Fixed** | Measured: 0.0084 / 0.0184 / **0.0148 paired**; MDE 0.0413; n for 0.02 = 445. Written to `data/power-baseline.json`, quoted in `docs/02`, and asserted by the numbers gate. |
+| **R3** ~8 figures ungated | **Fixed** | `PROSE_FIGURES` block: every SE/MDE figure must appear in `docs/02` and match the artefact; `nFor002` pinned. |
+| **R4** `17%` / `51%` unverified | **Partly** | The survey figure is retired, not restated: the correction notice now sits on the same line as the number, which is what the per-line rule requires. `51%` remains a figure with no script behind it — marked, not manufactured. |
+| **R5** doc drift no gate can see | **Fixed** | Test counts, block counts, gate counts and the observable precision are all derived by `numbers-gate`; 59 files scanned. |
+| **R6** LOO leaks through global means | **Fixed (claim), open (method)** | The disputed score **is** reproducible — as the leave-one-out value, not a reading of ACAPS' rating. The header of `measure-baseline.mjs` said the opposite and now says this, and the numbers gate pins it to `data/baseline-fit.json` rather than to prose. The imputation-mean leak is recorded as a limitation of the figure, not fixed in the fit. |
+
+### Gates, CI, data
+
+| ID | Status | How it is now held |
+|---|---|---|
+| **G1** new spine file is benign | **Fixed** | A new shared file increments `bad`; `--write` is the deliberate escape hatch. |
+| **G2** privacy gate misses `node:https` | **Fixed** | Now catches `fetch(`, `globalThis.fetch`, `XMLHttpRequest`, `WebSocket`/`EventSource`, `node:https|http|net|tls|dns|dgram` imports, and dynamic `import()` of a URL. Probed with a file that used all four; all four fire; the clean tree still passes. |
+| **G3** file-scoped excusal | **Fixed** | Per line, ±2 lines of context. This document itself was the live example and passes on its own merits now. |
+| **G4** "wired?" is a substring grep | **Fixed** | The gate *calls* the module: salt refusal, bare-`id` stripping, uncountable cells, k-floor, copy honesty, and 7 importers. |
+| **G5** CI never runs `verify` | **Fixed** | `ci.yml` runs `npm run verify`; `scripts/check-ci.mjs` fails if it stops, if `verify` names a missing script, or if `verify` stops running tests. |
+| **G6** no workspaces, no `packages/benchmark/package.json` | **Fixed** | `workspaces: ["packages/*"]`, real `package.json` in all three packages with exports that resolve, and `npm test` is `node --test` (no shell glob, so Windows works). `check-ci` rejects a reintroduced glob. |
+| **D1** two byte-identical exports | **Fixed** | `check-methodology` hashes both and fails on divergence. Probed by appending a newline to the organiser copy: gate fails with both hashes. |
+| **D2** silently truncated `triggers` | **Fixed** | Renamed `triggersPreview`; the key now says what it is. |
+| **D3** band boundary untested | **Fixed** | `boundary: 'upper-inclusive'` travels with the band; 12-point table test; convention documented in `docs/02`. |
+
+### Honest remainder
+
+Six findings are **not** fixed, and none of them is a code bug:
+
+- **B2** persistence, **B4** transport/clock, **B5** prospective resolution —
+  architectural and product scope.
+- **B3** auth boundary — narrowed at the module edge, open at the system edge.
+- **R4** `51%` — a published figure with no script behind it; marked, not
+  manufactured.
+- **R6** global-mean imputation — the figure is now correctly labelled; the
+  method behind it is still the one that produced it.
+
+The pattern worth carrying forward is the one that produced most of these: the
+repo had a gate for a concept, and the gate tested for the *spelling* of the
+concept rather than the concept (G2, G4, S3, S4). Each fix above moves one gate
+from grepping for a word to exercising the behaviour.

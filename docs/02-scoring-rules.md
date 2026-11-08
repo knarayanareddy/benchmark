@@ -73,3 +73,15 @@ The study design ships with the product. The most recent systematic review of di
 | 0.2171 | *check:* the same rating read off ACAPS' published percentage bands (midpoints). Differs by 0.0003 — the bar does not move with the reading. |
 | 0.2177 | A logistic regression on the same fields, leave-one-out — **it does not beat the bar** |
 | **0.0084 / 0.0184** | Standard error on a Brier score at this n (base rate / ACAPS rating); **0.0148** paired |
+## Probability bands
+
+`probabilityBand()` maps a probability to ACAPS' five bands. The boundary is
+**upper-inclusive**: `p <= band.max`, so `0.2` is Very Low and `0.2001` is Low.
+
+ACAPS publishes integer percentages (0–20, 21–40, …), so a submission sitting
+exactly on `0.2` has no ACAPS answer — this is a convention on our side, not a
+fact on theirs. The returned band carries `boundary: 'upper-inclusive'` so a
+renderer can say which side a value falls on, and the boundaries are pinned by
+a table test at 0 / 0.1999 / 0.2 / 0.2001 / 0.4 / 0.4001 / 0.6 / 0.6001 /
+0.8 / 0.8001 / 0.999 / 1.
+

@@ -83,7 +83,10 @@ for r in rows:
         "probability": (r.get("Probability") or "").strip(),
         "status": (r.get("Status") or "").strip(),
         "outcome": outcome(r.get("Status")),
-        "triggers": (r.get("Triggers") or "").strip()[:600],
+        # Was `"triggers": ...[:600]` — a silently truncated blob that nothing
+        # reads. The name said the whole field; the slice said 600 characters;
+        # no consumer could tell. `triggerList` is the parsed form.
+        "triggersPreview": (r.get("Triggers") or "").strip()[:600],
         "triggerList": trig_list,
         "triggerCount": len(trig_list),
         "rationale": (r.get("Rationale") or "").strip(),

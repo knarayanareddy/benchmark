@@ -11,7 +11,7 @@
   "probability": "",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "The Afghan government claims to be in a strategic retreat in several Helmand districts, though it is disputed that this is a full scale retreat. Strategic government districts in the province are under attack by the Taliban from several sides."
@@ -28,7 +28,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0990 - T0481\nTitle: US fund freeze\nDescription: \nThe aid suspension declared by US government has a severe impact in Afghanistan which is mostly dependent on foreign aid. The fund freeze has impacted healthcare services in the country with affecting millions who are in need of urgent medical assistance. The fund cut also have an impact in other sectors, such as food, livelihood etc. This worsening scenario is not feasible to accommodate large number of returnees from Pakistan. \nSources: \nhttps://www.voanews.com/a/how-pause-in-us-foreign-aid-is-impacting-south-central-asia/7971248.",
+  "triggersPreview": "Trigger ID: R0990 - T0481\nTitle: US fund freeze\nDescription: \nThe aid suspension declared by US government has a severe impact in Afghanistan which is mostly dependent on foreign aid. The fund freeze has impacted healthcare services in the country with affecting millions who are in need of urgent medical assistance. The fund cut also have an impact in other sectors, such as food, livelihood etc. This worsening scenario is not feasible to accommodate large number of returnees from Pakistan. \nSources: \nhttps://www.voanews.com/a/how-pause-in-us-foreign-aid-is-impacting-south-central-asia/7971248.",
   "triggerList": [
    {
     "triggerId": "T0481",
@@ -68,7 +68,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1015 - T0547\nTitle: Below-average precipitation continuation\nDescription: \nThe onset of a precipitation deficit serves as a key early-warning trigger in Afghanistan’s drought cycle, as sustained below-average rainfall reduces soil moisture, delays snow accumulation, and weakens river and groundwater recharge. According to the World Meteorological Organization and FEWS NET, such early deficits rapidly translate into water shortages that undermine winter crop growth and pasture regeneration, threatening food and income sources for farming and herding households. As water scarcity de",
+  "triggersPreview": "Trigger ID: R1015 - T0547\nTitle: Below-average precipitation continuation\nDescription: \nThe onset of a precipitation deficit serves as a key early-warning trigger in Afghanistan’s drought cycle, as sustained below-average rainfall reduces soil moisture, delays snow accumulation, and weakens river and groundwater recharge. According to the World Meteorological Organization and FEWS NET, such early deficits rapidly translate into water shortages that undermine winter crop growth and pasture regeneration, threatening food and income sources for farming and herding households. As water scarcity de",
   "triggerList": [
    {
     "triggerId": "T0547",
@@ -119,7 +119,7 @@
   "probability": "Very High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1062 - T0667\nTitle: Lethal militant attack in a major Pakistani urban centre. \nDescription: \nA confirmed TTP attack targeting Pakistani security forces or government installations in cities such as Karachi, Peshawar, or Islamabad is likely to trigger further Pakistani airstrikes or ground operations in Afghan border provinces. Historically, such events have served as the primary political trigger for Pakistani retaliatory airstrikes and ground operations in Afghan border provinces like Paktia and Paktika. The 28 June attack was carried out by Pakistan, according to Pakistani autho",
+  "triggersPreview": "Trigger ID: R1062 - T0667\nTitle: Lethal militant attack in a major Pakistani urban centre. \nDescription: \nA confirmed TTP attack targeting Pakistani security forces or government installations in cities such as Karachi, Peshawar, or Islamabad is likely to trigger further Pakistani airstrikes or ground operations in Afghan border provinces. Historically, such events have served as the primary political trigger for Pakistani retaliatory airstrikes and ground operations in Afghan border provinces like Paktia and Paktika. The 28 June attack was carried out by Pakistan, according to Pakistani autho",
   "triggerList": [
    {
     "triggerId": "T0667",
@@ -159,7 +159,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1067 - T0671\nTitle: Expanded ITA disarmament order or offensive in the north of Afghanistan:\nDescription: \nFurther efforts by the ITA to disarm opposition groups and consolidate control over local commanders could trigger armed resistance and renewed clashes in Badakhshan, particularly in areas where armed groups retain influence.\nSources: \nThe Diplomat 12/08/2026] https://thediplomat.com/2026/08/is-badakhshan-becoming-the-epicenter-of-anti-taliban-resistance/ ), \nCompletion rate: 60%\nCompletion rate history: \n03-09-2026: 60%\nQuantitative objective to meet 100%: \nYES. depending on",
+  "triggersPreview": "Trigger ID: R1067 - T0671\nTitle: Expanded ITA disarmament order or offensive in the north of Afghanistan:\nDescription: \nFurther efforts by the ITA to disarm opposition groups and consolidate control over local commanders could trigger armed resistance and renewed clashes in Badakhshan, particularly in areas where armed groups retain influence.\nSources: \nThe Diplomat 12/08/2026] https://thediplomat.com/2026/08/is-badakhshan-becoming-the-epicenter-of-anti-taliban-resistance/ ), \nCompletion rate: 60%\nCompletion rate history: \n03-09-2026: 60%\nQuantitative objective to meet 100%: \nYES. depending on",
   "triggerList": [
    {
     "triggerId": "T0671",
@@ -210,7 +210,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1056 - T0652\nTitle: Increase in resource-related intercommunal clashes\nDescription: \nDisputes over access to water, humanitarian aid, or other scarce resources escalate into violent confrontations between refugee groups within the camps.\nSources: \n([ACLED accessed 18/06/2026](https://acleddata.com/conflict-data/data-export-tool\\), [Atalayar 22/04/2026](https://www.atalayar.com/en/articulo/politics/the-united-states-is-putting-pressure-on-algeria-and-urging-it-to-dismantle-the-tindouf-camps/20260422210000225067.html)). \nCompletion rate: 30%\nCompletion rate history: \n29-06-2026: 30%",
+  "triggersPreview": "Trigger ID: R1056 - T0652\nTitle: Increase in resource-related intercommunal clashes\nDescription: \nDisputes over access to water, humanitarian aid, or other scarce resources escalate into violent confrontations between refugee groups within the camps.\nSources: \n([ACLED accessed 18/06/2026](https://acleddata.com/conflict-data/data-export-tool\\), [Atalayar 22/04/2026](https://www.atalayar.com/en/articulo/politics/the-united-states-is-putting-pressure-on-algeria-and-urging-it-to-dismantle-the-tindouf-camps/20260422210000225067.html)). \nCompletion rate: 30%\nCompletion rate history: \n29-06-2026: 30%",
   "triggerList": [
    {
     "triggerId": "T0652",
@@ -261,7 +261,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0371 - T0149\nTitle: Poor planning and lack of infrastructural integrity\nDescription: \nExisting issues such as human intervention destroying the passage of stormwater; recently built roads blocking drainage passages for floods in three Haor regions (wetland ecosystems) in Bangladesh; and poor waste management in Sylhet and Sunamganj districts blocking floodwater discharge will catalyse the floods.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R037",
+  "triggersPreview": "Trigger ID: R0371 - T0149\nTitle: Poor planning and lack of infrastructural integrity\nDescription: \nExisting issues such as human intervention destroying the passage of stormwater; recently built roads blocking drainage passages for floods in three Haor regions (wetland ecosystems) in Bangladesh; and poor waste management in Sylhet and Sunamganj districts blocking floodwater discharge will catalyse the floods.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R037",
   "triggerList": [
    {
     "triggerId": "T0149",
@@ -301,7 +301,7 @@
   "probability": "High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1020 - T0567\nTitle: Nationwide hartal calls or election boycott by major political parties\nDescription: \nIf major political parties, particularly the BNP or allied opposition groups formally announce nationwide hartals or an election boycott, the likelihood of widespread political violence would increase sharply. Such announcements would likely prompt mass mobilization, transport blockades, and confrontations between party supporters, security forces, and rival groups. Based on patterns from previous election cycles, hartal calls are often followed by pre-emptive security deployme",
+  "triggersPreview": "Trigger ID: R1020 - T0567\nTitle: Nationwide hartal calls or election boycott by major political parties\nDescription: \nIf major political parties, particularly the BNP or allied opposition groups formally announce nationwide hartals or an election boycott, the likelihood of widespread political violence would increase sharply. Such announcements would likely prompt mass mobilization, transport blockades, and confrontations between party supporters, security forces, and rival groups. Based on patterns from previous election cycles, hartal calls are often followed by pre-emptive security deployme",
   "triggerList": [
    {
     "triggerId": "T0567",
@@ -341,7 +341,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1039 - T0612\nTitle: Continuation of the Strait of Hormuz disruptions \nDescription: \nAny intensification of the conflict or prolonged insecurity around the Strait of Hormuz would further constrain fuel shipments and delay imports. \nSources: \n([ORF 16/04/2026](https://www.orfonline.org/expert-speak/beyond-diversification-bangladesh-s-fuel-crisis-and-role-of-neighbourhood-ties), [AJ 09/03/2026](https://www.aljazeera.com/news/2026/3/9/bangladesh-shuts-universities-limits-fuel-sale-as-iran-war-causes-shortage), [Dhaka Tribune 29/03/2026](https://www.dhakatribune.com/bangladesh/406405/d",
+  "triggersPreview": "Trigger ID: R1039 - T0612\nTitle: Continuation of the Strait of Hormuz disruptions \nDescription: \nAny intensification of the conflict or prolonged insecurity around the Strait of Hormuz would further constrain fuel shipments and delay imports. \nSources: \n([ORF 16/04/2026](https://www.orfonline.org/expert-speak/beyond-diversification-bangladesh-s-fuel-crisis-and-role-of-neighbourhood-ties), [AJ 09/03/2026](https://www.aljazeera.com/news/2026/3/9/bangladesh-shuts-universities-limits-fuel-sale-as-iran-war-causes-shortage), [Dhaka Tribune 29/03/2026](https://www.dhakatribune.com/bangladesh/406405/d",
   "triggerList": [
    {
     "triggerId": "T0612",
@@ -392,7 +392,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0510 - T0055\nTitle: Prevalence of Corruption and mismanagement of funds.\nDescription: \nCorruption in Burundi remains a pervasive issue, affecting government institutions and undermining economic development and public trust.\nSources: \nhttps://www.amnesty.org/en/latest/campaigns/2023/10/debt-and-the-right-to-health-closing-observations-from-our-series/\nhttps://freedomhouse.org/country/burundi/freedom-world/2023\nCompletion rate: 60%\nCompletion rate history: \n09-07-2024: 40%\n09-07-2024: 60%\nQuantitative objective to meet 100%: \nDirect or reports on cases on corruption linked to misma",
+  "triggersPreview": "Trigger ID: R0510 - T0055\nTitle: Prevalence of Corruption and mismanagement of funds.\nDescription: \nCorruption in Burundi remains a pervasive issue, affecting government institutions and undermining economic development and public trust.\nSources: \nhttps://www.amnesty.org/en/latest/campaigns/2023/10/debt-and-the-right-to-health-closing-observations-from-our-series/\nhttps://freedomhouse.org/country/burundi/freedom-world/2023\nCompletion rate: 60%\nCompletion rate history: \n09-07-2024: 40%\n09-07-2024: 60%\nQuantitative objective to meet 100%: \nDirect or reports on cases on corruption linked to misma",
   "triggerList": [
    {
     "triggerId": "T0055",
@@ -443,7 +443,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Escalating violence in the capital continues to place the population in need of protection. Opposition sorties across border territories restricts access to people in need and causes additional displacement, internal and across borders. Already overcrowded refugee camps have additional strain placed on services. UNHCR has registered over 20,000 new refugees so far in 2016, and there are currently 25,000 reported IDPs."
@@ -460,7 +460,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "The number of violent attacks carried out by armed groups (Boko Haram included) in the far North region and targeting civilians and IDP camps are increasing, leading to an increase in terms of humanitarian needs, espceially related to protection, displacement, and food security.\nIn December 2020, OCHA reported an increased insecurity. According to them, November 2020 recorded 49 security incidents against civilians and humanitarians in the Far North region, the second highest in 2020."
@@ -477,7 +477,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Following successful talks in the week leading up to the 24 February, CAR's minister of transport successfully convinced Cameroon on the corridor's safety, and Cameroonian truckers will resume traveling along the route. On 18 February, the first commercial convoy has been able to reach Bangui from the border with Cameroon, after two humanitarian convoys had already successfully made the trip. It was made in record time (2 days instead of 4), and another convoy has left Cameroon. However,  the CPC has reiterated that it could potentially close the corridor, and a security incident happened near Baboua, a town along the route.\nAccording to OCHA, 1'600 trucks are stuck at the border with Cameroon, including 500 with humanitarian assistance for UN and its partners. Transport has been blocked since the start of December 2020. Current electoral violence displacement figures: 100k IDPs and 84k refugeesAs of 19 January, the Douala-Bangui route remains blocked after a convoy of 30 trucks carrying WFP aid was attacked by CPC, injuring three truck drivers. Alarming price increases have already been noted in Bangui and some rural towns. \"The prices of basic imported food products, including milk powder, salt, sugar and onions, have spiked from  15% to 240% in markets surveyed across Bangui, Bimbo and Bégoua during the first week of January.\" (WB 16/01/2021)"
@@ -494,7 +494,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "An increased number of arbitrary killings and detentions are likely."
@@ -511,7 +511,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1043 - T0618\nTitle: Expansion of cross-border attacks and insecurity\nDescription: \n:Additional drone strikes, shelling, or armed incursions near the Chad–Sudan border, particularly around Adré, Tina, and other eastern border localities, increase civilian casualties, trigger further displacement into Chad, and constrain humanitarian operations in already fragile border areas. Continued insecurity may also disrupt cross-border trade and movement routes relied upon by refugees and host communities\nSources: \n([UNFPA 30/04/2026](https://reliefweb.int/report/chad/unfpa-situation-report-",
+  "triggersPreview": "Trigger ID: R1043 - T0618\nTitle: Expansion of cross-border attacks and insecurity\nDescription: \n:Additional drone strikes, shelling, or armed incursions near the Chad–Sudan border, particularly around Adré, Tina, and other eastern border localities, increase civilian casualties, trigger further displacement into Chad, and constrain humanitarian operations in already fragile border areas. Continued insecurity may also disrupt cross-border trade and movement routes relied upon by refugees and host communities\nSources: \n([UNFPA 30/04/2026](https://reliefweb.int/report/chad/unfpa-situation-report-",
   "triggerList": [
    {
     "triggerId": "T0618",
@@ -562,7 +562,7 @@
   "probability": "Very High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1066 - T0669\nTitle: Retaliatory violence following the killing of senior ISWAP leader Abu-Bilal al-Minuki\nDescription: \nThe reported killing of senior ISWAP leader Abu-Bilal al-Minuki by US and Nigerian forces on 15 May 2026 could trigger retaliatory attacks by ISWAP, while intensifying competition with JAS/Boko Haram for territorial influence and operational relevance. Escalating attacks against military positions, civilians, and strategic infrastructure—particularly in Borno State—could increase displacement and humanitarian needs, while military pressure and cross-border armed ",
+  "triggersPreview": "Trigger ID: R1066 - T0669\nTitle: Retaliatory violence following the killing of senior ISWAP leader Abu-Bilal al-Minuki\nDescription: \nThe reported killing of senior ISWAP leader Abu-Bilal al-Minuki by US and Nigerian forces on 15 May 2026 could trigger retaliatory attacks by ISWAP, while intensifying competition with JAS/Boko Haram for territorial influence and operational relevance. Escalating attacks against military positions, civilians, and strategic infrastructure—particularly in Borno State—could increase displacement and humanitarian needs, while military pressure and cross-border armed ",
   "triggerList": [
    {
     "triggerId": "T0669",
@@ -602,7 +602,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Growing number of paramilitaries and clashes is likely to increase displacement, especially among the already marginalized and difficult to reach populations."
@@ -619,7 +619,7 @@
   "probability": "High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1013 - T0541\nTitle: Breackdown of peace talks\nDescription: \nConcerns are growing over the potential breakdown of peace negotiations between the Colombian Government and the Gaitanist Self-Defense Forces of Colombia (EGC), the largest and most influential non-state armed group in the country. According to official estimates, the EGC increased its membership by 95% between 2018 and 2024, reaching around 7,000 members—including 2,499 combatants and 4,563 support network members—by mid-2024. The group has expanded its territorial control in several departments, particularly Chocó, Mag",
+  "triggersPreview": "Trigger ID: R1013 - T0541\nTitle: Breackdown of peace talks\nDescription: \nConcerns are growing over the potential breakdown of peace negotiations between the Colombian Government and the Gaitanist Self-Defense Forces of Colombia (EGC), the largest and most influential non-state armed group in the country. According to official estimates, the EGC increased its membership by 95% between 2018 and 2024, reaching around 7,000 members—including 2,499 combatants and 4,563 support network members—by mid-2024. The group has expanded its territorial control in several departments, particularly Chocó, Mag",
   "triggerList": [
    {
     "triggerId": "T0541",
@@ -670,7 +670,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1019 - T0554\nTitle: El Niño/La Niña-Southern Oscillation\nDescription: \nClimate forecasts predict La Niña conditions through November 2025 to January 2026, increasing rainfall across Haiti, which will bring flooding and landslides.\nSources: \n([CPC 09/10/2025](https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc_Sp.shtml)\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 06-11-2025\nLast update: 06-11-2025",
+  "triggersPreview": "Trigger ID: R1019 - T0554\nTitle: El Niño/La Niña-Southern Oscillation\nDescription: \nClimate forecasts predict La Niña conditions through November 2025 to January 2026, increasing rainfall across Haiti, which will bring flooding and landslides.\nSources: \n([CPC 09/10/2025](https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc_Sp.shtml)\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 06-11-2025\nLast update: 06-11-2025",
   "triggerList": [
    {
     "triggerId": "T0554",
@@ -699,7 +699,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1059 - T0656\nTitle: Launch of the 90-Day Security Crackdown\nDescription: \nThe incoming government’s planned military offensive against NSAGs from 7 August, including bombing campaigns against armed group camps, aerial coca fumigation, deployment of Joint Task Forces to Cauca, Chocó, and Nariño, and increased defence investment, is expected to provoke armed group retaliation against security forces and civilians perceived to be cooperating with the State.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate ent",
+  "triggersPreview": "Trigger ID: R1059 - T0656\nTitle: Launch of the 90-Day Security Crackdown\nDescription: \nThe incoming government’s planned military offensive against NSAGs from 7 August, including bombing campaigns against armed group camps, aerial coca fumigation, deployment of Joint Task Forces to Cauca, Chocó, and Nariño, and increased defence investment, is expected to provoke armed group retaliation against security forces and civilians perceived to be cooperating with the State.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate ent",
   "triggerList": [
    {
     "triggerId": "T0656",
@@ -761,7 +761,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Government security force deployment reportedly carried out bombings of schools, churches, and hospitals on April 5th. These attacks, which allegedly killed dozens, were in response to the 17 people killed in policy barracks and a government building on April 4th by the Ninja militia. Almost 10,000 have fled the conflict in the capital."
@@ -778,7 +778,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1023 - T0569\nTitle: Prolonged inability to secure fuel imports at market rates\nDescription: \nIf Cuba cannot obtain licenses or afford commercial fuel purchases under new U.S. licensing policies within the next 4–8 weeks, the energy deficit will persist through summer 2026. This would maintain or intensify current service disruptions, worsening the humanitarian situation.\nSources: \nhttps://www.hklaw.com/en/insights/publications/2026/02/ofac-eases-licensing-policy-on-venezuelan-origin-oil-bound-for-cuba \n\nhttps://www.american.edu/centers/latin-american-latino-studies/cuba-s-economic",
+  "triggersPreview": "Trigger ID: R1023 - T0569\nTitle: Prolonged inability to secure fuel imports at market rates\nDescription: \nIf Cuba cannot obtain licenses or afford commercial fuel purchases under new U.S. licensing policies within the next 4–8 weeks, the energy deficit will persist through summer 2026. This would maintain or intensify current service disruptions, worsening the humanitarian situation.\nSources: \nhttps://www.hklaw.com/en/insights/publications/2026/02/ofac-eases-licensing-policy-on-venezuelan-origin-oil-bound-for-cuba \n\nhttps://www.american.edu/centers/latin-american-latino-studies/cuba-s-economic",
   "triggerList": [
    {
     "triggerId": "T0569",
@@ -829,7 +829,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0529 - T0448\nTitle: Emergence of ethnic militia\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0529 - T0449\nTitle:  Increased attacks against civilians\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0529 - T0450\nTitle: Expansion of the geographical scope of the Yaka-Teke intercommun",
+  "triggersPreview": "Trigger ID: R0529 - T0448\nTitle: Emergence of ethnic militia\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0529 - T0449\nTitle:  Increased attacks against civilians\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0529 - T0450\nTitle: Expansion of the geographical scope of the Yaka-Teke intercommun",
   "triggerList": [
    {
     "triggerId": "T0448",
@@ -880,7 +880,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0462 - T0459\nTitle: The M23 expanding its area of influence\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0462 - T0460\nTitle: Increase in population displacement\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0462 - T0461\nTitle: Withdrawal of MONUSCO from some towns in eastern DRC ",
+  "triggersPreview": "Trigger ID: R0462 - T0459\nTitle: The M23 expanding its area of influence\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0462 - T0460\nTitle: Increase in population displacement\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0462 - T0461\nTitle: Withdrawal of MONUSCO from some towns in eastern DRC ",
   "triggerList": [
    {
     "triggerId": "T0459",
@@ -931,7 +931,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0463 - T0462\nTitle: M23 resurgence and increased armed groups activity\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0463 - T0463\nTitle: Ineffective state of siege\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0463 - T0464\nTitle: Set up and deployment of a regional force \nDescript",
+  "triggersPreview": "Trigger ID: R0463 - T0462\nTitle: M23 resurgence and increased armed groups activity\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0463 - T0463\nTitle: Ineffective state of siege\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0463 - T0464\nTitle: Set up and deployment of a regional force \nDescript",
   "triggerList": [
    {
     "triggerId": "T0462",
@@ -982,7 +982,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "The DRC’s Independent National Electoral Commission (CENI) has officially set the general elections’ ballot date to 20 December 2023, which will include polls for the presidency, national legislature, provincial assemblies, and local councils. The electoral process started in December 2022 with voter identification and registration procedures that lasted until June 2023. The electoral campaign for the presidency started on 19 November and finish on 18 December, two days before voting day. The electoral process will then continue throughout 2024 with the swearing-in of the new president scheduled for 20 January and indirect elections for the senate, provincial governorates, and other official positions scheduled to take place through September 2024. The presidency, elected through a simple majority for a five-year term, will have President Félix Tshisekedi seeking re-election amid a list of 26 opponents, including prominent figures such as Martin Fayulu, a politician claiming to have won the 2018 elections; Moïse Katumbi, a wealthy businessman and politician; and Denis Mukwege, an activist and 2018 Nobel Peace Prize winner.\n\nLogistical challenges, criticism towards the electoral commission for its alleged biases, and a defective electoral roll generate a climate of mistrust and heightened tensions, compounded by the failure of the Government and the CENI to engage with civil society observer missions. This tense situation engenders an environment that is ripe for discontent, hostility, and protests, increasing the probability of violence during the electoral cycle. The opposition’s reluctance to engage in the electoral process may lead to intentional election disruptions, also potentially instigating violence. At the polling stations, any denial of voter rights, perceived impartiality of officials, or restrictions imposed on observers could lead to confrontations involving officials, supporters of different political parties or rival groups, and security forces.\n\nThe tense political environment is heightening social and political divisions. Unresolved grievances from the 2018 contested general elections, which included some of the candidates for the current ballot, have fostered divisions and mistrust among political factions and communities. The opposition is still unsuccessfully discussing the potential for a joint coalition candidate. The fractured opposition landscape, marked by diverse political ideologies and ambitions, has been a source of tension during the electoral process. The fragmentation and lack of meaningful electoral odds for some opposition candidates can lead to frustration among supporters who may feel disenfranchised, increasing tensions and the potential for confrontation \nbetween rival political factions. Confrontations could also arise if results are contested. A re-elected incumbent and disputed results could trigger existing contentions between communities and ethnic groups to escalate into political violence. A losing party’s refusal to accept the results could incite confrontations and protests involving groups in dispute for prominence and power, potentially escalating into greater clashes between rival communities and larger scale political conflicts. In certain territories, communities are deeply politically attached to particular candidates, such as the Kasaï, who support the incumbent president, and the Katanga, who support Moïse Katumbi, one of the main opposition candidates. These divides could lead to strong reactions. The constant inflammatory language of the Government and opposition figures, including contentious debates around the definition \nof the Congolese identity, amplifies ethnopolitical and intercommunal tensions and divisions and heightens the threat of confrontations.\n\nContinued repression and abuses by state security forces could trigger increased resistance and dissatisfaction, sparking demonstrations, civil unrest, or violent clashes. Reports of military abuse and limits on political freedoms provoke resentment and erode trust in both state institutions and the electoral process. At the same time, heavy-handed security responses and peaceful protest suppression are expected to result in further demonstrations \nand civil unrest."
@@ -999,7 +999,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Since the resurgence of the M23 in November 2021, tensions have intensified between the DRC and Rwanda, which accuse each other of supporting rival armed groups in North Kivu province. Demonstrations by civil society organisations have taken place in several provinces of the country since May 2022 to support the Congolese army, demand a more offensive attitude from the East Africa regional force towards the M23, or even express their hostility towards Rwanda. These demonstrations often turn into attacks against people and their property because of their presumed Rwandan origins or proximity to the M23. \nSince January 2022, riots or attacks by armed groups targeting people of Rwandan origin have killed at least 12 people. These attacks have intensified since June 2022 in Maniema, North Kivu, and South Kivu provinces, shortly after the M23 took over the border town of Bunagana. In February 2022, demonstrations against the regional force’s lack of action escalated into the destruction and looting of shops believed to be Tutsi-owned. Churches were also ransacked on the grounds that they were mainly frequented by the Banyamulenge community (descendants of Rwandans). Because of the inability of the regional force, MONUSCO, and the Congolese army to curb the advances of the M23, violence against Rwandophone communities is likely to increase. \nIn addition, these communities are increasingly being accused of sympathy for the M23. Some of them claim to have been threatened and beaten by Congolese troops or armed groups and militias fighting the M23 in Kitshanga (Masisi territory), forcing them to flee to other localities and hide. A ceasefire expected to start on 7 March 2023 and supposed to be implemented by the M23 was announced by the President of Angola, which is currently mediating peace efforts between the DRC, Rwanda, and the M23. That said, the ceasefire seems unlikely to lead to the M23 withdrawing from the controlled areas or to a decrease in the intensity of the anti-Rwandan sentiments in the DRC. While the ceasefire is supposed to have taken effect, clashes between the Congolese army and the M23 still continue, and both sides accuse each other of launching attacks on their positions.\n\nThe expansion of the area under M23 control is likely to cause an increase in retaliatory attacks against Rwandophone communities across the country. The property of many people from these communities will likely be destroyed or looted in the demonstrations that follow M23 advances. With the context of the tension between the Governments of the DRC and Rwanda being conducive to the expression of hostile feelings against the latter, some civil society members will continue to maintain a discourse of hatred against Rwandophone communities. Incidents involving armed groups and militias fighting the M23 and conflating ethnicity and ideological support are also likely to increase. \nAlthough not the whole country subscribes to such stigmatisation, and certain civil society organisations continue to defend Rwan dophones, such as Association jeunes Tutsi au Nord-Kivu and the Archidiocese of Kinshasa, the security of the latter will likely be increasingly threatened, particularly in areas where armed groups fighting the M23 are active. Many protesters will consider members of Rwandophone communities as foreigners and threaten them into returning to Rwanda. The announcement of the Rwandan President to no longer host Congolese refugees, without giving more details, risks further reducing the options of those who wish to find refuge in Rwanda. As a result, new IDPs (both Rwandophone and not) within the DRC will be added to the thousands already displaced by the resurgence of the M23, with critical needs for protection, health, livelihoods, and shelter.\n\nUpdate 22/06/2023\nHostilities against Tutsi communities have persisted since the DRC government accused Rwanda of supporting M23. In April 2023, in Goma, Bukavu, Nyagenzi and Uvira, in eastern Congo, groups of young people threatened and beat Banyamulenge – Congolese Tutsi from South Kivu province – and temporarily refused them access to enrolment centres because of their ethnicity. Recent sources report an escalation of misinformation, xenophobia, hate speech and incitement to discrimination and violence, targeting in particular Tutsi/Banyarwanda and other people of Rwandan origin or presumed to be Rwandan."
@@ -1016,7 +1016,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0553 - T0051\nTitle: Further escalation of the war in Gaza\nDescription: \nSince 7 October 2023, the likelihood of a prolonged Israeli military operation in Gaza, one that ends up pushing parts of the population into the Sinai Desert, has been low, at least until the Israeli Government’s announcement on 7 February 2024 of its intent to start a ground invasion of Rafah city. An estimated 1.2 million people, the majority of whom are IDPs, are staying in Rafah, which the Israeli army has previously designated as a safe zone. Rafah is the city immediately adjacent to the Egyptian border.",
+  "triggersPreview": "Trigger ID: R0553 - T0051\nTitle: Further escalation of the war in Gaza\nDescription: \nSince 7 October 2023, the likelihood of a prolonged Israeli military operation in Gaza, one that ends up pushing parts of the population into the Sinai Desert, has been low, at least until the Israeli Government’s announcement on 7 February 2024 of its intent to start a ground invasion of Rafah city. An estimated 1.2 million people, the majority of whom are IDPs, are staying in Rafah, which the Israeli army has previously designated as a safe zone. Rafah is the city immediately adjacent to the Egyptian border.",
   "triggerList": [
    {
     "triggerId": "T0051",
@@ -1078,7 +1078,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1026 - T0574\nTitle: A potential war between Israel/United States and Iran\nDescription: \nFollowing the 12-Day War in June 2025 and a military buid up by the United States in the Middle East since December 2025, it is likely that a war on Iran will take place in February or March.\nSources: \nhttps://www.aljazeera.com/news/2026/2/20/tracking-the-rapid-us-military-build-up-near-iran \nhttps://www.criticalthreats.org/analysis/iran-update-february-19-2026?utm_campaign=22129330-FDP_NLR%20CTP%20Iran%20Update&utm_medium=email&_hsenc=p2ANqtz-8AKcDi2l3KocN1wfwMrlHy3F1375JpQNKgMbuNXHXZCC9H5lHzM",
+  "triggersPreview": "Trigger ID: R1026 - T0574\nTitle: A potential war between Israel/United States and Iran\nDescription: \nFollowing the 12-Day War in June 2025 and a military buid up by the United States in the Middle East since December 2025, it is likely that a war on Iran will take place in February or March.\nSources: \nhttps://www.aljazeera.com/news/2026/2/20/tracking-the-rapid-us-military-build-up-near-iran \nhttps://www.criticalthreats.org/analysis/iran-update-february-19-2026?utm_campaign=22129330-FDP_NLR%20CTP%20Iran%20Update&utm_medium=email&_hsenc=p2ANqtz-8AKcDi2l3KocN1wfwMrlHy3F1375JpQNKgMbuNXHXZCC9H5lHzM",
   "triggerList": [
    {
     "triggerId": "T0574",
@@ -1118,7 +1118,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "On 6 April, the Federal Government announced a plan to disband regional special forces across all regions and restructure their members under federal security institutions, regular police force, and the national army. Protests over the announcement took place in major cities across Amhara, including Bahir Dar and Gondar, and in areas previously affected by the northern Ethiopia conflict."
@@ -1135,7 +1135,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1045 - T0625\nTitle: Developing El Niño conditions forecast to suppress June–September Kiremt rainfall across Ethiopia's key Meher-producing areas\nDescription: \nClimate forecasts indicate a high and rising likelihood of El Niño conditions developing by 2026, strengthening through the second half of the year. ICPAC's May 2026 forecast points to a high probability of below-normal Kiremt rainfall across Ethiopia, with precipitation deficits likely in the northeastern and central areas, where there is at least a 50% probability of deficits reaching 50% or more. This combination of redu",
+  "triggersPreview": "Trigger ID: R1045 - T0625\nTitle: Developing El Niño conditions forecast to suppress June–September Kiremt rainfall across Ethiopia's key Meher-producing areas\nDescription: \nClimate forecasts indicate a high and rising likelihood of El Niño conditions developing by 2026, strengthening through the second half of the year. ICPAC's May 2026 forecast points to a high probability of below-normal Kiremt rainfall across Ethiopia, with precipitation deficits likely in the northeastern and central areas, where there is at least a 50% probability of deficits reaching 50% or more. This combination of redu",
   "triggerList": [
    {
     "triggerId": "T0625",
@@ -1175,7 +1175,7 @@
   "probability": "High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Food insecurity is expected to worsen in the coming months as COVID-19 related restrictions and continuing economic crisis reduce food availability and access. Below-average and irregular rains resulted in a 20% loss of the spring maize yield, reducing market supply.\nIPC analysis highlights a deterioration for the period August 2020-February 2021 (from 3,67 million people to 4 million) and a projected further deterioration for March-June 2021 (up to 4,4 million)."
@@ -1192,7 +1192,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0349 - T0368\nTitle: Haiti Election delays\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-12-2024\nLast update: 18-12-2024",
+  "triggersPreview": "Trigger ID: R0349 - T0368\nTitle: Haiti Election delays\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-12-2024\nLast update: 18-12-2024",
   "triggerList": [
    {
     "triggerId": "T0368",
@@ -1221,7 +1221,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1018 - T0553\nTitle: La Niña persistence and intensification\nDescription: \nClimate forecasts predict La Niña conditions through November 2025 to January 2026, increasing rainfall across Haiti, which will bring flooding and landslides.\nSources: \n([Fews Net 16/10/2025](https://www.cpc.ncep.noaa.gov/products/international/FEWS_REPORT/Haiti/Current.pdf)\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 05-11-2025\nLast update: 10-11-2025",
+  "triggersPreview": "Trigger ID: R1018 - T0553\nTitle: La Niña persistence and intensification\nDescription: \nClimate forecasts predict La Niña conditions through November 2025 to January 2026, increasing rainfall across Haiti, which will bring flooding and landslides.\nSources: \n([Fews Net 16/10/2025](https://www.cpc.ncep.noaa.gov/products/international/FEWS_REPORT/Haiti/Current.pdf)\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 05-11-2025\nLast update: 10-11-2025",
   "triggerList": [
    {
     "triggerId": "T0553",
@@ -1250,7 +1250,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1040 - T0607\nTitle: El Niño\nDescription: \nEl Niño is a climate variability phenomenon characterised by the anomalous warming of ocean surface temperatures across the central and eastern tropical Pacific, accompanied by a weakening of trade winds and a significant shift in global weather systems. Its effects are highly variable by region: it typically brings below-average rainfall to Central America and drought conditions across the Dry corridor\nSources: \nhttps://iri.columbia.edu/our-expertise/climate/forecasts/seasonal-climate-forecasts/\nCompletion rate: 70%\nCompletion rate histor",
+  "triggersPreview": "Trigger ID: R1040 - T0607\nTitle: El Niño\nDescription: \nEl Niño is a climate variability phenomenon characterised by the anomalous warming of ocean surface temperatures across the central and eastern tropical Pacific, accompanied by a weakening of trade winds and a significant shift in global weather systems. Its effects are highly variable by region: it typically brings below-average rainfall to Central America and drought conditions across the Dry corridor\nSources: \nhttps://iri.columbia.edu/our-expertise/climate/forecasts/seasonal-climate-forecasts/\nCompletion rate: 70%\nCompletion rate histor",
   "triggerList": [
    {
     "triggerId": "T0607",
@@ -1279,7 +1279,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1071 - T0683\nTitle: Sustained increase in hotspots and peatland fires \nDescription: \nA continued rise in hotspots and burned area across West and Central Kalimantan, South Sumatra, Riau, and Jambi, particularly where fires spread into deep peat, would indicate that suppression operations are not containing the fire season. Fires persisting underground or reigniting after initial suppression would increase the likelihood of prolonged smoke exposure. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered:",
+  "triggersPreview": "Trigger ID: R1071 - T0683\nTitle: Sustained increase in hotspots and peatland fires \nDescription: \nA continued rise in hotspots and burned area across West and Central Kalimantan, South Sumatra, Riau, and Jambi, particularly where fires spread into deep peat, would indicate that suppression operations are not containing the fire season. Fires persisting underground or reigniting after initial suppression would increase the likelihood of prolonged smoke exposure. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered:",
   "triggerList": [
    {
     "triggerId": "T0683",
@@ -1319,7 +1319,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1008 - T0527\nTitle: Prolonged Drought and Heatwaves\nDescription: \nIran’s worsening water crisis is being driven by prolonged drought and intensifying heatwaves, which have sharply reduced rainfall, surface water, and groundwater reserves. Between October 2024 and March 2025, precipitation declined by 41% below long-term averages and 21% compared to the previous year, severely limiting inflows into dams and reservoirs.\nThe deficit now affects 30 of 31 provinces, with the harshest shortfalls recorded in Hormozgan (–75.9%), Sistan-Baluchestan (–75.4%), and East Azerbaijan (–60%). Rec",
+  "triggersPreview": "Trigger ID: R1008 - T0527\nTitle: Prolonged Drought and Heatwaves\nDescription: \nIran’s worsening water crisis is being driven by prolonged drought and intensifying heatwaves, which have sharply reduced rainfall, surface water, and groundwater reserves. Between October 2024 and March 2025, precipitation declined by 41% below long-term averages and 21% compared to the previous year, severely limiting inflows into dams and reservoirs.\nThe deficit now affects 30 of 31 provinces, with the harshest shortfalls recorded in Hormozgan (–75.9%), Sistan-Baluchestan (–75.4%), and East Azerbaijan (–60%). Rec",
   "triggerList": [
    {
     "triggerId": "T0527",
@@ -1359,7 +1359,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1030 - T0586\nTitle: Failure of diplomatic negotiations \nDescription: \nUS -IRAN conflict escalate if a collapse of ongoing negotiations over Iran’s nuclear program, particularly if diplomatic channels fail and Washington opts for a military option. The U.S. has significantly increased its military presence in the Middle East in early 2026, deploying aircraft carrier strike groups and additional forces as tensions with Tehran rise. Such a buildup combined with stalled talks and hardened positions on uranium enrichment and sanctions could prompt a preemptive strike on Iranian nuclear",
+  "triggersPreview": "Trigger ID: R1030 - T0586\nTitle: Failure of diplomatic negotiations \nDescription: \nUS -IRAN conflict escalate if a collapse of ongoing negotiations over Iran’s nuclear program, particularly if diplomatic channels fail and Washington opts for a military option. The U.S. has significantly increased its military presence in the Middle East in early 2026, deploying aircraft carrier strike groups and additional forces as tensions with Tehran rise. Such a buildup combined with stalled talks and hardened positions on uranium enrichment and sanctions could prompt a preemptive strike on Iranian nuclear",
   "triggerList": [
    {
     "triggerId": "T0586",
@@ -1410,7 +1410,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "If the Iraqi Government goes through with the threat to expel foreign troops, and/or if militia attacks against foreign security personnel increase, foreign troops are likely to leave Iraq or see their capacity to operate severely limited. The number of ISIS attacks is likely to spike with consequent rising protection concerns for the local residents."
@@ -1427,7 +1427,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1029 - T0585\nTitle: US or Israeli military strikes on Iran\nDescription: \nA US or Israeli military strike on Iran would significantly increase the probability of PMF militia retaliation against US military assets in Iraq. The leader of Kata'ib Hezbollah has explicitly warned of \"total war\" in this scenario, and Iran's Revolutionary Guard has reportedly discussed activating alternative support arenas in Iraq in the event of a direct confrontation. Unlike Jordan and Yemen, Iraq's risk is driven not only by external escalation but by the presence of heavily armed Iran-backed militias ",
+  "triggersPreview": "Trigger ID: R1029 - T0585\nTitle: US or Israeli military strikes on Iran\nDescription: \nA US or Israeli military strike on Iran would significantly increase the probability of PMF militia retaliation against US military assets in Iraq. The leader of Kata'ib Hezbollah has explicitly warned of \"total war\" in this scenario, and Iran's Revolutionary Guard has reportedly discussed activating alternative support arenas in Iraq in the event of a direct confrontation. Unlike Jordan and Yemen, Iraq's risk is driven not only by external escalation but by the presence of heavily armed Iran-backed militias ",
   "triggerList": [
    {
     "triggerId": "T0585",
@@ -1456,7 +1456,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0996 - T0495\nTitle: Official confirmation of President Ouattara’s candidacy for a fourth term\nDescription: \nIf President Alassane Ouattara officially declares his candidacy for a fourth term, despite constitutional limits and past controversies over term extensions, this could escalate perceptions of electoral manipulation and exclusion. The move would likely trigger opposition reactions, public protests, and heighten political tensions in the pre-electoral period.\nSources: \nhttps://www.reuters.com/world/africa/ivory-coast-president-says-he-would-like-continue-serving-president-20",
+  "triggersPreview": "Trigger ID: R0996 - T0495\nTitle: Official confirmation of President Ouattara’s candidacy for a fourth term\nDescription: \nIf President Alassane Ouattara officially declares his candidacy for a fourth term, despite constitutional limits and past controversies over term extensions, this could escalate perceptions of electoral manipulation and exclusion. The move would likely trigger opposition reactions, public protests, and heighten political tensions in the pre-electoral period.\nSources: \nhttps://www.reuters.com/world/africa/ivory-coast-president-says-he-would-like-continue-serving-president-20",
   "triggerList": [
    {
     "triggerId": "T0495",
@@ -1507,7 +1507,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0345 - T0465\nTitle: Advance of armed groups from the Sahel to the south\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0345 - T0466\nTitle: Multiplication of attacks by armed groups in the Gulf of Guinea countries\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025",
+  "triggersPreview": "Trigger ID: R0345 - T0465\nTitle: Advance of armed groups from the Sahel to the south\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025\n\n\nTrigger ID: R0345 - T0466\nTitle: Multiplication of attacks by armed groups in the Gulf of Guinea countries\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 03-03-2025\nLast update: 03-03-2025",
   "triggerList": [
    {
     "triggerId": "T0465",
@@ -1547,7 +1547,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Kenya has experienced electoral violence during past elections. There is a likelihood of electoral violence before/during the August 2022 election period. There is currently high political tension, worsened by hate speech by some politicians. The tone of the media is also quite divisive and disinformation campaigns on social media are becoming more frequent. Politicians could also weaponise ongoing resource-based conflicts for their own political gains. \nThere is a possibility of displacement of 150,000 people due to localised violence and intercommunal conflicts. Access constraints are also likely to increase in drought affected areas due to intercommunal conflicts.\nIn 2022, more than 1,060 political disorder events were reported as at 5 August-the highest since 1997. Many of these events happened during party primaries from March to April.\nGeneral elections held on 9 August had relatively low voter turnout(65.4%), allegations of voter bribery and technology failures. Even though a petition challenging the presidential election results was rejected by the Supreme Court, there was peace countrywide until William Ruto was inaugurated as President on 13 September."
@@ -1564,7 +1564,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0998 - T0501\nTitle: Further Cuts in Food and Essential Services: \nDescription: \n If humanitarian funding gaps persist through late 2025, food rations may fall below survival thresholds, while key services such as maternal health, water trucking, or protection casework may be scaled back or halted entirely. Such conditions could provoke unrest within camps or lead to unsafe self-relocation by refugees\nSources: \nhttps://www.bbc.com/news/articles/c1dew7zyg49o\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 15-",
+  "triggersPreview": "Trigger ID: R0998 - T0501\nTitle: Further Cuts in Food and Essential Services: \nDescription: \n If humanitarian funding gaps persist through late 2025, food rations may fall below survival thresholds, while key services such as maternal health, water trucking, or protection casework may be scaled back or halted entirely. Such conditions could provoke unrest within camps or lead to unsafe self-relocation by refugees\nSources: \nhttps://www.bbc.com/news/articles/c1dew7zyg49o\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 15-",
   "triggerList": [
    {
     "triggerId": "T0501",
@@ -1604,7 +1604,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1044 - T0623\nTitle: Developing El Niño conditions forecast to suppress June–September rainfall across western and northern Kenya \nDescription: \nClimate forecasts indicate a high and rising likelihood of El Niño conditions developing during May–July 2026, strengthening through the second half of the year. ICPAC's May 2026 forecast points to a high probability of below-normal JJAS rainfall across western and northern Kenya — where the unimodal long rains season in fact extends into August/September and has already tracked below average in April and early May — alongside above-normal",
+  "triggersPreview": "Trigger ID: R1044 - T0623\nTitle: Developing El Niño conditions forecast to suppress June–September rainfall across western and northern Kenya \nDescription: \nClimate forecasts indicate a high and rising likelihood of El Niño conditions developing during May–July 2026, strengthening through the second half of the year. ICPAC's May 2026 forecast points to a high probability of below-normal JJAS rainfall across western and northern Kenya — where the unimodal long rains season in fact extends into August/September and has already tracked below average in April and early May — alongside above-normal",
   "triggerList": [
    {
     "triggerId": "T0623",
@@ -1644,7 +1644,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0031 - T0218\nTitle: Worsening economic condition for refugees in Lebanon\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024",
+  "triggersPreview": "Trigger ID: R0031 - T0218\nTitle: Worsening economic condition for refugees in Lebanon\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024",
   "triggerList": [
    {
     "triggerId": "T0218",
@@ -1673,7 +1673,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0274 - T0317\nTitle: Diplomatic crisis between Lebanon and the Gulf states\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024\n\n\nTrigger ID: R0274 - T0318\nTitle: Structural economic issues\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024\n\n\nTrigger ID: R0274 - T0319\nTitle: Increased influence of some Gulf states on Leban",
+  "triggersPreview": "Trigger ID: R0274 - T0317\nTitle: Diplomatic crisis between Lebanon and the Gulf states\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024\n\n\nTrigger ID: R0274 - T0318\nTitle: Structural economic issues\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024\n\n\nTrigger ID: R0274 - T0319\nTitle: Increased influence of some Gulf states on Leban",
   "triggerList": [
    {
     "triggerId": "T0317",
@@ -1735,7 +1735,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0960 - T0026\nTitle: Geographical expansion of airstrikes, reaching areas more than southern Lebanon\nDescription: \nThe airstrikes has been mainly targeting southern Lebanon. However, it is likely that more attacks will be affecting cities such as Sida or Baalbak that were already targeted one time each in February. \nSources: \n(Al Jazeera 26/02/2024](https://www.aljazeera.com/news/2024/2/26/israeli-jets-bomb-eastern-lebanon-for-the-first-time-since-gaza-war-began)\n[The New Arab 19/02/2024](https://www.newarab.com/news/israel-strikes-near-major-lebanese-city-saida)\nCompletion rate: 4",
+  "triggersPreview": "Trigger ID: R0960 - T0026\nTitle: Geographical expansion of airstrikes, reaching areas more than southern Lebanon\nDescription: \nThe airstrikes has been mainly targeting southern Lebanon. However, it is likely that more attacks will be affecting cities such as Sida or Baalbak that were already targeted one time each in February. \nSources: \n(Al Jazeera 26/02/2024](https://www.aljazeera.com/news/2024/2/26/israeli-jets-bomb-eastern-lebanon-for-the-first-time-since-gaza-war-began)\n[The New Arab 19/02/2024](https://www.newarab.com/news/israel-strikes-near-major-lebanese-city-saida)\nCompletion rate: 4",
   "triggerList": [
    {
     "triggerId": "T0026",
@@ -1764,7 +1764,7 @@
   "probability": "High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0985 - T0441\nTitle: Military setbacks weakening Hezbollah\nDescription: \nThe assassination of Hassan Nasrallah on 27 September 2024 and the pager attack on 17 September 2024 significantly undermined Hezbollah’s operational capabilities. Additionally, the fall of the Assad regime on 8 December 2024 disrupted the supply routes for arms and funds from Iran, further weakening the group. These events have collectively contributed to the perception that Hezbollah’s military strength is in decline.\nSources: \nhttps://icct.nl/publication/counter-terrorism-targeted-killing-hassan-nasrallah-h",
+  "triggersPreview": "Trigger ID: R0985 - T0441\nTitle: Military setbacks weakening Hezbollah\nDescription: \nThe assassination of Hassan Nasrallah on 27 September 2024 and the pager attack on 17 September 2024 significantly undermined Hezbollah’s operational capabilities. Additionally, the fall of the Assad regime on 8 December 2024 disrupted the supply routes for arms and funds from Iran, further weakening the group. These events have collectively contributed to the perception that Hezbollah’s military strength is in decline.\nSources: \nhttps://icct.nl/publication/counter-terrorism-targeted-killing-hassan-nasrallah-h",
   "triggerList": [
    {
     "triggerId": "T0441",
@@ -1837,7 +1837,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1027 - T0576\nTitle: War between Israel/United States and Iran\nDescription: \nFollowing the 12-Day War in June 2025 and a military buid up by the United States in the Middle East since December 2025, it is likely that a war on Iran will take place in February or March.\nSources: \nhttps://www.aljazeera.com/news/2026/2/20/tracking-the-rapid-us-military-build-up-near-iran \nhttps://www.criticalthreats.org/analysis/iran-update-february-19-2026?utm_campaign=22129330-FDP_NLR%20CTP%20Iran%20Update&utm_medium=email&_hsenc=p2ANqtz-8AKcDi2l3KocN1wfwMrlHy3F1375JpQNKgMbuNXHXZCC9H5lHzMkjQ7XEv_cRWC",
+  "triggersPreview": "Trigger ID: R1027 - T0576\nTitle: War between Israel/United States and Iran\nDescription: \nFollowing the 12-Day War in June 2025 and a military buid up by the United States in the Middle East since December 2025, it is likely that a war on Iran will take place in February or March.\nSources: \nhttps://www.aljazeera.com/news/2026/2/20/tracking-the-rapid-us-military-build-up-near-iran \nhttps://www.criticalthreats.org/analysis/iran-update-february-19-2026?utm_campaign=22129330-FDP_NLR%20CTP%20Iran%20Update&utm_medium=email&_hsenc=p2ANqtz-8AKcDi2l3KocN1wfwMrlHy3F1375JpQNKgMbuNXHXZCC9H5lHzMkjQ7XEv_cRWC",
   "triggerList": [
    {
     "triggerId": "T0576",
@@ -1877,7 +1877,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1034 - T0600\nTitle: Additional internal displacement\nDescription: \nAdditional influxes of IDPs into already saturated urban areas will further strain housing, services, and labour markets. Sudden increases in population density are likely to heighten competition over resources and amplify host community resentment.\nSources: \n([TMS 30/03/2026](https://admin.tms-lebanon.com/StaticFiles/Files/TMS_Tensions_Pulse_-_30_March_2026.pdf), [UNHCR 30/03/2026](https://reliefweb.int/report/lebanon/middle-east-situation-lebanon-flash-update-4-23-29-march-2026)\nCompletion rate: 50%\nCompletion ra",
+  "triggersPreview": "Trigger ID: R1034 - T0600\nTitle: Additional internal displacement\nDescription: \nAdditional influxes of IDPs into already saturated urban areas will further strain housing, services, and labour markets. Sudden increases in population density are likely to heighten competition over resources and amplify host community resentment.\nSources: \n([TMS 30/03/2026](https://admin.tms-lebanon.com/StaticFiles/Files/TMS_Tensions_Pulse_-_30_March_2026.pdf), [UNHCR 30/03/2026](https://reliefweb.int/report/lebanon/middle-east-situation-lebanon-flash-update-4-23-29-march-2026)\nCompletion rate: 50%\nCompletion ra",
   "triggerList": [
    {
     "triggerId": "T0600",
@@ -1928,7 +1928,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0970 - T0180\nTitle: Prolonged disagreement regarding the Central Bank chief\nDescription: \nIf the two rival governments do not reach to an agreement regarding the chief of the Central Bank, this will likely continue to drive tensions between them. It also means that banking services and oil production will continue to be halted, affecting Libyan citizens and harming the country's economy.\nSources: \nhttps://www.aljazeera.com/news/2024/8/26/libyas-eastern-government-closes-all-oil-fields-over-central-bank-spat\n\nhttps://www.reuters.com/markets/commodities/oil-prices-pause-after-surgin",
+  "triggersPreview": "Trigger ID: R0970 - T0180\nTitle: Prolonged disagreement regarding the Central Bank chief\nDescription: \nIf the two rival governments do not reach to an agreement regarding the chief of the Central Bank, this will likely continue to drive tensions between them. It also means that banking services and oil production will continue to be halted, affecting Libyan citizens and harming the country's economy.\nSources: \nhttps://www.aljazeera.com/news/2024/8/26/libyas-eastern-government-closes-all-oil-fields-over-central-bank-spat\n\nhttps://www.reuters.com/markets/commodities/oil-prices-pause-after-surgin",
   "triggerList": [
    {
     "triggerId": "T0180",
@@ -1968,7 +1968,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0976 - T0399\nTitle: Increased Russian military presence\nDescription: \nFollowing the fall of Al Assad regime on 8 December 2024, the loss of Syria as a strategic foothold is likely to prompt Russia to redirect focus to Libya to compensate for its position in the region. On 18 December, Russia moved approximately 1,000 military personnel, including former Syrian soldiers, and air defense systems to Benghazi Airport, strengthening its military presence in Libya.\nSources: \nhttps://www.newarab.com/analysis/why-russia-moving-military-assets-syria-libya\n\nhttps://www.newarab.com/news/excl",
+  "triggersPreview": "Trigger ID: R0976 - T0399\nTitle: Increased Russian military presence\nDescription: \nFollowing the fall of Al Assad regime on 8 December 2024, the loss of Syria as a strategic foothold is likely to prompt Russia to redirect focus to Libya to compensate for its position in the region. On 18 December, Russia moved approximately 1,000 military personnel, including former Syrian soldiers, and air defense systems to Benghazi Airport, strengthening its military presence in Libya.\nSources: \nhttps://www.newarab.com/analysis/why-russia-moving-military-assets-syria-libya\n\nhttps://www.newarab.com/news/excl",
   "triggerList": [
    {
     "triggerId": "T0399",
@@ -2008,7 +2008,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0995 - T0493\nTitle: Dbeibah’s consolidation of power in Tripoli\nDescription: \nThe recent defeat of rival factions (like Ghnewa) and Dbeibah’s expanding control could be perceived by the LNA as a threat or provocation, prompting a response.\nSources: \nhttps://www.atlanticcouncil.org/blogs/menasource/the-killing-of-abdul-ghani-al-kikli-may-be-a-turning-point-for-libya/#:~:text=On%20May%2012%2C%202025%2C%20Abdulghani,%E2%80%9D \nCompletion rate: 50%\nCompletion rate history: \n28-05-2025: 50%\nQuantitative objective to meet 100%: \n\nTrend: Stable\nTrend history: \n24-11-2025: Stable\nDate ent",
+  "triggersPreview": "Trigger ID: R0995 - T0493\nTitle: Dbeibah’s consolidation of power in Tripoli\nDescription: \nThe recent defeat of rival factions (like Ghnewa) and Dbeibah’s expanding control could be perceived by the LNA as a threat or provocation, prompting a response.\nSources: \nhttps://www.atlanticcouncil.org/blogs/menasource/the-killing-of-abdul-ghani-al-kikli-may-be-a-turning-point-for-libya/#:~:text=On%20May%2012%2C%202025%2C%20Abdulghani,%E2%80%9D \nCompletion rate: 50%\nCompletion rate history: \n28-05-2025: 50%\nQuantitative objective to meet 100%: \n\nTrend: Stable\nTrend history: \n24-11-2025: Stable\nDate ent",
   "triggerList": [
    {
     "triggerId": "T0493",
@@ -2048,7 +2048,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1028 - T0578\nTitle: Contested election timeline\nDescription: \nAs of 24 February, presidential and parliamentary elections are planned for mid-April, while little agreement regarding the elections process, timeline, and rules have been made.\nSources: \nhttps://www.crisisgroup.org/crisiswatch/january-trends-and-february-alerts-2026 \nhttps://peacenews.com/fragmentation-governance-and-the-limits-of-political-settlement-and-peacebuilding-in-libya/ \nhttps://press.un.org/en/2026/sc16298.doc.htm \nCompletion rate: 50%\nCompletion rate history: \n24-02-2026: 30%\n27-04-2026: 50%\nQuantitative ob",
+  "triggersPreview": "Trigger ID: R1028 - T0578\nTitle: Contested election timeline\nDescription: \nAs of 24 February, presidential and parliamentary elections are planned for mid-April, while little agreement regarding the elections process, timeline, and rules have been made.\nSources: \nhttps://www.crisisgroup.org/crisiswatch/january-trends-and-february-alerts-2026 \nhttps://peacenews.com/fragmentation-governance-and-the-limits-of-political-settlement-and-peacebuilding-in-libya/ \nhttps://press.un.org/en/2026/sc16298.doc.htm \nCompletion rate: 50%\nCompletion rate history: \n24-02-2026: 30%\n27-04-2026: 50%\nQuantitative ob",
   "triggerList": [
    {
     "triggerId": "T0578",
@@ -2121,7 +2121,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1046 - T0627\nTitle: Rainfall deficits and above average precipitation affecting agricultural production\nDescription: \nDry conditions are likely to lead to reduced soil moisture, crop failure, and declining pasture availability, which in turn limit household food production and income from agriculture. This reduces food availability at the household level and increases reliance on markets at a time of constrained purchasing power. \n\nSources: \n(Moov 03/06/2026 ; Meteomadagascar 29/04/2026 ; FEWS NET 05/06/2026 ; OCHA 30/04/2026 ; UNRIC 21/04/2026)\nCompletion rate: 60%\nCompletion rat",
+  "triggersPreview": "Trigger ID: R1046 - T0627\nTitle: Rainfall deficits and above average precipitation affecting agricultural production\nDescription: \nDry conditions are likely to lead to reduced soil moisture, crop failure, and declining pasture availability, which in turn limit household food production and income from agriculture. This reduces food availability at the household level and increases reliance on markets at a time of constrained purchasing power. \n\nSources: \n(Moov 03/06/2026 ; Meteomadagascar 29/04/2026 ; FEWS NET 05/06/2026 ; OCHA 30/04/2026 ; UNRIC 21/04/2026)\nCompletion rate: 60%\nCompletion rat",
   "triggerList": [
    {
     "triggerId": "T0627",
@@ -2150,7 +2150,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Despite a cease fire agreement from August 2019, inter-ethnic tensions between Fulani and Dogon ethnic groups remain and violent clashes related to intercommunal tensions occurred in early January for instance an attack of Siba village (central Mali) on 16 January. Displacement, protection"
@@ -2167,7 +2167,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "On 18 August, troops in Bamako conducted a mutiny and arrested the country's president, Ibrahim Boubacar Keita, and vice-president. Late in the night between 18-19 August, IBK resigned dissolving the parliament and the government. Men claiming to be the spokespeople of the \"National Committe for the Salvation of the People\" gave an address on the country's public TV station where they announced that the country's borders were now closed and a curfew was in place. They also promised that the Malian armed forces would honour all of their current commitments (G5 Sahel and Barkhane, 2015 peace deal), and that elections would be organized in a \"reasonable\" amount of time. People have been protesting since a controversial ruling by the country's Constitutional Court flipped 31 legislative seats, including 10 that went to IBK's party. The protests were organized by the M5-RFP coalition under the guidance of Immam Dicko. So far, there is no evidence of coordination between the coup plotters and M5-RFP. The main difference between this coup and the one in 2012, which makes predicting outcomes difficult, is that this time high-ranking officers are involved (The leader is Colonel Assimi Goita). The TV statement also makes it seem like the coup plotters are politically savvy. The coup has drawn international condemnation, including ECOWAS, AU, France, USA and the UN. Consequences so far: ECOWAS has called on their members to close their borders with Mali and stop financial flows. A prolonged dispute between ECOWAS and Mali could mean economic problems for the local population, and access issues for the humanitarian sector. If the coup leads to even lower state and coalition presence in conflict-affected areas, we could see a dramatic rise in violence. As of writing all senarios are plausible. Rainy season is underway, with shifted priorities, humanitarian response could be affected."
@@ -2184,7 +2184,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Since July, clashes have resumed in the Niono circle (Ségou region) between the Katiba Macina armed group linked to Al-Qaeda in the Islamic Maghreb (Aqmi) and the traditional dozo hunters militia in the area, who tried to face them. The ceasefire agreement that was reached in March 2021 has been broken.  The situation has deteriorated particularly since the end of September with daily attacks targeting civilians but also clashes between armed groups and militia. Dozens of deaths are reported even though there is no reliable figures yet. The Dozo militiamen are also accused of extortion, forced recruitment and cattle theft. These incidents occur during the harvest period, preventing farmers from going to the fields. Many people have started to flee to safer places, especially in Ségou. With the violence continuing, the risk of increased attacks on civilians and displacement seems very likely in the weeks to come. The needs for essential goods and food security are likely to increase."
@@ -2201,7 +2201,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "On 9 January 2022 the Economic Community of West African States (ECOWAS) decided to apply several economic sanctions against Mali, including the closure of land and air borders with member countries, the suspension of all commercial and financial transactions between ECOWAS countries and Mali, and the freezing of Malian assets in the Central Banks of ECOWAS. These sanctions were applied in reaction to the decision of the Transition authorities to postpone the presidential election, initially scheduled for February 2022, and following the submission of a timetable for a transition period of five years at the end of the Assises Nationales de la Refondation −consultations with the population with the objective to fix the date of the next elections and to guarantee the return of civilians to power. The five-year period was judged too long by ECOWAS."
@@ -2218,7 +2218,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1014 - T0544\nTitle: Exhaustion of strategic fuel reserves\nDescription: \nIf strategic fuel reserves held by the Malian army and state institutions fall below critical thresholds, the suspension of non-emergency services—such as power generation, water treatment, and public transportation—will become likely. This could spark widespread public unrest and intensify pressure on the transitional government.\nSources: \nhttps://www.aljazeera.com/news/2025/11/6/is-mali-about-to-fall-to-al-qaeda-affiliate-jnim\nhttps://theconversation.com/bamako-under-siege-why-malis-army-is-struggling-to-bre",
+  "triggersPreview": "Trigger ID: R1014 - T0544\nTitle: Exhaustion of strategic fuel reserves\nDescription: \nIf strategic fuel reserves held by the Malian army and state institutions fall below critical thresholds, the suspension of non-emergency services—such as power generation, water treatment, and public transportation—will become likely. This could spark widespread public unrest and intensify pressure on the transitional government.\nSources: \nhttps://www.aljazeera.com/news/2025/11/6/is-mali-about-to-fall-to-al-qaeda-affiliate-jnim\nhttps://theconversation.com/bamako-under-siege-why-malis-army-is-struggling-to-bre",
   "triggerList": [
    {
     "triggerId": "T0544",
@@ -2280,7 +2280,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1042 - T0616\nTitle: Expansion of coordinated JNIM–FLA operations\nDescription: \nCoordinated attacks by JNIM and the FLA against military bases, urban centres, and strategic infrastructure may continue or expand into additional regions, increasing territorial contestation and exposing civilians to heightened insecurity. Although likely tactical and temporary, continued operational coordination between both actors could allow simultaneous attacks across multiple regions and increase pressure on Malian forces. Sustained cooperation may also increase pressure on transport corridors and",
+  "triggersPreview": "Trigger ID: R1042 - T0616\nTitle: Expansion of coordinated JNIM–FLA operations\nDescription: \nCoordinated attacks by JNIM and the FLA against military bases, urban centres, and strategic infrastructure may continue or expand into additional regions, increasing territorial contestation and exposing civilians to heightened insecurity. Although likely tactical and temporary, continued operational coordination between both actors could allow simultaneous attacks across multiple regions and increase pressure on Malian forces. Sustained cooperation may also increase pressure on transport corridors and",
   "triggerList": [
    {
     "triggerId": "T0616",
@@ -2320,7 +2320,7 @@
   "probability": "Very Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1005 - T0520\nTitle: Inceased tensions over resources as numbers of Malian refugees continue to rise\nDescription: \nAs of 30 June 2025, there were 160,700 Malian refugees in Hodh Chargui wilaya, compromising over 25.5% of its total population, up from 19% in 2024, increasing competition over limited water and land resources. If tensions over limited water and grazing resources continues between refugees and the host community, this will likely trigger localised clashes. \nSources: \nhttps://unicri.org/sites/default/files/2025-03/EN-Climate-Violent-Extremism-Tool-Mauritania-2025.pdf \nh",
+  "triggersPreview": "Trigger ID: R1005 - T0520\nTitle: Inceased tensions over resources as numbers of Malian refugees continue to rise\nDescription: \nAs of 30 June 2025, there were 160,700 Malian refugees in Hodh Chargui wilaya, compromising over 25.5% of its total population, up from 19% in 2024, increasing competition over limited water and land resources. If tensions over limited water and grazing resources continues between refugees and the host community, this will likely trigger localised clashes. \nSources: \nhttps://unicri.org/sites/default/files/2025-03/EN-Climate-Violent-Extremism-Tool-Mauritania-2025.pdf \nh",
   "triggerList": [
    {
     "triggerId": "T0520",
@@ -2360,7 +2360,7 @@
   "probability": "High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0296 - T0373\nTitle: Migration crisis in the USA - Mexico border\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-12-2024\nLast update: 19-12-2024",
+  "triggersPreview": "Trigger ID: R0296 - T0373\nTitle: Migration crisis in the USA - Mexico border\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-12-2024\nLast update: 19-12-2024",
   "triggerList": [
    {
     "triggerId": "T0373",
@@ -2389,7 +2389,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0952 - T0017\nTitle: Summer drought resulting in inadequate pasture and hay production\nDescription: \nThe grass and wheat that livestock depend on dries up in the summer drought. Herders cannot collect and store enough hay and food for their animals, leaving them weak and vulnerable.\n\n50% of the country had summer moisture defect, in particular western and southern parts. That has significantly reduced pasture locations and hay production.\nSources: \nhttps://www.redcross.org.uk/stories/disasters-and-emergencies/world/faster-than-disaster-beating-the-white-death-in-mongolia \nCompletio",
+  "triggersPreview": "Trigger ID: R0952 - T0017\nTitle: Summer drought resulting in inadequate pasture and hay production\nDescription: \nThe grass and wheat that livestock depend on dries up in the summer drought. Herders cannot collect and store enough hay and food for their animals, leaving them weak and vulnerable.\n\n50% of the country had summer moisture defect, in particular western and southern parts. That has significantly reduced pasture locations and hay production.\nSources: \nhttps://www.redcross.org.uk/stories/disasters-and-emergencies/world/faster-than-disaster-beating-the-white-death-in-mongolia \nCompletio",
   "triggerList": [
    {
     "triggerId": "T0017",
@@ -2429,7 +2429,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0335 - T0316\nTitle: Drought\nDescription: \nDrought significantly reduces water availability, which is critical for Morocco's agriculture-dependent economy, impacting crop yields and livelihoods. Prolonged dry conditions also exacerbate food price inflation and strain water resources, increasing vulnerabilities for communities reliant on agriculture and domestic water supply.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024",
+  "triggersPreview": "Trigger ID: R0335 - T0316\nTitle: Drought\nDescription: \nDrought significantly reduces water availability, which is critical for Morocco's agriculture-dependent economy, impacting crop yields and livelihoods. Prolonged dry conditions also exacerbate food price inflation and strain water resources, increasing vulnerabilities for communities reliant on agriculture and domestic water supply.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-12-2024\nLast update: 12-12-2024",
   "triggerList": [
    {
     "triggerId": "T0316",
@@ -2458,7 +2458,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0977 - T0407\nTitle: Political Tensions and Electoral Disputes\nDescription: \nThe allegations of vote tampering, restricted access for opposition, and misuse of state resources are major political triggers that could escalate unrest. The ongoing dispute over election results and the unyielding positions of both Mondlane and the government (Frelimo) could lead to further polarization and violence\nSources: \nhttps://www.dw.com/pt-002/mo%C3%A7ambique-seis-fraudes-mancham-as-elei%C3%A7%C3%B5es-gerais/a-70502464 \nhttps://www.iri.org/news/iri-releases-preliminary-statement-on-mozambiques-g",
+  "triggersPreview": "Trigger ID: R0977 - T0407\nTitle: Political Tensions and Electoral Disputes\nDescription: \nThe allegations of vote tampering, restricted access for opposition, and misuse of state resources are major political triggers that could escalate unrest. The ongoing dispute over election results and the unyielding positions of both Mondlane and the government (Frelimo) could lead to further polarization and violence\nSources: \nhttps://www.dw.com/pt-002/mo%C3%A7ambique-seis-fraudes-mancham-as-elei%C3%A7%C3%B5es-gerais/a-70502464 \nhttps://www.iri.org/news/iri-releases-preliminary-statement-on-mozambiques-g",
   "triggerList": [
    {
     "triggerId": "T0407",
@@ -2509,7 +2509,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1017 - T0550\nTitle: Tropical cyclone formation in the Mozambique Channel (November–March)\nDescription: \nLa Niña years are associated with a higher likelihood of tropical cyclones in the South-West Indian Ocean. Any cyclone landfall could cause flash floods, storm surges, and compound already high river levels\nSources: \nhttps://www.bing.com/ck/a?!&&p=a6429c6860d000888e333378b55e264bad498c0e5c388f7474eedd1563426813JmltdHM9MTc2MjIxNDQwMA&ptn=3&ver=2&hsh=4&fclid=06d497a3-b9e6-6bac-00d6-8211b8d56a62&psq=impact+of+la+nina+in+Mozambique+2025%2f2026&u=a1aHR0cHM6Ly93d3cuY3BjLm5jZXAubm9hYS5",
+  "triggersPreview": "Trigger ID: R1017 - T0550\nTitle: Tropical cyclone formation in the Mozambique Channel (November–March)\nDescription: \nLa Niña years are associated with a higher likelihood of tropical cyclones in the South-West Indian Ocean. Any cyclone landfall could cause flash floods, storm surges, and compound already high river levels\nSources: \nhttps://www.bing.com/ck/a?!&&p=a6429c6860d000888e333378b55e264bad498c0e5c388f7474eedd1563426813JmltdHM9MTc2MjIxNDQwMA&ptn=3&ver=2&hsh=4&fclid=06d497a3-b9e6-6bac-00d6-8211b8d56a62&psq=impact+of+la+nina+in+Mozambique+2025%2f2026&u=a1aHR0cHM6Ly93d3cuY3BjLm5jZXAubm9hYS5",
   "triggerList": [
    {
     "triggerId": "T0550",
@@ -2560,7 +2560,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1047 - T0628\nTitle: Below-average rainfall and rising temperatures in southern and central regions\nDescription: \nBelow-average rainfall and rising temperatures in southern and central regions: \nDuring El Niño events, large-scale atmospheric circulation shifts suppress moisture transport into southern Africa, reducing rainfall during the main cropping season. In southern and central Mozambique, this often results in prolonged dry spells, erratic rainfall distribution, and early cessation of rains rather than a complete absence of precipitation. At the same time, above-average tempe",
+  "triggersPreview": "Trigger ID: R1047 - T0628\nTitle: Below-average rainfall and rising temperatures in southern and central regions\nDescription: \nBelow-average rainfall and rising temperatures in southern and central regions: \nDuring El Niño events, large-scale atmospheric circulation shifts suppress moisture transport into southern Africa, reducing rainfall during the main cropping season. In southern and central Mozambique, this often results in prolonged dry spells, erratic rainfall distribution, and early cessation of rains rather than a complete absence of precipitation. At the same time, above-average tempe",
   "triggerList": [
    {
     "triggerId": "T0628",
@@ -2611,7 +2611,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1072 - T0685\nTitle: Increased FADM pressure in northern Cabo Delgado\nDescription: \nContinued military operations in Macomia, Muidumbe and surrounding areas could further fragment ISM groups and push fighters towards Quissanga, Meluco, Ancuabe, Chiúre, Montepuez and Niassa. ACLED has documented ISM groups moving south and west following increased state-force pressure in the Catupa area, while subsequent FADM operations also pushed fighters towards Montepuez and the Niassa border.\nSources: \n([ACLED 05/08/2026](https://acleddata.com/update/mozambique-conflict-monitor-update-august-20",
+  "triggersPreview": "Trigger ID: R1072 - T0685\nTitle: Increased FADM pressure in northern Cabo Delgado\nDescription: \nContinued military operations in Macomia, Muidumbe and surrounding areas could further fragment ISM groups and push fighters towards Quissanga, Meluco, Ancuabe, Chiúre, Montepuez and Niassa. ACLED has documented ISM groups moving south and west following increased state-force pressure in the Catupa area, while subsequent FADM operations also pushed fighters towards Montepuez and the Niassa border.\nSources: \n([ACLED 05/08/2026](https://acleddata.com/update/mozambique-conflict-monitor-update-august-20",
   "triggerList": [
    {
     "triggerId": "T0685",
@@ -2662,7 +2662,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0134 - T0139\nTitle: People's Defense Force (PDF) being designated by the military junta as a 'terrorist' organisation. \nDescription: \nThe anti-coup resistance armed group, People's Defense Force (PDF), has been designated by the military junta as a 'terrorist' organisation. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 17-08-2024\nLast update: 17-08-2024\n\n\nTrigger ID: R0134 - T0140\nTitle: Announced general elections for 2022\nDescription: \nMore conflict and violence based on the elections are li",
+  "triggersPreview": "Trigger ID: R0134 - T0139\nTitle: People's Defense Force (PDF) being designated by the military junta as a 'terrorist' organisation. \nDescription: \nThe anti-coup resistance armed group, People's Defense Force (PDF), has been designated by the military junta as a 'terrorist' organisation. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 17-08-2024\nLast update: 17-08-2024\n\n\nTrigger ID: R0134 - T0140\nTitle: Announced general elections for 2022\nDescription: \nMore conflict and violence based on the elections are li",
   "triggerList": [
    {
     "triggerId": "T0139",
@@ -2702,7 +2702,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0961 - T0027\nTitle: Number of military junta bases and towns captured by armed resistance groups\nDescription: \nThe more military junta bases and towns are captured by the armed resistance groups. higher the chances are for the military junta to recruit more civilians through the conscription law.\n\nUPDATE (05/01/2025):\nIt has been reported that more than 60 towns and hundreds of military junta bases were reportedly captured by the armed resistance forces since Operation 1027. This is one of the factors that has likely induced the military junta to recruit more civilians into their ",
+  "triggersPreview": "Trigger ID: R0961 - T0027\nTitle: Number of military junta bases and towns captured by armed resistance groups\nDescription: \nThe more military junta bases and towns are captured by the armed resistance groups. higher the chances are for the military junta to recruit more civilians through the conscription law.\n\nUPDATE (05/01/2025):\nIt has been reported that more than 60 towns and hundreds of military junta bases were reportedly captured by the armed resistance forces since Operation 1027. This is one of the factors that has likely induced the military junta to recruit more civilians into their ",
   "triggerList": [
    {
     "triggerId": "T0027",
@@ -2775,7 +2775,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1012 - T0534\nTitle: Dissolution of Opposition and Restrictive Laws\nDescription: \nThe junta dissolved the popular National League for Democracy (NLD) and over 40 other political parties for failing to register under a new, stringent Political Party Registration Law. The new law also prohibits anyone serving a prison term (including NLD leaders like Aung San Suu Kyi) from joining a political party, effectively rigging the contest.\nSources: \nhttps://www.idea.int/news/international-idea-statement-situation-myanmar \nhttps://www.bing.com/ck/a?!&&p=abcd8571a495008bcdb23171b2af617863a6e0a",
+  "triggersPreview": "Trigger ID: R1012 - T0534\nTitle: Dissolution of Opposition and Restrictive Laws\nDescription: \nThe junta dissolved the popular National League for Democracy (NLD) and over 40 other political parties for failing to register under a new, stringent Political Party Registration Law. The new law also prohibits anyone serving a prison term (including NLD leaders like Aung San Suu Kyi) from joining a political party, effectively rigging the contest.\nSources: \nhttps://www.idea.int/news/international-idea-statement-situation-myanmar \nhttps://www.bing.com/ck/a?!&&p=abcd8571a495008bcdb23171b2af617863a6e0a",
   "triggerList": [
    {
     "triggerId": "T0534",
@@ -2848,7 +2848,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1069 - T0677\nTitle: Military reinforcement and establishment of permanent positions in the SEZ\nDescription: \n·The military reportedly controls Yebyu town and some SEZ compounds, while the wider Nabule area remains contested. The deployment of additional battalions, construction of fortified positions and roadblocks, increased patrols, land clearance, or engineering surveys around Nabule, Wet Chaung, and the deep-sea port site would indicate plans to establish a sustained security perimeter.\n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100",
+  "triggersPreview": "Trigger ID: R1069 - T0677\nTitle: Military reinforcement and establishment of permanent positions in the SEZ\nDescription: \n·The military reportedly controls Yebyu town and some SEZ compounds, while the wider Nabule area remains contested. The deployment of additional battalions, construction of fortified positions and roadblocks, increased patrols, land clearance, or engineering surveys around Nabule, Wet Chaung, and the deep-sea port site would indicate plans to establish a sustained security perimeter.\n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100",
   "triggerList": [
    {
     "triggerId": "T0677",
@@ -2899,7 +2899,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0387 - T0163\nTitle: Political competition leading to inter-party and intra-party political violence in the November 2022 general elections\nDescription: \nInter-party and intra-party political violence has been on the rise in Nepal in the period of 2018-2021 as parties engage in competition for power. The 2022 general elections are set to be an event where it is likely that political violence will see an increase.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-08-2024\nLast update: 19-08-2024",
+  "triggersPreview": "Trigger ID: R0387 - T0163\nTitle: Political competition leading to inter-party and intra-party political violence in the November 2022 general elections\nDescription: \nInter-party and intra-party political violence has been on the rise in Nepal in the period of 2018-2021 as parties engage in competition for power. The 2022 general elections are set to be an event where it is likely that political violence will see an increase.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-08-2024\nLast update: 19-08-2024",
   "triggerList": [
    {
     "triggerId": "T0163",
@@ -2928,7 +2928,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1038 - T0608\nTitle: Increased frequency of direct clashes between JNIM and ISSP in western Niger\nDescription: \nReports of repeated armed confrontations between JNIM and ISSP in Tillabéri and Tahoua indicate a shift towards sustained inter-group rivalry and territorial contestation. An increase in the frequency, scale, or geographic spread of these clashes would signal a deterioration in the security environment and a higher likelihood of violence against civilians and displacement in affected areas.\nSources: \n([Crisis Group 20/02/2026](https://www.crisisgroup.org/rpt/africa/sahel-",
+  "triggersPreview": "Trigger ID: R1038 - T0608\nTitle: Increased frequency of direct clashes between JNIM and ISSP in western Niger\nDescription: \nReports of repeated armed confrontations between JNIM and ISSP in Tillabéri and Tahoua indicate a shift towards sustained inter-group rivalry and territorial contestation. An increase in the frequency, scale, or geographic spread of these clashes would signal a deterioration in the security environment and a higher likelihood of violence against civilians and displacement in affected areas.\nSources: \n([Crisis Group 20/02/2026](https://www.crisisgroup.org/rpt/africa/sahel-",
   "triggerList": [
    {
     "triggerId": "T0608",
@@ -2990,7 +2990,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1074 - T0690\nTitle: Further military dissent, purges, or command disruption:\nDescription: \nFurther mutinies, arrests, dismissals, or changes within the Nigerien armed forces could deepen internal divisions and disrupt command continuity and operational coordination. The replacement of armed forces chief of staff Moussa Salaou Barmou and other senior command changes following the August mutiny indicate ongoing restructuring, although their effect on military effectiveness remains unclear. Further changes affecting commanders or units deployed in conflict-affected western regions wo",
+  "triggersPreview": "Trigger ID: R1074 - T0690\nTitle: Further military dissent, purges, or command disruption:\nDescription: \nFurther mutinies, arrests, dismissals, or changes within the Nigerien armed forces could deepen internal divisions and disrupt command continuity and operational coordination. The replacement of armed forces chief of staff Moussa Salaou Barmou and other senior command changes following the August mutiny indicate ongoing restructuring, although their effect on military effectiveness remains unclear. Further changes affecting commanders or units deployed in conflict-affected western regions wo",
   "triggerList": [
    {
     "triggerId": "T0690",
@@ -3041,7 +3041,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Increased shelter and protection needs as returning IDPs and refugees settle in informal camps, in areas where access remains limited (particularly in Borno) despite relative improvement. They are already vulnerable and relocate to areas where BH is still active, making them potential targets for attacks and forced recruitment. Unhygienic conditions and overcrowding in the settlements will result in associated WASH and health concerns. The need for food assistance will continue as many returnees have no livelihood opportunities. Over 1.4 million IDPs have been identified in Borno, including over 100,000 who are staying in camps."
@@ -3058,7 +3058,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0978 - T0417\nTitle: Security Vacuum and Porous Borders\nDescription: \nCapitalising on weak cross-border collaboration, the group/Lakurawa exploited challenging terrains to infiltrate remote areas in northwestern states and disseminate its ideology. Moreover, the already strained relations between Nigeria and Niger exacerbated by Niger’s July 2023 coup disrupted joint military operations, thereby enabling the Lakurawa group to broaden its influence further. The porous borders between northwest Nigeria and its neighbouring countries, along with limited border control, have significan",
+  "triggersPreview": "Trigger ID: R0978 - T0417\nTitle: Security Vacuum and Porous Borders\nDescription: \nCapitalising on weak cross-border collaboration, the group/Lakurawa exploited challenging terrains to infiltrate remote areas in northwestern states and disseminate its ideology. Moreover, the already strained relations between Nigeria and Niger exacerbated by Niger’s July 2023 coup disrupted joint military operations, thereby enabling the Lakurawa group to broaden its influence further. The porous borders between northwest Nigeria and its neighbouring countries, along with limited border control, have significan",
   "triggerList": [
    {
     "triggerId": "T0417",
@@ -3109,7 +3109,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1021 - T0561\nTitle: Repeated ceasefire violations\nDescription: \nAccording to the Gaza Government Media Office, between 10 October – 22 December 2025, Israel committed at least 875 separate violations of the ceasefire, killing 114 and wounding 1,112 Palestinians. Repeated Israeli violations may eventually prompt a response from Hamas, contributing to a collapse of the ceasefire and a return to conflict. \nSources: \nhttps://www.aljazeera.com/news/2025/12/22/israel-kills-two-palestinians-in-gaza-city-as-ceasefire-violations-mount \nCompletion rate: 80%\nCompletion rate history: \n24-12-2",
+  "triggersPreview": "Trigger ID: R1021 - T0561\nTitle: Repeated ceasefire violations\nDescription: \nAccording to the Gaza Government Media Office, between 10 October – 22 December 2025, Israel committed at least 875 separate violations of the ceasefire, killing 114 and wounding 1,112 Palestinians. Repeated Israeli violations may eventually prompt a response from Hamas, contributing to a collapse of the ceasefire and a return to conflict. \nSources: \nhttps://www.aljazeera.com/news/2025/12/22/israel-kills-two-palestinians-in-gaza-city-as-ceasefire-violations-mount \nCompletion rate: 80%\nCompletion rate history: \n24-12-2",
   "triggerList": [
    {
     "triggerId": "T0561",
@@ -3182,7 +3182,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1041 - T0615\nTitle: Increased Israeli restrictions and settlement expansion\nDescription: \nThe sharp rise in demolitions, settlement approvals, and movement obstacles is likely to increase tensions and trigger more clashes, protests, and confrontations between Palestinians, Israeli forces, and settlers, particularly in highly restricted areas and around checkpoints.\nSources: \n([OCHA 02/05/2026](https://reliefweb.int/report/occupied-palestinian-territory/opt-humanitarian-situation-report-1-may-2026), [OCHA 24/04/2026](https://reliefweb.int/report/occupied-palestinian-territory/opt-h",
+  "triggersPreview": "Trigger ID: R1041 - T0615\nTitle: Increased Israeli restrictions and settlement expansion\nDescription: \nThe sharp rise in demolitions, settlement approvals, and movement obstacles is likely to increase tensions and trigger more clashes, protests, and confrontations between Palestinians, Israeli forces, and settlers, particularly in highly restricted areas and around checkpoints.\nSources: \n([OCHA 02/05/2026](https://reliefweb.int/report/occupied-palestinian-territory/opt-humanitarian-situation-report-1-may-2026), [OCHA 24/04/2026](https://reliefweb.int/report/occupied-palestinian-territory/opt-h",
   "triggerList": [
    {
     "triggerId": "T0615",
@@ -3233,7 +3233,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1061 - T0660\nTitle: Israeli decision formalising further territorial expansion\nDescription: \nThe Israeli Security Cabinet or Ministry of Defense formally authorises a further advance of the \"Yellow Line\" or designates areas east of it as permanent military exclusion zones or closed military areas. \nSources: \n\nCompletion rate: 10%\nCompletion rate history: \n02-08-2026: 10%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 02-08-2026\nLast update: 02-08-2026\n\n\nTrigger ID: R1061 - T0661\nTitle: Breakdown of post-conflict governance negotiations\nDescription: \n",
+  "triggersPreview": "Trigger ID: R1061 - T0660\nTitle: Israeli decision formalising further territorial expansion\nDescription: \nThe Israeli Security Cabinet or Ministry of Defense formally authorises a further advance of the \"Yellow Line\" or designates areas east of it as permanent military exclusion zones or closed military areas. \nSources: \n\nCompletion rate: 10%\nCompletion rate history: \n02-08-2026: 10%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 02-08-2026\nLast update: 02-08-2026\n\n\nTrigger ID: R1061 - T0661\nTitle: Breakdown of post-conflict governance negotiations\nDescription: \n",
   "triggerList": [
    {
     "triggerId": "T0660",
@@ -3295,7 +3295,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1073 - T0688\nTitle: Implementation of E1 tender awards before the elections\nDescription: \nProgress of the E1 tenders, including any reversal of the Attorney General's postponement, before or after 27 October, could move the plan from approval towards physical implementation and make it more difficult for a future government to reverse.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 02-10-2026\nLast update: 02-10-2026\n\n\nTrigger ID: R1073 - T0689\nTitle: Post-election government commitment\nDescripti",
+  "triggersPreview": "Trigger ID: R1073 - T0688\nTitle: Implementation of E1 tender awards before the elections\nDescription: \nProgress of the E1 tenders, including any reversal of the Attorney General's postponement, before or after 27 October, could move the plan from approval towards physical implementation and make it more difficult for a future government to reverse.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 02-10-2026\nLast update: 02-10-2026\n\n\nTrigger ID: R1073 - T0689\nTitle: Post-election government commitment\nDescripti",
   "triggerList": [
    {
     "triggerId": "T0688",
@@ -3335,7 +3335,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "---------BACKGROUND AND RATIONALE-------\nThe Panamanian government signed a concession contract (arrangement between a public authority and an economic operator) with the Canadian mining company First Quantum Minerals, which allowed the latter to continue operating an open-pit copper mine in a richly biodiverse jungle. Panama’s National Assembly, the country’s legislative body, and the country’s president fast-tracked the contract and approved it on 20 October 2023. \n\nSince the contract was approved, Panama has been facing protests across the country. Protestors claim the contract was fast-tracked with little public input and lacks transparency, making allegations of corruption of the lawmakers. The protests are being led by construction workers, educators, indigenous groups, and activists, mainly calling for the revocation of the mining contract. Tens of thousands of people have been reported to be participating in the protests across the country. According to the protesters, there are significant environmental risks of the contract, including for the vital water sources required for water consumption.\n\nAs at 10 November 2023, the protests have generally been peaceful; ACLED data shows that around 80% of the protests occurring since 20 October 2023 have been peaceful and 20% violent demonstrations which include incidents of clashes between protestors and security forces, use of tear gas to disperse protestors, arrests, vandalism, and robbery. Significant increase in the deployment of security forces has been observed since the protests began. As at 14 November 2023, two fatalities have been reported: an elderly man was apparently frustrated with the blockage and tried to force the protestors to remove a barrier blocking the Pan American highway and then he allegedly opened fire on the protestors, killing two of them.\n\nOn 3 November 2023, the National Assembly signed an indefinite moratorium on new mining concessions into law, which also prohibits renewing existing concessions. However, the new law still allows Minera Panama, the Panamanian subsidiary of First Quantum Minerals, to operate. Hence, the protests are still ongoing. The country’s Supreme Court stated that it will consider two lawsuits filed against the renewed contract with First Quantum.\n\nThe protests led to countrywide road blockades that have negatively impacted the economy, transportation, food security, education, healthcare, and WASH, and raised protection concerns.\nDue to the insecurity caused by the protests, educational authorities closed all schools across the country. \n\nThere have been reports of attack on healthcare, including assault on healthcare personnel, ambulances, and vehicles transporting patients by people among the protestors. On 27 October 2023, the Panamanian National Operations Center requested interinstitutional support to the Red Cross Society of Panama to provide assistance, especially through healthcare services, to the population affected by the protests and blockades. The IFRC has initiated an operation targeting 3,500 people. In several provinces, supplies required for water purification are running low, leading to the risk of clean water rationing. \n\nSeveral areas in the provinces of Bocas del Toro, Chiriqui, Darien, Herrera, and Los Santos have reported fuel shortages and rationing of food supplies by supermarkets and stores. An electricity generation company, whose production depends on fossil fuels, has issued warnings of potential controlled power outages to manage the electricity supply.\n\nRice is the staple food in Panama. Darien, Herrera, Los Santos, and Chiriqui provinces comprise the primary rice producers. Rice mills are unable to distribute their stored rice during the harvest period due to road closures, resulting in considerable losses. Significant loss in perishable goods, including fruits and vegetables, have also been reported due to the inability to sell and transport perishable products to markets and storage facilities.\n\nIn early October of 2023, Panama and Costa Rica announced a plan to provide a bus service to quickly move thousands of migrants crossing the Darien Gap through Panama to the Costa Rican border. On 24 October, it was reported that more than 30 buses from Darien to Costa Rica were stranded in the Chiriqui as they could not move forward towards Costa Rica. On 25 October, another 20 buses were not permitted to pass in San Felix, Chiriqui province; as a result, the migrants on the buses started their journey by foot from San Felix to Paso Canoas, Costa Rica.\n\n-----AGGRAVATING FACTORS--------\nCopper is the major export good for Panama. Analysts estimate that revoking the mining contract would cut Panama’s GDP growth from a forecast 6% in 2023 to just 1%. So, repealing the mining contract will have significant negative impact on the economy; however, not repealing it would also likely cause significant negative environmental (and consequently economic) impacts. This situation is aggravated by the current drought, exacerbated by a severe El Nino weather system, which has reduced water levels in the Panama Canal, prompting the Panama Canal Authority to implement additional vessel reductions in an effort to conserve water.\n\n--------EXPECTED IMPACT--------\nContinued protests will worsen the abovementioned situation, which could lead to a political and socioeconomic crisis in Panama, and possibly to humanitarian consequences for some more exposed population groups, These consequences could include lack of healthcare support, education, and clean water in some areas of the countries. There would also be raising food insecurity concerns, loss of livelihoods, especially among rice and vegetable farmers, and heightening of protection concerns for those participating in protests that become violent. \n\n--------UPDATE--------\nThe risk has only partially materialised. The expected impact was not realised. So far, it has not generated humanitarian needs other than those already mentioned in the background and rationale section. \n\nPanama's Supreme Court of Justice ruled that Panama’s new mining contract with the Canadian company First Quantum was unconstitutional. Following the ruling, the president of the country said that a process to close the Cobre Panama mine was set to begin. Protests have also began to subside after the ruling.\n\nThe protests have already had significant impact on the economy. Retail associations estimated a loss of around US$200 million in the first 30 days of protests. Logistics losses are estimated to be around US$4.6 billion. \n\nPanama’s economy is heavily based on the ability to facilitate the transit of global merchandise, which has been negatively affected by the protests. The logistics sector has been estimated to account for around 20% of the country’s GDP and employs around 10% of the Panamanian workforce.\n\nThe protests also have reportedly reduced Panama’s attractiveness as a foreign investment destination. Large losses in the tourism and hospitality sectors have been reported, with many international tourists cancelling their trips to the country through January 2024. \n\nShortages in food, fuel, and medicines have been reported in some cities and the government is importing such supplies from neighbouring Costa Rica to fill the gaps.\n\nThe company said that it has initiated international arbitration against Panama. Estimates suggest that Panama might have to pay at least US$20-50 billion (25-65% of the country’s GDP) if it loses the case. \n\nLivelihoods of the mine's employees and the people whose jobs are indirectly related to the mine are considered to be affected. The mine is reported to employ around 6,600 people (more than 5,500 are Panamanians). In total 40,000 jobs, directly and indirectly, are reportedly linked with the mine. \n\nIt is to be noted that, if Panama loses the international arbitration case, which would be compounded by the negative impacts of the closure of the mine, there will likely be significant socio-economic distress in the country."
@@ -3352,7 +3352,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0957 - T0028\nTitle: Continued fragile social and economic situation in the country\nDescription: \nPapua New Guinea has been facing a persistent fragile social and economic state, especially high youth unemployment, reduced purchasing power, and limited water, sanitation, and electricity services. People living in the urban areas are constantly alert to the possibility of theft and assault. The situation is such that when an opportune moment arises, such as a strike called by security forces, a part of the population facing the socioeconomic issues tend to take advantage through rio",
+  "triggersPreview": "Trigger ID: R0957 - T0028\nTitle: Continued fragile social and economic situation in the country\nDescription: \nPapua New Guinea has been facing a persistent fragile social and economic state, especially high youth unemployment, reduced purchasing power, and limited water, sanitation, and electricity services. People living in the urban areas are constantly alert to the possibility of theft and assault. The situation is such that when an opportune moment arises, such as a strike called by security forces, a part of the population facing the socioeconomic issues tend to take advantage through rio",
   "triggerList": [
    {
     "triggerId": "T0028",
@@ -3403,7 +3403,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0492 - T0366\nTitle: Political Inestability in Pery\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-12-2024\nLast update: 18-12-2024",
+  "triggersPreview": "Trigger ID: R0492 - T0366\nTitle: Political Inestability in Pery\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-12-2024\nLast update: 18-12-2024",
   "triggerList": [
    {
     "triggerId": "T0366",
@@ -3432,7 +3432,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0303 - T0160\nTitle: Start of the electoral period\nDescription: \nPast episodes of electoral violence in the country indicate that there will violence during the electoral period.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R0303 - T0161\nTitle: Candidacy of controversial candidate Ferdinand Marcos Jr.  \nDescription: \nThe controversial Marcos Jr.’s candidacy will likely contribute to increased political tensions and violence in Mindanao.   \nSource",
+  "triggersPreview": "Trigger ID: R0303 - T0160\nTitle: Start of the electoral period\nDescription: \nPast episodes of electoral violence in the country indicate that there will violence during the electoral period.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R0303 - T0161\nTitle: Candidacy of controversial candidate Ferdinand Marcos Jr.  \nDescription: \nThe controversial Marcos Jr.’s candidacy will likely contribute to increased political tensions and violence in Mindanao.   \nSource",
   "triggerList": [
    {
     "triggerId": "T0160",
@@ -3483,7 +3483,7 @@
   "probability": "Very High",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0542 - T0167\nTitle: Start of electoral period with rival groups participating in the village and youth council elections\nDescription: \nThere is a history of electoral violence, clan feuds, and political rivalry in the Philippines. Overall, electoral violence in country is a recurrent concern. Rival groups are participating in the village and youth council elections. Presence of non-state armed groups in the Mindanao islands aggravates the situation. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered",
+  "triggersPreview": "Trigger ID: R0542 - T0167\nTitle: Start of electoral period with rival groups participating in the village and youth council elections\nDescription: \nThere is a history of electoral violence, clan feuds, and political rivalry in the Philippines. Overall, electoral violence in country is a recurrent concern. Rival groups are participating in the village and youth council elections. Presence of non-state armed groups in the Mindanao islands aggravates the situation. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered",
   "triggerList": [
    {
     "triggerId": "T0167",
@@ -3512,7 +3512,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1016 - T0548\nTitle: La nina establishment\nDescription: \nLa Niña is present and will persist until February-March 2026\n\nSources: \nhttps://www.cpc.ncep.noaa.gov/products/analysis_monitoring/lanina/enso_evolution-status-fcsts-web.pdf\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 04-11-2025\nLast update: 11-11-2025\n\n\nTrigger ID: R1016 - T0549\nTitle: Monsoon Intensification and Tropical Cyclone Surge \nDescription: \nDuring La Niña years, the southwest and northeast monsoons tend to be stronger and more persisten",
+  "triggersPreview": "Trigger ID: R1016 - T0548\nTitle: La nina establishment\nDescription: \nLa Niña is present and will persist until February-March 2026\n\nSources: \nhttps://www.cpc.ncep.noaa.gov/products/analysis_monitoring/lanina/enso_evolution-status-fcsts-web.pdf\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 04-11-2025\nLast update: 11-11-2025\n\n\nTrigger ID: R1016 - T0549\nTitle: Monsoon Intensification and Tropical Cyclone Surge \nDescription: \nDuring La Niña years, the southwest and northeast monsoons tend to be stronger and more persisten",
   "triggerList": [
    {
     "triggerId": "T0548",
@@ -3552,7 +3552,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1058 - T0655\nTitle: Below-average rainfall and above-average temperatures\nDescription: \nEl Niño typically suppresses rainfall across the Philippines while also contributing to above-average temperatures. During the monsoon season, it also contributes to irregular rainfall distribution, characterized by intermittent dry spells and uneven precipitation.  Reduced or unheavenly distributed rainfall, combined with high temperatures, increases evapotranspiration, accelerating the depletion of soil moisture, while reduced precipitation affect surface and groundwater reserves. This can si",
+  "triggersPreview": "Trigger ID: R1058 - T0655\nTitle: Below-average rainfall and above-average temperatures\nDescription: \nEl Niño typically suppresses rainfall across the Philippines while also contributing to above-average temperatures. During the monsoon season, it also contributes to irregular rainfall distribution, characterized by intermittent dry spells and uneven precipitation.  Reduced or unheavenly distributed rainfall, combined with high temperatures, increases evapotranspiration, accelerating the depletion of soil moisture, while reduced precipitation affect surface and groundwater reserves. This can si",
   "triggerList": [
    {
     "triggerId": "T0655",
@@ -3581,7 +3581,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0190 - T0301\nTitle: Presidential Term Extension\nDescription: \nPresident Farmaajo’s decision to unilaterally extend his term by two years without broad political consensus sparked outrage among opposition groups. This was seen as unconstitutional and led to armed confrontations in Mogadishu as militias aligned with opposition leaders mobilized against government forces\nSources: \nhttps://www.dw.com/en/somalia-mogadishu-tense-as-armed-opposition-fighters-take-up-positions/a-57329047;https://liberties.aljazeera.com/en/residents-of-mogadishu-fled-neighbourhoods-fearing-renewed-clashes-",
+  "triggersPreview": "Trigger ID: R0190 - T0301\nTitle: Presidential Term Extension\nDescription: \nPresident Farmaajo’s decision to unilaterally extend his term by two years without broad political consensus sparked outrage among opposition groups. This was seen as unconstitutional and led to armed confrontations in Mogadishu as militias aligned with opposition leaders mobilized against government forces\nSources: \nhttps://www.dw.com/en/somalia-mogadishu-tense-as-armed-opposition-fighters-take-up-positions/a-57329047;https://liberties.aljazeera.com/en/residents-of-mogadishu-fled-neighbourhoods-fearing-renewed-clashes-",
   "triggerList": [
    {
     "triggerId": "T0301",
@@ -3621,7 +3621,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Food security is likely to further deteriorate if intercommunal conflict spreads, and conflict and drought-induced displacement are concerning for their impacts on other human rights."
@@ -3638,7 +3638,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1007 - T0525\nTitle: Escalating disputes between Federal Government and Federal Member States\nDescription: \nDisagreements between Mogadishu and states such as Puntland and Jubbaland could escalate as electoral preparations advance, particularly if federal authorities attempt to impose electoral frameworks without consensus. Past disputes have already resulted in violent clashes in Jubbaland.\nSources: \nreuters.com/world/africa/somalias-jubbaland-government-suspends-ties-with-federal-administration-2024-11-28\nhttps://www.garoweonline.com/en/news/somalia/senior-jubaland-police-command",
+  "triggersPreview": "Trigger ID: R1007 - T0525\nTitle: Escalating disputes between Federal Government and Federal Member States\nDescription: \nDisagreements between Mogadishu and states such as Puntland and Jubbaland could escalate as electoral preparations advance, particularly if federal authorities attempt to impose electoral frameworks without consensus. Past disputes have already resulted in violent clashes in Jubbaland.\nSources: \nreuters.com/world/africa/somalias-jubbaland-government-suspends-ties-with-federal-administration-2024-11-28\nhttps://www.garoweonline.com/en/news/somalia/senior-jubaland-police-command",
   "triggerList": [
    {
     "triggerId": "T0525",
@@ -3678,7 +3678,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1009 - T0539\nTitle: La Niña and Negative Indian Ocean Dipole Likely to Suppress Deyr Rains\nDescription: \nClimate forecasts indicate a high likelihood of La Niña conditions developing through December 2025, coupled with a negative Indian Ocean Dipole persisting until November. This combination is expected to suppress rainfall across Somalia, particularly in southern and central regions. The reduced moisture inflow and weaker monsoon activity are likely to delay the onset and shorten the duration of the Deyr season, worsening soil moisture deficits and compounding drought conditions",
+  "triggersPreview": "Trigger ID: R1009 - T0539\nTitle: La Niña and Negative Indian Ocean Dipole Likely to Suppress Deyr Rains\nDescription: \nClimate forecasts indicate a high likelihood of La Niña conditions developing through December 2025, coupled with a negative Indian Ocean Dipole persisting until November. This combination is expected to suppress rainfall across Somalia, particularly in southern and central regions. The reduced moisture inflow and weaker monsoon activity are likely to delay the onset and shorten the duration of the Deyr season, worsening soil moisture deficits and compounding drought conditions",
   "triggerList": [
    {
     "triggerId": "T0539",
@@ -3718,7 +3718,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1033 - T0598\nTitle: Major new deployments or clashes around Baidoa\nDescription: \nSignificant additional deployments or renewed heavy clashes between federal, regional and allied forces in or around Baidoa or key road corridors, including attempts to seize or re‑seize state institutions, indicating movement towards larger‑scale fighting.\nSources: \nhttps://www.somaliguardian.com/news/somalia-news/southwest-somalia-president-orders-regional-forces-to-counter-federal-troops/\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDa",
+  "triggersPreview": "Trigger ID: R1033 - T0598\nTitle: Major new deployments or clashes around Baidoa\nDescription: \nSignificant additional deployments or renewed heavy clashes between federal, regional and allied forces in or around Baidoa or key road corridors, including attempts to seize or re‑seize state institutions, indicating movement towards larger‑scale fighting.\nSources: \nhttps://www.somaliguardian.com/news/somalia-news/southwest-somalia-president-orders-regional-forces-to-counter-federal-troops/\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDa",
   "triggerList": [
    {
     "triggerId": "T0598",
@@ -3758,7 +3758,7 @@
   "probability": "Medium",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Authorities in Pochalla County of the Greater Pibor Administrative Area have reported suspected cholera cases in some parts of the county.Two people died after severe watery diarrhea and vomiting, and one survived. There are no doctors in the area to confirm. Due to floods there are no boreholes in the area, the people drink water directly from the river. Several health facilities in the region were flooded last year. In Pibor, one of the areas hardest hit by the floods, 90 per cent of the health and nutrition facilities have suspended their services due to the 2019 floods."
@@ -3775,7 +3775,7 @@
   "probability": "",
   "status": "",
   "outcome": null,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Clashes increase displacement and disrupt the harvest, leading to a third poor year. The number of severely food insecure increases dramatically increases and violence prevents the delivery of aid and prevents any locally produced surpluses from reaching regional markets. The number of people in IPC 5 (currently 40,000) continues to increase. All needs are exacerbated by severe restrictions on humanitarian access. The situation in Protection of Civilian sites remains dire as most IDPs are still unable to return home. Overcrowding increases as new IDPs arrived displaced by fighting. Any remaining stocks of food, nutrition treatments and drugs are quickly depleted. The number of people in SAM is likely to increase as the supply of treatments is cut off as humanitarian actors leave conflict affected areas as they have been forced to do in previous years. Clashes between government forces and opposition groups will likely cause new displacement. The situation in PoCs will remain dire as most IDPs are still unable to return home, and new IDPs arrive."
@@ -3792,7 +3792,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1037 - T0603\nTitle: Cancellation of the December 2026 elections\nDescription: \nWith the 2018 peace process now dead, the December 2026 elections represented one of the few remaining frameworks for legitimate political transition — yet the prerequisites for a credible vote do not exist. The National Elections Commission remains unfunded, forces have not been unified, and active fighting makes campaigning impossible across large parts of the country. A further cancellation would likely be interpreted by opposition groups as a permanent consolidation of power by Kiir's government, dee",
+  "triggersPreview": "Trigger ID: R1037 - T0603\nTitle: Cancellation of the December 2026 elections\nDescription: \nWith the 2018 peace process now dead, the December 2026 elections represented one of the few remaining frameworks for legitimate political transition — yet the prerequisites for a credible vote do not exist. The National Elections Commission remains unfunded, forces have not been unified, and active fighting makes campaigning impossible across large parts of the country. A further cancellation would likely be interpreted by opposition groups as a permanent consolidation of power by Kiir's government, dee",
   "triggerList": [
    {
     "triggerId": "T0603",
@@ -3843,7 +3843,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0332 - T0143\nTitle: Failure of the Sri Lankan government to restructure its debt repayment scheme\nDescription: \nFailure of the Sri Lankan government to restructure its debt repayment scheme will push the country deeper into economic crisis.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R0332 - T0144\nTitle: Further depletion of foreign currency reserves\nDescription: \nFurther depletion of foreign currency reserves will result in decrease in importa",
+  "triggersPreview": "Trigger ID: R0332 - T0143\nTitle: Failure of the Sri Lankan government to restructure its debt repayment scheme\nDescription: \nFailure of the Sri Lankan government to restructure its debt repayment scheme will push the country deeper into economic crisis.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 18-08-2024\nLast update: 18-08-2024\n\n\nTrigger ID: R0332 - T0144\nTitle: Further depletion of foreign currency reserves\nDescription: \nFurther depletion of foreign currency reserves will result in decrease in importa",
   "triggerList": [
    {
     "triggerId": "T0143",
@@ -3883,7 +3883,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0002 - T0189\nTitle: Violent demonstrations\nDescription: \nThe escalating protests, particularly the violent crackdown on the 3 June 2019 sit-in, can fuel further unrest and contribute to the instability of the transitional government. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 25-11-2024\nLast update: 25-11-2024\n\n\nTrigger ID: R0002 - T0190\nTitle: Violence among armed groups \nDescription: \nThe internal divisions within the TMC and the RSF's involvement in violent actions, along with their hist",
+  "triggersPreview": "Trigger ID: R0002 - T0189\nTitle: Violent demonstrations\nDescription: \nThe escalating protests, particularly the violent crackdown on the 3 June 2019 sit-in, can fuel further unrest and contribute to the instability of the transitional government. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 25-11-2024\nLast update: 25-11-2024\n\n\nTrigger ID: R0002 - T0190\nTitle: Violence among armed groups \nDescription: \nThe internal divisions within the TMC and the RSF's involvement in violent actions, along with their hist",
   "triggerList": [
    {
     "triggerId": "T0189",
@@ -3923,7 +3923,7 @@
   "probability": "Very High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0018 - T0096\nTitle: Rising food inflation\nDescription: \nRising prices of commodities, especially food, is likely to trigger more protests and instability across the country. By 1 March 2019, overall inflation has reached 45%.\nSources: \nhttps://tradingeconomics.com/sudan/inflation-cpi \nCompletion rate: 50%\nCompletion rate history: \n14-07-2024: 50%\nQuantitative objective to meet 100%: \nYes, the trigger can be considered materialised if overall inflation reaches 100%\nTrend: \nTrend history: \n\nDate entered: 14-07-2024\nLast update: 14-07-2024",
+  "triggersPreview": "Trigger ID: R0018 - T0096\nTitle: Rising food inflation\nDescription: \nRising prices of commodities, especially food, is likely to trigger more protests and instability across the country. By 1 March 2019, overall inflation has reached 45%.\nSources: \nhttps://tradingeconomics.com/sudan/inflation-cpi \nCompletion rate: 50%\nCompletion rate history: \n14-07-2024: 50%\nQuantitative objective to meet 100%: \nYes, the trigger can be considered materialised if overall inflation reaches 100%\nTrend: \nTrend history: \n\nDate entered: 14-07-2024\nLast update: 14-07-2024",
   "triggerList": [
    {
     "triggerId": "T0096",
@@ -3952,7 +3952,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0120 - T0219\nTitle: Demonstration on fuel prices\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024\n\n\nTrigger ID: R0120 - T0220\nTitle: Devaluation of currency \nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024\n\n\nTrigger ID: R0120 - T0221\nTitle: High prices and poor markets\nDescription: \n\nSources: \n\nCompletion rate: \nCo",
+  "triggersPreview": "Trigger ID: R0120 - T0219\nTitle: Demonstration on fuel prices\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024\n\n\nTrigger ID: R0120 - T0220\nTitle: Devaluation of currency \nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 27-11-2024\nLast update: 27-11-2024\n\n\nTrigger ID: R0120 - T0221\nTitle: High prices and poor markets\nDescription: \n\nSources: \n\nCompletion rate: \nCo",
   "triggerList": [
    {
     "triggerId": "T0219",
@@ -4003,7 +4003,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0073 - T0239\nTitle: Intercommunal clashes, increase in violent incidents, more fatalities\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
+  "triggersPreview": "Trigger ID: R0073 - T0239\nTitle: Intercommunal clashes, increase in violent incidents, more fatalities\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
   "triggerList": [
    {
     "triggerId": "T0239",
@@ -4032,7 +4032,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0248 - T0280\nTitle: More refugees from South Sudan continue to arrive\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024\n\n\nTrigger ID: R0248 - T0281\nTitle: Inability to cover gaps in response\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
+  "triggersPreview": "Trigger ID: R0248 - T0280\nTitle: More refugees from South Sudan continue to arrive\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024\n\n\nTrigger ID: R0248 - T0281\nTitle: Inability to cover gaps in response\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
   "triggerList": [
    {
     "triggerId": "T0280",
@@ -4072,7 +4072,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0200 - T0322\nTitle: Protests, blocking of ports and roads, and lack of fuel, medicine, and wheat. \nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 16-12-2024\nLast update: 16-12-2024",
+  "triggersPreview": "Trigger ID: R0200 - T0322\nTitle: Protests, blocking of ports and roads, and lack of fuel, medicine, and wheat. \nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 16-12-2024\nLast update: 16-12-2024",
   "triggerList": [
    {
     "triggerId": "T0322",
@@ -4101,7 +4101,7 @@
   "probability": "High",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1048 - T0631\nTitle: RSF advances north from Baw\nDescription: \nRSF movement towards Ed Damazine or the Roseires Dam corridor would indicate expansion beyond current front lines and increase displacement risk.\nSources: \n([ACLED 26/01/2026](https://acleddata.com/report/blue-nile-peripheral-front-central-battleground-sudan-conflict), [MEE 26/01/2026](https://www.middleeasteye.net/news/sudans-rsf-launches-offensive-blue-nile-state), [AJ 19/08/2025](https://www.aljazeera.com/features/longform/2025/8/19/inside-the-nuba-mountains-and-the-alliance-reshaping-sudans-civil-war), [ACLED 15/04/",
+  "triggersPreview": "Trigger ID: R1048 - T0631\nTitle: RSF advances north from Baw\nDescription: \nRSF movement towards Ed Damazine or the Roseires Dam corridor would indicate expansion beyond current front lines and increase displacement risk.\nSources: \n([ACLED 26/01/2026](https://acleddata.com/report/blue-nile-peripheral-front-central-battleground-sudan-conflict), [MEE 26/01/2026](https://www.middleeasteye.net/news/sudans-rsf-launches-offensive-blue-nile-state), [AJ 19/08/2025](https://www.aljazeera.com/features/longform/2025/8/19/inside-the-nuba-mountains-and-the-alliance-reshaping-sudans-civil-war), [ACLED 15/04/",
   "triggerList": [
    {
     "triggerId": "T0631",
@@ -4152,7 +4152,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1049 - T0634\nTitle: RSF encirclement of Al Obeid\nDescription: \nFurther RSF deployment west/south of Al Obeid, road interdiction, or attacks on access routes would indicate renewed siege formation.\nSources: \n([UN 19/12/2025](https://news.un.org/en/story/2025/12/1166633), [Darfur24 13/11/2025](https://www.darfur24.com/en/2025/11/13/military-document-reveals-rsf-preparations-for-major-attack-on-el-obeid/), [YSPH HRL 16/01/2026](https://files-profile.medicine.yale.edu/documents/8dce0cc5-35fb-4078-b2aa-748e51cc8e9d), [BBC 06/01/2026](https://www.bbc.co.uk/news/articles/c74w54783zeo), [",
+  "triggersPreview": "Trigger ID: R1049 - T0634\nTitle: RSF encirclement of Al Obeid\nDescription: \nFurther RSF deployment west/south of Al Obeid, road interdiction, or attacks on access routes would indicate renewed siege formation.\nSources: \n([UN 19/12/2025](https://news.un.org/en/story/2025/12/1166633), [Darfur24 13/11/2025](https://www.darfur24.com/en/2025/11/13/military-document-reveals-rsf-preparations-for-major-attack-on-el-obeid/), [YSPH HRL 16/01/2026](https://files-profile.medicine.yale.edu/documents/8dce0cc5-35fb-4078-b2aa-748e51cc8e9d), [BBC 06/01/2026](https://www.bbc.co.uk/news/articles/c74w54783zeo), [",
   "triggerList": [
    {
     "triggerId": "T0634",
@@ -4203,7 +4203,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1051 - T0637\nTitle: Extension or enforcement of goods bans\nDescription: \nRenewed decrees, checkpoint enforcement, or seizures of goods moving towards RSF-controlled areas would tighten market supply.\nSources: \n([Darfur24 23/12/2025(https://www.darfur24.com/2025/12/23/%D8%BA%D9%84%D8%A7%D8%A1-%D8%A7%D9%84%D9%85%D8%B9%D9%8A%D8%B4%D8%A9-%D9%8A%D9%87%D8%AF%D8%AF-%D9%83%D8%B1%D8%AF%D9%81%D8%A7%D9%86-%D8%A8%D8%B9%D8%AF-%D8%AD%D8%B8%D8%B1-%D8%A7%D9%84%D8%AE%D8%B1%D8%B7/), [ST 20/12/2025(https://sudantribune.com/article/308450), [SMF 31/12/2025(https://sudanmediaforum.org/en/blocking-the-",
+  "triggersPreview": "Trigger ID: R1051 - T0637\nTitle: Extension or enforcement of goods bans\nDescription: \nRenewed decrees, checkpoint enforcement, or seizures of goods moving towards RSF-controlled areas would tighten market supply.\nSources: \n([Darfur24 23/12/2025(https://www.darfur24.com/2025/12/23/%D8%BA%D9%84%D8%A7%D8%A1-%D8%A7%D9%84%D9%85%D8%B9%D9%8A%D8%B4%D8%A9-%D9%8A%D9%87%D8%AF%D8%AF-%D9%83%D8%B1%D8%AF%D9%81%D8%A7%D9%86-%D8%A8%D8%B9%D8%AF-%D8%AD%D8%B8%D8%B1-%D8%A7%D9%84%D8%AE%D8%B1%D8%B7/), [ST 20/12/2025(https://sudantribune.com/article/308450), [SMF 31/12/2025(https://sudanmediaforum.org/en/blocking-the-",
   "triggerList": [
    {
     "triggerId": "T0637",
@@ -4254,7 +4254,7 @@
   "probability": "Low",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1052 - T0640\nTitle: SAF moves to integrate or restrict allied groups\nDescription: \nWeapons restrictions, command integration orders, arrests, or removal of senior figures could provoke armed resistance.\nSources: \n([Atlantic Council 26/01/2026](https://www.atlanticcouncil.org/blogs/menasource/sudan-muslim-brotherhood-iran-us-terror/), [CT 12/03/2026](https://www.criticalthreats.org/analysis/africa-file-march-12-2026-islamist-militias-sudan), [The Interpreter 26/11/2025](https://www.lowyinstitute.org/the-interpreter/armed-groups-sudan-conflict), [US DOS 09/03/2026](https://www.state",
+  "triggersPreview": "Trigger ID: R1052 - T0640\nTitle: SAF moves to integrate or restrict allied groups\nDescription: \nWeapons restrictions, command integration orders, arrests, or removal of senior figures could provoke armed resistance.\nSources: \n([Atlantic Council 26/01/2026](https://www.atlanticcouncil.org/blogs/menasource/sudan-muslim-brotherhood-iran-us-terror/), [CT 12/03/2026](https://www.criticalthreats.org/analysis/africa-file-march-12-2026-islamist-militias-sudan), [The Interpreter 26/11/2025](https://www.lowyinstitute.org/the-interpreter/armed-groups-sudan-conflict), [US DOS 09/03/2026](https://www.state",
   "triggerList": [
    {
     "triggerId": "T0640",
@@ -4305,7 +4305,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1053 - T0643\nTitle: Repeated drone attacks on Port Sudan or corridor infrastructure\nDescription: \n: Strikes on fuel depots, warehouses, port facilities, roads, or transport hubs would indicate escalation.\nSources: \n([Reuters 12/09/2025](https://www.reuters.com/investigations/how-sudans-rsf-used-drones-its-civil-war-2025-09-12/), [Milton et al. 09/11/2025](https://ctc.westpoint.edu/sudans-long-range-drone-war/), [UN 18/01/2026](https://news.un.org/en/story/2026/01/1166786), [EPC 08/09/2023](https://epc.ae/en/details/scenario/port-sudan-the-economics-and-geopolitics-of-sudans-new-ca",
+  "triggersPreview": "Trigger ID: R1053 - T0643\nTitle: Repeated drone attacks on Port Sudan or corridor infrastructure\nDescription: \n: Strikes on fuel depots, warehouses, port facilities, roads, or transport hubs would indicate escalation.\nSources: \n([Reuters 12/09/2025](https://www.reuters.com/investigations/how-sudans-rsf-used-drones-its-civil-war-2025-09-12/), [Milton et al. 09/11/2025](https://ctc.westpoint.edu/sudans-long-range-drone-war/), [UN 18/01/2026](https://news.un.org/en/story/2026/01/1166786), [EPC 08/09/2023](https://epc.ae/en/details/scenario/port-sudan-the-economics-and-geopolitics-of-sudans-new-ca",
   "triggerList": [
    {
     "triggerId": "T0643",
@@ -4356,7 +4356,7 @@
   "probability": "Low",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1054 - T0646\nTitle: Drone strikes directly hit Merowe Dam or grid infrastructure\nDescription: \nAttacks on turbines, substations, transmission lines, or associated power facilities would increase outage risk.\nSources: \n([ADF 14/10/2025](https://adf-magazine.com/2025/10/drones-take-on-growing-role-in-sudans-conflict-as-technology-advances/), [CT 10/04/2025](https://www.criticalthreats.org/analysis/africa-file-april-10-2025-the-rsfs-northern-sudan-campaign), [ST 13/01/2025](https://sudantribune.com/article/295881), [Le Monde 22/03/2026](https://www.lemonde.fr/en/le-monde-africa/artic",
+  "triggersPreview": "Trigger ID: R1054 - T0646\nTitle: Drone strikes directly hit Merowe Dam or grid infrastructure\nDescription: \nAttacks on turbines, substations, transmission lines, or associated power facilities would increase outage risk.\nSources: \n([ADF 14/10/2025](https://adf-magazine.com/2025/10/drones-take-on-growing-role-in-sudans-conflict-as-technology-advances/), [CT 10/04/2025](https://www.criticalthreats.org/analysis/africa-file-april-10-2025-the-rsfs-northern-sudan-campaign), [ST 13/01/2025](https://sudantribune.com/article/295881), [Le Monde 22/03/2026](https://www.lemonde.fr/en/le-monde-africa/artic",
   "triggerList": [
    {
     "triggerId": "T0646",
@@ -4407,7 +4407,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1055 - T0649\nTitle: Further aid cuts in eastern Chad\nDescription: \nReduced food, health, shelter, or cash assistance would increase pressure on refugees to return despite insecurity.\nSources: \n([IOM 13/04/2026](https://reliefweb.int/report/sudan/dtm-sudan-displacement-and-return-snapshot-update-4-12-april-2026), [RFI 24/03/2026](https://www.rfi.fr/en/africa/20260324-chad-relocates-refugees-amid-rising-tensions-at-border-with-sudan), [IOM 26/01/2026](https://reliefweb.int/report/sudan/dtm-sudan-displacement-and-return-snapshot-update-1-26-january-2026), [UN 17/02/2026](https://news",
+  "triggersPreview": "Trigger ID: R1055 - T0649\nTitle: Further aid cuts in eastern Chad\nDescription: \nReduced food, health, shelter, or cash assistance would increase pressure on refugees to return despite insecurity.\nSources: \n([IOM 13/04/2026](https://reliefweb.int/report/sudan/dtm-sudan-displacement-and-return-snapshot-update-4-12-april-2026), [RFI 24/03/2026](https://www.rfi.fr/en/africa/20260324-chad-relocates-refugees-amid-rising-tensions-at-border-with-sudan), [IOM 26/01/2026](https://reliefweb.int/report/sudan/dtm-sudan-displacement-and-return-snapshot-update-1-26-january-2026), [UN 17/02/2026](https://news",
   "triggerList": [
    {
     "triggerId": "T0649",
@@ -4458,7 +4458,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "In May 2022, Türkiye announced that it plans to continue its 30km military incursion into northern Syria, along the border, as part of its regional conflict against Kurdish armed groups that considers part of PKK network. Türkiye also announced plans to move 1 million Syrians back to Syria. This is a renewed rhetoric from similar statements in October 2021.\n\nOn 1 June, President Erdogan confirmed some of the areas that will be targeted sometime in the future when the military operation takes place: Tal Rifat and Manbij cities. He added that once these cities are under control, the forces will move to other areas, which means Kobani and the areas north of M4 route are likely to be targeted in the military offensive. Türkiye would seek to link the two separated areas under its control in northeast Syria.\n\nDisplacement and protection concerns are likely for the civilians living in the area. The estimated population of Tal Rifaat, Manbij (450,000), and Kobani is over 500,000.\n\nThe probability of an offensive was still low in June, with no significant military deployment at the border. The Turkish military plan has been opposed by the US, Russia and Iran., the Syrian government, and the de facto Kurdish authorities in the north, and is only backed by the Syrian armed groups that Turkey supports. \n\nIn August, Turkiye announced that it is in the last stage of preparations for the military incursion into northern Syria. In the same month, the Turkish president hinted at readiness to contact the Syrian government. By late September, it became known that the Turkish intelligence chief held multiple meetings with the Syrian counterpart in Damascus, likely because of Russian mediation. \n\nIn November an explosion hit the center of Istanbul, killing six and wounded 81 people. Turkish authority blamed the PKK/YPG in Northwest Syria for the explosion and is said the commands for the attack came from Kobane city, a Kurdish stronghold in Northwest Syria.\n\nIn the event of an incursion, there is also a low yet existing possibility of ISIS taking advantage of the conflict escalation to increase attacks across northern Syria, with the SDF being focused on fighting against the Turkish military.\n\nInflation rate has reached over 80% in October 2022, the highest in 24 years. High inflation and the economic crisis is the main challenge for the ruling party in next year's election. In early October, Erdogan renewed his pledge to send one million Syrians back to Syria at the Parliament. As the economic crisis deteriorates and opposition parties in Turkiye regularly call for Syrians to return to Syria, the issue is increasingly likely to shape the upcoming election season."
@@ -4475,7 +4475,7 @@
   "probability": "",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Up to 100,000 people likely to be displaced by strikes, as well as increases in civilian casualties and destruction of water/sanitation infrastructure."
@@ -4492,7 +4492,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0999 - T0503\nTitle: A sense of marginalisation among many former President Al Assad loyalists\nDescription: \nThe dismantling of Al Assad’s security apparatus without offering former personnel reintegration or salary continuity has deepened feelings of marginalisation among Alawite loyalists. Attempts to incorporate them into the new army have been met with mistrust from both opposition groups and minority communities, who fear a return of past abuses.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf\nComp",
+  "triggersPreview": "Trigger ID: R0999 - T0503\nTitle: A sense of marginalisation among many former President Al Assad loyalists\nDescription: \nThe dismantling of Al Assad’s security apparatus without offering former personnel reintegration or salary continuity has deepened feelings of marginalisation among Alawite loyalists. Attempts to incorporate them into the new army have been met with mistrust from both opposition groups and minority communities, who fear a return of past abuses.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf\nComp",
   "triggerList": [
    {
     "triggerId": "T0503",
@@ -4543,7 +4543,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1000 - T0506\nTitle: Weak control over Sunni armed groups\nDescription: \nThe transitional Government’s weak control over Sunni armed groups has been a key trigger for renewed clashes with the Druze, as some militias operate independently and target minority communities. This lack of oversight undermines state authority and fuels sectarian violence, particularly around Al Sweida and Damascus.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf \nCompletion rate: 60%\nCompletion rate history: \n22-07-2025: 60%\nQu",
+  "triggersPreview": "Trigger ID: R1000 - T0506\nTitle: Weak control over Sunni armed groups\nDescription: \nThe transitional Government’s weak control over Sunni armed groups has been a key trigger for renewed clashes with the Druze, as some militias operate independently and target minority communities. This lack of oversight undermines state authority and fuels sectarian violence, particularly around Al Sweida and Damascus.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf \nCompletion rate: 60%\nCompletion rate history: \n22-07-2025: 60%\nQu",
   "triggerList": [
    {
     "triggerId": "T0506",
@@ -4605,7 +4605,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1001 - T0510\nTitle: Potential return of Iran-backed militias\nDescription: \nIsrael fears the potential return of Iran-backed militias, particularly Hezbollah, to areas near the Golan Heights, prompting it to maintain and expand its military presence in southern Syria. Despite the withdrawal of many such forces after Al Assad’s fall, Israel has declared their re-emergence a red line that would trigger immediate military action.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf\nCompletion rate: 10%\nCompleti",
+  "triggersPreview": "Trigger ID: R1001 - T0510\nTitle: Potential return of Iran-backed militias\nDescription: \nIsrael fears the potential return of Iran-backed militias, particularly Hezbollah, to areas near the Golan Heights, prompting it to maintain and expand its military presence in southern Syria. Despite the withdrawal of many such forces after Al Assad’s fall, Israel has declared their re-emergence a red line that would trigger immediate military action.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysis__July-December_2025__.pdf\nCompletion rate: 10%\nCompleti",
   "triggerList": [
    {
     "triggerId": "T0510",
@@ -4667,7 +4667,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1002 - T0513\nTitle: Increased crackdown on smuggling routes\nDescription: \nThe Syria–Lebanon border remains a major smuggling corridor for fuel, weapons, and drugs—particularly Captagon—facilitated by networks linked to Hezbollah and Iran-backed militias. Efforts by Syria’s transitional Government to crack down on these routes have triggered violent resistance from local armed clans, risking further cross-border clashes in areas where smuggling underpins local power and livelihoods.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysi",
+  "triggersPreview": "Trigger ID: R1002 - T0513\nTitle: Increased crackdown on smuggling routes\nDescription: \nThe Syria–Lebanon border remains a major smuggling corridor for fuel, weapons, and drugs—particularly Captagon—facilitated by networks linked to Hezbollah and Iran-backed militias. Efforts by Syria’s transitional Government to crack down on these routes have triggered violent resistance from local armed clans, risking further cross-border clashes in areas where smuggling underpins local power and livelihoods.\nSources: \nhttps://www.acaps.org/fileadmin/Data_Product/Main_media/20250722_ACAPS_Syria-_Risk_analysi",
   "triggerList": [
    {
     "triggerId": "T0513",
@@ -4707,7 +4707,7 @@
   "probability": "Very Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1003 - T0515\nTitle: US funding freeze\nDescription: \nThe US funding freeze, ordered in January 2025, halted nearly all humanitarian aid to northeastern Syria, including critical support for Al Hol and Al Roj camps. This led to the suspension of essential services like water, sanitation, food distribution, and security, creating severe gaps in camp management and raising the risk of unrest, disease outbreaks, and mass escape attempts.\nSources: \nhttps://www.atlanticcouncil.org/blogs/menasource/the-foreign-aid-freeze-poses-risks-to-us-interests-in-syria \nhttps://www.atlanticcouncil.or",
+  "triggersPreview": "Trigger ID: R1003 - T0515\nTitle: US funding freeze\nDescription: \nThe US funding freeze, ordered in January 2025, halted nearly all humanitarian aid to northeastern Syria, including critical support for Al Hol and Al Roj camps. This led to the suspension of essential services like water, sanitation, food distribution, and security, creating severe gaps in camp management and raising the risk of unrest, disease outbreaks, and mass escape attempts.\nSources: \nhttps://www.atlanticcouncil.org/blogs/menasource/the-foreign-aid-freeze-poses-risks-to-us-interests-in-syria \nhttps://www.atlanticcouncil.or",
   "triggerList": [
    {
     "triggerId": "T0515",
@@ -4747,7 +4747,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1004 - T0517\nTitle: Dry winter and spring in 2024/2025\nDescription: \nSyria experienced an unusually dry winter and spring in 2024/2025, with significantly below-average rainfall and higher temperatures. This contributed to declining water levels, including a major drop at the Euphrates Dam, worsening the country’s ongoing drought and water scarcity.\nSources: \nhttps://reliefweb.int/report/syrian-arab-republic/giews-country-brief-syrian-arab-republic-04-april-2025\nhttps://www.aljazeera.net/climate/longform/2025/4/22/%D8%A8%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AC%D9%81",
+  "triggersPreview": "Trigger ID: R1004 - T0517\nTitle: Dry winter and spring in 2024/2025\nDescription: \nSyria experienced an unusually dry winter and spring in 2024/2025, with significantly below-average rainfall and higher temperatures. This contributed to declining water levels, including a major drop at the Euphrates Dam, worsening the country’s ongoing drought and water scarcity.\nSources: \nhttps://reliefweb.int/report/syrian-arab-republic/giews-country-brief-syrian-arab-republic-04-april-2025\nhttps://www.aljazeera.net/climate/longform/2025/4/22/%D8%A8%D9%85%D9%88%D8%A7%D8%AC%D9%87%D8%A9-%D8%A7%D9%84%D8%AC%D9%81",
   "triggerList": [
    {
     "triggerId": "T0517",
@@ -4798,7 +4798,7 @@
   "probability": "Low",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1068 - T0674\nTitle: Expansion of Israeli military control \nDescription: \nA further expansion of Israeli positions, checkpoints or closed military zones beyond the current areas of control in Quneitra and western Dar'a could indicate movement towards a more permanent security zone. If Israeli forces begin holding additional territory or restricting civilian access on a sustained basis, this could increase local resistance and create conditions for a broader Israeli-controlled zone extending towards areas linked to As-Sweida. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\n",
+  "triggersPreview": "Trigger ID: R1068 - T0674\nTitle: Expansion of Israeli military control \nDescription: \nA further expansion of Israeli positions, checkpoints or closed military zones beyond the current areas of control in Quneitra and western Dar'a could indicate movement towards a more permanent security zone. If Israeli forces begin holding additional territory or restricting civilian access on a sustained basis, this could increase local resistance and create conditions for a broader Israeli-controlled zone extending towards areas linked to As-Sweida. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\n",
   "triggerList": [
    {
     "triggerId": "T0674",
@@ -4849,7 +4849,7 @@
   "probability": "Very Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "There has been no violent attacks taking place in Tanzania since the entry of this risk in November. On 14 October, some 300 insurgents from Mozambique attacked Kitaya, a riverside border village in the Mtwara region. The Tanzanian authorities acknowledged for the first time an attack in Tanzania carried out by insurgents coming from the neighbouring country.\nIn November 2020, Tanzania and Mozambique have signed a memorandum of understanding aimed to join forces against ISIL-linked fighters in Cabo Delgado. Recently raids have been carried out in Tanzanian villages near the border and many fighters are believed to come from Tanzania.\nThe population of Mtwara region (which borders with Cabo Delgado) is over 1,270,000 people.\n\nUpdate (Sep 2021): Rwandan and Tanzanian police forces held a bilateral meeting to discuss their approach to counter the possible threat of insurgents from Cabo Delgado. Terrorists fleeing from their hideouts in Mozambique may infiltrate the borders and establish cells in Rwanda, Tanzania or other neighboring countries."
@@ -4866,7 +4866,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0982 - T0438\nTitle: Heavy Rainfall\nDescription: \nIntense and prolonged precipitation leads to soil saturation, increasing the likelihood of floods and landslides.\nSources: \nhttps://dailynews.co.tz/nemc-issues-warning-on-rainfall-landslide/ \nhttps://reliefweb.int/report/united-republic-tanzania/tanzania-africa-floods-and-landslides-202324-revised-emergency-appeal-mdrtz035\nCompletion rate: 90%\nCompletion rate history: \n12-02-2025: 100%\n12-02-2025: 90%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-02-2025\nLast update: 12-02-2025\n\n\nTrigger ID: R0982 ",
+  "triggersPreview": "Trigger ID: R0982 - T0438\nTitle: Heavy Rainfall\nDescription: \nIntense and prolonged precipitation leads to soil saturation, increasing the likelihood of floods and landslides.\nSources: \nhttps://dailynews.co.tz/nemc-issues-warning-on-rainfall-landslide/ \nhttps://reliefweb.int/report/united-republic-tanzania/tanzania-africa-floods-and-landslides-202324-revised-emergency-appeal-mdrtz035\nCompletion rate: 90%\nCompletion rate history: \n12-02-2025: 100%\n12-02-2025: 90%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 12-02-2025\nLast update: 12-02-2025\n\n\nTrigger ID: R0982 ",
   "triggerList": [
    {
     "triggerId": "T0438",
@@ -4906,7 +4906,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0549 - T0164\nTitle: Drought throughout the country due to the El Nino Southern Oscillation (ENSO) conditions \nDescription: \nThe entire country of Timor-Leste is showing signs of drought due to the ongoing El Nino Southern Oscillation (ENSO) conditions and is forecasted to strengthen and persist until early 2024. Prolonged dry spells will negatively impact agriculture output in the country.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-08-2024\nLast update: 19-08-2024\n\n\nTrigger ID: R0549 - T01",
+  "triggersPreview": "Trigger ID: R0549 - T0164\nTitle: Drought throughout the country due to the El Nino Southern Oscillation (ENSO) conditions \nDescription: \nThe entire country of Timor-Leste is showing signs of drought due to the ongoing El Nino Southern Oscillation (ENSO) conditions and is forecasted to strengthen and persist until early 2024. Prolonged dry spells will negatively impact agriculture output in the country.\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 19-08-2024\nLast update: 19-08-2024\n\n\nTrigger ID: R0549 - T01",
   "triggerList": [
    {
     "triggerId": "T0164",
@@ -4957,7 +4957,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R0078 - T0258\nTitle: Worsening of socioeconomi crisis\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024\n\n\nTrigger ID: R0078 - T0259\nTitle: Disappointing economic and labour reforms from new cabinet.\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
+  "triggersPreview": "Trigger ID: R0078 - T0258\nTitle: Worsening of socioeconomi crisis\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024\n\n\nTrigger ID: R0078 - T0259\nTitle: Disappointing economic and labour reforms from new cabinet.\nDescription: \n\nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 28-11-2024\nLast update: 28-11-2024",
   "triggerList": [
    {
     "triggerId": "T0258",
@@ -4997,7 +4997,7 @@
   "probability": "Low",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Both the government and the PKK seem unwilling to negotiate and have warned that clashes could escalate and spread in the southeast. With the beginning of spring, PKK mobility and capacity are likely to increase. In response to this possibility, the government has already increased its deployment of troops and police, and more people have joined the PKK, leading to an increased militarisation of the southeast. This is likely to lead to more fighting. Between August 2015 and March 2016, Turkish forces have imposed 59 curfews in the cities of Diyarbakir, Sirnak, Mardin, Hakkari, Mus, Elazig and Batman, affecting 1.3 million people. Humanitarian and media access in southeast Türkiye is limited, especially in cities where curfews are in force"
@@ -5014,7 +5014,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0108 - T0079\nTitle: 2021 Elections\nDescription: \nElections were held and Uganda’s electoral commission has declared incumbent Yoweri Museveni the winner. \nSources: \nhttps://www.aljazeera.com/news/2021/1/16/ugandas-museveni-declared-winner-of-presidential-election\nCompletion rate: 100%\nCompletion rate history: \n11-07-2024: 100%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 11-07-2024\nLast update: 11-07-2024",
+  "triggersPreview": "Trigger ID: R0108 - T0079\nTitle: 2021 Elections\nDescription: \nElections were held and Uganda’s electoral commission has declared incumbent Yoweri Museveni the winner. \nSources: \nhttps://www.aljazeera.com/news/2021/1/16/ugandas-museveni-declared-winner-of-presidential-election\nCompletion rate: 100%\nCompletion rate history: \n11-07-2024: 100%\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 11-07-2024\nLast update: 11-07-2024",
   "triggerList": [
    {
     "triggerId": "T0079",
@@ -5043,7 +5043,7 @@
   "probability": "",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "The cholera outbreak reaches the Burundi refugee camps in the south of the country. The lack of sanitation and hygiene facilities, and poor access to safe drinking water in overcrowded camps means the diseases spread quickly, rapidly overwhelming health services."
@@ -5060,7 +5060,7 @@
   "probability": "",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1022 - T0565\nTitle: Disputed election results\nDescription: \nHistorically, the most volatile moment in the Ugandan electoral cycle occurs when the Electoral Commission announces the presidential results. If the results are perceived as fraudulent or pre-determined in favour of the incumbent, it typically triggers spontaneous mass protests in urban strongholds like Kampala and Wakiso. As seen in early January 2026 reports, opposition leaders have already primed their supporters to protect the vote, making a formal rejection of the results a direct catalyst for street confrontations.",
+  "triggersPreview": "Trigger ID: R1022 - T0565\nTitle: Disputed election results\nDescription: \nHistorically, the most volatile moment in the Ugandan electoral cycle occurs when the Electoral Commission announces the presidential results. If the results are perceived as fraudulent or pre-determined in favour of the incumbent, it typically triggers spontaneous mass protests in urban strongholds like Kampala and Wakiso. As seen in early January 2026 reports, opposition leaders have already primed their supporters to protect the vote, making a formal rejection of the results a direct catalyst for street confrontations.",
   "triggerList": [
    {
     "triggerId": "T0565",
@@ -5100,7 +5100,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0954 - T0024\nTitle: Increased political tensions across the EU compounded by elections set throughout EU in 2024\nDescription: \nHeightened political competition and tensions will likely result in increased focus on support to Ukraine versus domestic issues, and the US presidential elections will likely be a compounding factor. Farmers across the EU are additionally protesting against EU's Green Deal regulations. The European Commission president Ursula von der Leyen withdrew a bill to minimise the use of chemical pesticides by half by 2030. this comes as the European Parliamentary ",
+  "triggersPreview": "Trigger ID: R0954 - T0024\nTitle: Increased political tensions across the EU compounded by elections set throughout EU in 2024\nDescription: \nHeightened political competition and tensions will likely result in increased focus on support to Ukraine versus domestic issues, and the US presidential elections will likely be a compounding factor. Farmers across the EU are additionally protesting against EU's Green Deal regulations. The European Commission president Ursula von der Leyen withdrew a bill to minimise the use of chemical pesticides by half by 2030. this comes as the European Parliamentary ",
   "triggerList": [
    {
     "triggerId": "T0024",
@@ -5140,7 +5140,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0993 - T0482\nTitle: Ceasefire violation signals\nDescription: \nRussia will likely abuse any loopholes in its ceasefire agreement with the US. The US will likely avoid acknowledging Russian violations in order to push a full ceasefire, the negotiations of which are ongoing, and which Russia will likely continue to delay, and the Russian forces use the end of the partial ceasefire in late April to wage a country-wide combined missile and drone attack against the energy infrastructure.\nSources: \nhttps://www.aljazeera.com/news/2025/4/4/russia-stalls-ceasefire-talks-as-it-intensifies-at",
+  "triggersPreview": "Trigger ID: R0993 - T0482\nTitle: Ceasefire violation signals\nDescription: \nRussia will likely abuse any loopholes in its ceasefire agreement with the US. The US will likely avoid acknowledging Russian violations in order to push a full ceasefire, the negotiations of which are ongoing, and which Russia will likely continue to delay, and the Russian forces use the end of the partial ceasefire in late April to wage a country-wide combined missile and drone attack against the energy infrastructure.\nSources: \nhttps://www.aljazeera.com/news/2025/4/4/russia-stalls-ceasefire-talks-as-it-intensifies-at",
   "triggerList": [
    {
     "triggerId": "T0482",
@@ -5169,7 +5169,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R1011 - T0531\nTitle: Escalation of US Military Operations\nDescription: \nThe U.S. military has conducted multiple airstrikes against vessels suspected of drug trafficking near Venezuela, resulting in casualties and escalating tensions. These operations are officially framed as anti-narcotics efforts but are perceived by Venezuela as hostile acts and part of a pressure campaign.\nSources: \nhttps://credendo.com/en/knowledge-hub/venezuela-biggest-military-build-caribbean-three-decades-increases-risk-military\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100",
+  "triggersPreview": "Trigger ID: R1011 - T0531\nTitle: Escalation of US Military Operations\nDescription: \nThe U.S. military has conducted multiple airstrikes against vessels suspected of drug trafficking near Venezuela, resulting in casualties and escalating tensions. These operations are officially framed as anti-narcotics efforts but are perceived by Venezuela as hostile acts and part of a pressure campaign.\nSources: \nhttps://credendo.com/en/knowledge-hub/venezuela-biggest-military-build-caribbean-three-decades-increases-risk-military\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100",
   "triggerList": [
    {
     "triggerId": "T0531",
@@ -5220,7 +5220,7 @@
   "probability": "",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": ""
@@ -5237,7 +5237,7 @@
   "probability": "Low",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "since the beginning of 2023, Political conflict in southern Yemen have deepened and may escalate into open fighting, especially in Aden as the interim capital and main port for the Southern Yemen, with the potential to spread into other governorates such as Lahj, Abyan, Ad Dali’, and Hadramawt,  .  The STC has been openly advocating for an independent Southern state, using the deterioration of the economy, depreciation of local currency and worsening of public services (especially electricity and healthcare), and the overall frustration of the population, to maintain support for its goal of independence. Their position contradicts that of the Presidential Leadership Council (PLC), the executive body of Yemen’s Internationally Recognized Government (IRG), which operates outside of DFA-controlled areas (De-Facto Authority known also as Houthis/Ansar Allah movement). On 8 May 2023, the head the STC has restructured the council leadership by appointing three of the PLC members as vice presidents. This was done in an attempt to make clear that the STC represented all the southern governorates, including Hadramawt, the key southern governorate rich in oil and gas fields. In response, Saudi Arabia and the IRG retaliated by forming the Hadramawt National Council and establishing the National Shield Forces, reporting directly to the Head of PLC. These forces may eventually find themselves in conflict with STC’s forces (AGSIW 18/07/2023; sanaacenter 09/03/2023;  south24.net 13/02/2023; Yemen Future 22/09/2023;  sanaacenter 10.03/2023). The creation of the Hadramawt National Council was intended to create an alternative entity to the STC and its secessionist aspirations (Middle East Institute 24/07/2023; south24.net 13/02/2023; Yemen Future 21/09/2023). The demand for a southern secession escalated recently when the head of the STC, threatened to use force to protect the STC’s objectives for the secession of southern Yemen's provinces during meeting with STC’s military and security forces (debriefer 10/07/2023). Furthermore, the STC threatened to expel all IRG’s forces from Hadramawt and other southern governorates during a public rally in the city of Al Mukalla (Debriefer. 08/07/2023). Also, while attending the United Nations General Assembly's annual meeting, the head of STC stated that he will prioritize establishing a independence country in the south In any In negotiations with Houthi (yahoo.news 22/09/2023). In response to the STC declarations, on 24 June 2023, the head of the PLC visited Hadramawt for the first time, timing the visit to highlight the growing disagreement between STC and IRG  ( Al Bawaba 26/06/2023). On 23 June, in the same week of the head of the PLC visit to Hadramawt, the STC leader stated that peace in Yemen can only be accomplished when “southerners’ calls” for independence are addressed, and that the IRG corruption is driving the country to the brink of economic failure. Head of STC also stated that Yemen cannot move forward in any peace process unless the issue of southern independence is addressed ( Middle East Eye 23/6/2023)AGSIW 18/7/2023; )."
@@ -5254,7 +5254,7 @@
   "probability": "Medium",
   "status": "Not materialised",
   "outcome": 0,
-  "triggers": "Trigger ID: R1025 - T0584\nTitle: US or Israeli military strikes on Iran\nDescription: \nThe Houthis have explicitly pledged to respond to any US or Israeli military strike on Iran, most likely by escalating attacks on Israel, Red Sea maritime traffic, and US military assets in the region. Any such Houthi response would likely invite a renewed US or Israeli air campaign targeting Houthi military and economic infrastructure, including Hodeidah port and other critical installations in northwest Yemen. A January 2026 speech by the Houthi leader signalled the group's combat readiness and assigned equ",
+  "triggersPreview": "Trigger ID: R1025 - T0584\nTitle: US or Israeli military strikes on Iran\nDescription: \nThe Houthis have explicitly pledged to respond to any US or Israeli military strike on Iran, most likely by escalating attacks on Israel, Red Sea maritime traffic, and US military assets in the region. Any such Houthi response would likely invite a renewed US or Israeli air campaign targeting Houthi military and economic infrastructure, including Hodeidah port and other critical installations in northwest Yemen. A January 2026 speech by the Houthi leader signalled the group's combat readiness and assigned equ",
   "triggerList": [
    {
     "triggerId": "T0584",
@@ -5283,7 +5283,7 @@
   "probability": "Medium",
   "status": "Active",
   "outcome": null,
-  "triggers": "Trigger ID: R1065 - T0664\nTitle: Renewed Cross-Border Hostilities\nDescription: \nContinued reciprocal attacks and restrictions on Sana’a Airport would reduce incentives for restraint and increase the risk of renewed cross-border hostilities. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 05-08-2026\nLast update: 05-08-2026\n\n\nTrigger ID: R1065 - T0665\nTitle: Maritime escalation\nDescription: \nEnforcement of the Houthi-declared maritime blockade or attacks on commercial shipping in the Bab al-Mandeb Strait trigg",
+  "triggersPreview": "Trigger ID: R1065 - T0664\nTitle: Renewed Cross-Border Hostilities\nDescription: \nContinued reciprocal attacks and restrictions on Sana’a Airport would reduce incentives for restraint and increase the risk of renewed cross-border hostilities. \nSources: \n\nCompletion rate: \nCompletion rate history: \n\nQuantitative objective to meet 100%: \n\nTrend: \nTrend history: \n\nDate entered: 05-08-2026\nLast update: 05-08-2026\n\n\nTrigger ID: R1065 - T0665\nTitle: Maritime escalation\nDescription: \nEnforcement of the Houthi-declared maritime blockade or attacks on commercial shipping in the Bab al-Mandeb Strait trigg",
   "triggerList": [
    {
     "triggerId": "T0664",
@@ -5334,7 +5334,7 @@
   "probability": "Medium",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "Zimbabwe imposed new Covid-19 restrictions, following an increase in cases at the beginning of June. Restrictions, include private and public offices being limited to a 50-percent capacity, and retail businesses, markets, and shops may operate from 08:00-18:00. Such restrictions might impact economy and ultimately affect food insecurity. \nOver 600 cases confirmed during the first week of June, while in May, only 132 new cases were recorded in the first week.\nConsecutive poor agricultural seasons, current economic issues, and the impacts of COVID-19 measures are contributing to increased acute food insecurity across the country, particularly rural areas. 5-6 million people are estimated to experience Crisis (IPC Phase 3) and above levels of food insecurity in rural areas between October and December 2020, compared to 4.3 million people between February and June 2020.\n\nUpdate: IPC projection for the period between Jan and March 2021 is 35% of the population analysed to be in Crisis (IPC-3) or above, compared to 27% in October-December 2020.\n“The food insecurity is primarily due to shocks and hazards experienced in the country such as drought, reduced livelihood opportunities due to restrictions linked to COVID-19, pests and diseases, and high food prices.”"
@@ -5351,7 +5351,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "",
+  "triggersPreview": "",
   "triggerList": [],
   "triggerCount": 0,
   "rationale": "The number of food-insecure people in Zimbabwe is anticipated to increase by almost 50% by the end of the year. 8.6 million people (60% of the population), including 5.3 million living in rural areas, are expected to be food insecure.\nConsecutive poor agricultural seasons, current economic issues, and the impacts of COVID-19 measures are contributing to increased acute food insecurity across the country, particularly rural areas. 5-6 million people are estimated to experience Crisis (IPC Phase 3) and above levels of food insecurity in rural areas between October and December 2020, compared to 4.3 million people between February and June 2020."
@@ -5368,7 +5368,7 @@
   "probability": "High",
   "status": "Materialised",
   "outcome": 1,
-  "triggers": "Trigger ID: R0512 - T0499\nTitle: Climate and Weather Phenomena\nDescription: \nThe World Meteorological Organization's declaration of El Niño's onset, coupled with a 90% likelihood of its persistence into late 2023, acts as a primary catalyst for the anticipated dry spell. This meteorological phenomenon is poised to usher in arid conditions, particularly impacting Zimbabwe's agricultural season.\nCompounding this looming threat are the lingering effects of past extreme weather events such as Cyclone Freddy and other significant floods. These prior disasters have already eroded the resilience of Z",
+  "triggersPreview": "Trigger ID: R0512 - T0499\nTitle: Climate and Weather Phenomena\nDescription: \nThe World Meteorological Organization's declaration of El Niño's onset, coupled with a 90% likelihood of its persistence into late 2023, acts as a primary catalyst for the anticipated dry spell. This meteorological phenomenon is poised to usher in arid conditions, particularly impacting Zimbabwe's agricultural season.\nCompounding this looming threat are the lingering effects of past extreme weather events such as Cyclone Freddy and other significant floods. These prior disasters have already eroded the resilience of Z",
   "triggerList": [
    {
     "triggerId": "T0499",
