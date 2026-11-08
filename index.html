@@ -3,24 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ground Truth Circle — ACAPS Risk Analysis Platform | Hackathon for Good #8</title>
+  <title>Ground Truth Circle — Web Desktop Live Preview & Evaluation Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0B0F19;
-      --card-bg: #111827;
-      --card-border: #1F2937;
-      --teal: #0D9488;
-      --teal-light: #14B8A6;
-      --sand: #F6F3EE;
-    }
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: var(--bg);
-      color: #F3F4F6;
+      background-color: #f6f3ee;
+      color: #1c2430;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     .font-serif {
       font-family: 'Newsreader', Georgia, serif;
@@ -28,695 +20,363 @@
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
     }
-    /* Phone frame scrollbar styling */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
     .glow-teal {
-      box-shadow: 0 0 40px rgba(20, 184, 166, 0.15);
-    }
-    .glow-amber {
-      box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+      box-shadow: 0 10px 40px rgba(13, 148, 136, 0.12);
     }
   </style>
 </head>
-<body class="min-h-screen antialiased selection:bg-teal-500 selection:text-white">
+<body class="p-4 sm:p-6 lg:p-8 antialiased selection:bg-teal-700 selection:text-white">
+  <div class="mx-auto max-w-6xl space-y-8">
 
-  <!-- Ambient background lighting -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-teal-600/10 blur-[130px] rounded-full"></div>
-    <div class="absolute top-[40%] right-[-100px] w-[500px] h-[500px] bg-blue-600/10 blur-[140px] rounded-full"></div>
-  </div>
-
-  <div class="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 space-y-12">
-
-    <!-- Top Navigation Header -->
-    <header class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800/80 pb-6">
-      <div class="flex items-center gap-3">
-        <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-800 text-lg font-bold text-white shadow-lg shadow-teal-900/40">◉</span>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="rounded-full bg-teal-950/80 px-2.5 py-0.5 text-[10px] font-bold text-teal-300 border border-teal-800/60 uppercase tracking-wider">ACAPS × HFG #8</span>
-            <span class="text-xs text-gray-400">Challenge 2: Ground Truth</span>
-          </div>
-          <h1 class="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            Ground Truth Circle
-          </h1>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <a href="#video-demo" class="rounded-xl border border-gray-700 bg-gray-800/70 px-3.5 py-2 text-xs font-semibold text-gray-200 transition hover:bg-gray-700 hover:text-white">
-          🎬 Demo Film
-        </a>
-        <a href="#interactive-simulator" class="rounded-xl border border-teal-600/50 bg-teal-950/40 px-3.5 py-2 text-xs font-semibold text-teal-300 transition hover:bg-teal-900/60 hover:text-white">
-          📲 Simulator
-        </a>
-        <a href="GroundTruthCircle.apk" download class="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-teal-900/30 transition hover:brightness-110">
-          📥 Download APK (6.4 MB)
-        </a>
-        <a href="https://github.com/knarayanareddy/benchmark" target="_blank" class="rounded-xl border border-gray-700 bg-gray-900 p-2 text-gray-400 hover:text-white transition">
-          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-        </a>
-      </div>
-    </header>
-
-    <!-- Hero Value Statement -->
-    <section class="space-y-4">
-      <div class="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-950/40 px-3 py-1 text-xs text-teal-300">
-        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        Finalist Solution for ACAPS Risk Analysis &amp; Delphi Elicitation
-      </div>
-      <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl text-white font-serif max-w-4xl leading-tight">
-        Turning 45-minute interviews into <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">90-second structured Delphi forecasts</span>.
-      </h2>
-      <p class="max-w-3xl text-base sm:text-lg text-gray-300 leading-relaxed">
-        Ground Truth Circle is a trusted expert elicitation protocol built for ACAPS. It protects field responders with <b>4 differential anonymity tiers</b>, eliminates groupthink via a <b>Give-to-Get</b> locked consensus mechanism, and resolves conflicting intelligence into calibrated Brier probabilities and structured debate.
-      </p>
-
-      <!-- Key Metrics Row -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-        <div class="rounded-2xl border border-gray-800 bg-gray-900/60 p-4">
-          <div class="text-2xl font-extrabold text-teal-400 font-mono">90s</div>
-          <div class="text-xs text-gray-400 mt-1">Elicitation Card Time</div>
-        </div>
-        <div class="rounded-2xl border border-gray-800 bg-gray-900/60 p-4">
-          <div class="text-2xl font-extrabold text-teal-400 font-mono">4 Tiers</div>
-          <div class="text-xs text-gray-400 mt-1">Differential Privacy &amp; Retreat</div>
-        </div>
-        <div class="rounded-2xl border border-gray-800 bg-gray-900/60 p-4">
-          <div class="text-2xl font-extrabold text-teal-400 font-mono">139</div>
-          <div class="text-xs text-gray-400 mt-1">Real ACAPS Risks Mapped</div>
-        </div>
-        <div class="rounded-2xl border border-gray-800 bg-gray-900/60 p-4">
-          <div class="text-2xl font-extrabold text-teal-400 font-mono">0.217</div>
-          <div class="text-xs text-gray-400 mt-1">Brier Calibration Score</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 1: PRODUCT DEMO FILM -->
-    <section id="video-demo" class="space-y-4 pt-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-xl font-bold text-white flex items-center gap-2">
-            <span>🎬 Product Demo Showcase</span>
-            <span class="rounded bg-teal-900/60 text-teal-300 text-[11px] font-mono px-2 py-0.5 border border-teal-700/50">1080P · SUNO SPEECH NARRATION</span>
-          </h3>
-          <p class="text-xs text-gray-400 mt-0.5">Click any chapter pill below to jump directly to that feature in the video:</p>
-        </div>
-        <span class="text-xs font-mono text-gray-400 hidden sm:inline">Duration: 01:56</span>
-      </div>
-
-      <div class="rounded-2xl border border-gray-800 bg-gray-950 overflow-hidden shadow-2xl glow-teal">
-        <div class="aspect-video w-full bg-black relative">
-          <video id="demoVideo" controls poster="s01.png" class="w-full h-full object-contain">
-            <source src="ground-truth-circle-demo.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-        </div>
-
-        <!-- Video Chapter Bar -->
-        <div class="border-t border-gray-800/90 bg-gray-900/90 p-4 space-y-3">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-amber-400 uppercase tracking-wider text-[11px]">Interactive Chapter Seek:</span>
-            <span class="text-gray-400">Jump to any scene</span>
-          </div>
-
-          <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar text-xs font-medium">
-            <button onclick="seekVideo(0, this)" class="chap-pill active whitespace-nowrap rounded-xl border border-teal-500 bg-teal-950/70 px-3 py-1.5 text-teal-200 transition hover:border-teal-400">
-              0:00 · 1. Reality on Ground
-            </button>
-            <button onclick="seekVideo(17.5, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              0:17 · 2. Safe Participation
-            </button>
-            <button onclick="seekVideo(35.4, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              0:35 · 3. 90s Forecast Card
-            </button>
-            <button onclick="seekVideo(51.6, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              0:51 · 4. Consensus &amp; Peers
-            </button>
-            <button onclick="seekVideo(67.0, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              1:07 · 5. Systemic Causal DAG
-            </button>
-            <button onclick="seekVideo(84.2, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              1:24 · 6. Protecting Time
-            </button>
-            <button onclick="seekVideo(100.8, this)" class="chap-pill whitespace-nowrap rounded-xl border border-gray-700 bg-gray-800/80 px-3 py-1.5 text-gray-300 transition hover:border-teal-500 hover:text-white">
-              1:40 · 7. Mobile APK &amp; Stage
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: INTERACTIVE DEVICE SIMULATOR (JUDGE PLAYGROUND) -->
-    <section id="interactive-simulator" class="space-y-6 pt-6">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="rounded-full bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-800">INTERACTIVE PLAYGROUND</span>
-            <h3 class="text-2xl font-bold text-white">Live App Experience</h3>
-          </div>
-          <p class="text-xs text-gray-400 mt-1">
-            Test the elicitation card, drag probability intervals, submit estimates, and unlock the Roundtable debate:
-          </p>
-        </div>
-
-        <!-- Mode Toggle & Cloud Connect -->
-        <div class="flex items-center gap-2">
-          <button id="modeStandaloneBtn" onclick="setSimMode('standalone')" class="rounded-xl border border-teal-500 bg-teal-950/70 px-3 py-1.5 text-xs font-semibold text-teal-200">
-            ✓ Standalone Engine (100% Online)
-          </button>
-          <button id="modeCloudBtn" onclick="toggleCloudModal()" class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-300 hover:border-teal-500 hover:text-white transition">
-            ⚡ Connect Live Backend / Tunnel
-          </button>
-        </div>
-      </div>
-
-      <!-- Smartphone Frame Container -->
-      <div class="grid lg:grid-cols-12 gap-8 items-start">
-
-        <!-- Left: The Phone (7 cols) -->
-        <div class="lg:col-span-7 flex justify-center">
-          <div class="relative w-full max-w-[400px] rounded-[44px] border-[10px] border-slate-900 bg-slate-950 shadow-2xl overflow-hidden ring-1 ring-slate-800 glow-teal">
-
-            <!-- Phone Top Notch / Speaker -->
-            <div class="relative flex items-center justify-between px-6 pt-3 pb-2 bg-[#f6f3ee] border-b border-stone-200 text-slate-800 text-xs font-semibold select-none">
-              <span id="simTime">09:41</span>
-              <div class="h-4 w-28 rounded-full bg-slate-900"></div>
-              <div class="flex items-center gap-1.5 text-[11px]">
-                <span>5G</span>
-                <span>100%</span>
-              </div>
-            </div>
-
-            <!-- SIMULATOR APP SCREEN (SAND BACKGROUND #f6f3ee) -->
-            <div id="simScreen" class="h-[680px] bg-[#f6f3ee] text-slate-900 overflow-y-auto no-scrollbar flex flex-col justify-between text-sm">
-
-              <!-- App Inner Header -->
-              <div class="sticky top-0 z-20 border-b border-stone-200 bg-[#f6f3ee]/95 backdrop-blur px-3 py-2.5 space-y-2">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1.5 font-serif font-bold text-slate-900">
-                    <span class="grid h-6 w-6 place-items-center rounded-full bg-teal-700 text-xs text-white">◉</span>
-                    <span>Ground Truth Circle</span>
-                  </div>
-                  <select id="personaSelect" onchange="changePersona(this.value)" class="rounded-lg border border-stone-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-800 shadow-sm">
-                    <option value="fatime">Fatimé (Local NGO · Chad)</option>
-                    <option value="idriss" selected>Idriss (Sealed · Chad)</option>
-                    <option value="claire">Dr. Claire (Named · Stage)</option>
-                    <option value="mod">ACAPS Moderator</option>
-                  </select>
-                </div>
-
-                <!-- APK Horizontal Pill Bar (Verified APK Feature) -->
-                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-medium pb-0.5">
-                  <button onclick="switchTab('pulse')" id="tab-pulse" class="app-tab active rounded-full px-3 py-1 bg-slate-900 text-white shadow-sm">
-                    Pulse (3)
-                  </button>
-                  <button onclick="switchTab('roundtable')" id="tab-roundtable" class="app-tab rounded-full px-3 py-1 bg-white border border-stone-300 text-slate-700 hover:bg-stone-100">
-                    Risks &amp; Roundtable
-                  </button>
-                  <button onclick="switchTab('evolution')" id="tab-evolution" class="app-tab rounded-full px-3 py-1 bg-white border border-stone-300 text-slate-700 hover:bg-stone-100">
-                    Evolution
-                  </button>
-                  <button onclick="switchTab('honour')" id="tab-honour" class="app-tab rounded-full px-3 py-1 bg-white border border-stone-300 text-slate-700 hover:bg-stone-100">
-                    Honour Roll
-                  </button>
-                  <button onclick="switchTab('me')" id="tab-me" class="app-tab rounded-full px-3 py-1 bg-white border border-stone-300 text-slate-700 hover:bg-stone-100">
-                    My Space
-                  </button>
-                </div>
-              </div>
-
-              <!-- VIEW 1: PULSE FEED & 90s FORECAST CARD -->
-              <div id="view-pulse" class="p-3.5 space-y-3.5 flex-1">
-                <div class="rounded-xl border border-teal-200 bg-teal-50/80 p-3 text-xs text-teal-900">
-                  <span class="font-bold">⚡ 90-Second Forecast Ask</span>
-                  <p class="mt-0.5 text-teal-800">Targeted to your expertise in Chad &amp; Cross-Border Conflict:</p>
-                </div>
-
-                <!-- Question Card -->
-                <div class="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm space-y-3">
-                  <div class="flex items-center justify-between text-[11px] text-stone-500">
-                    <span class="rounded bg-stone-100 px-2 py-0.5 font-bold text-stone-700">R1043 · Chad</span>
-                    <span class="text-amber-700 font-semibold">Closes in 48h</span>
-                  </div>
-
-                  <h4 class="font-serif font-bold text-slate-900 text-base leading-snug">
-                    Will the Sudan conflict spill over into eastern Chad, forcing closure of the Adré humanitarian border corridor before April 2026?
-                  </h4>
-
-                  <!-- Slider Interactive Control -->
-                  <div class="space-y-1.5 pt-1">
-                    <div class="flex justify-between items-center text-xs">
-                      <span class="font-semibold text-slate-700">Your Probability Estimate:</span>
-                      <span id="probVal" class="text-lg font-bold font-mono text-teal-700">68%</span>
-                    </div>
-                    <input type="range" id="probSlider" min="5" max="95" value="68" oninput="updateProb(this.value)" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-teal-700">
-                    <div class="flex justify-between text-[10px] text-stone-400">
-                      <span>Very unlikely (5%)</span>
-                      <span>Toss-up (50%)</span>
-                      <span>Highly likely (95%)</span>
-                    </div>
-                  </div>
-
-                  <!-- Confidence Tiers -->
-                  <div class="space-y-1">
-                    <span class="text-xs font-semibold text-slate-700">How sure are you?</span>
-                    <div class="grid grid-cols-3 gap-1.5 text-xs">
-                      <button onclick="setConf('hunch', this)" class="conf-btn rounded-lg border border-stone-200 bg-stone-50 py-1.5 text-center text-stone-600 hover:bg-stone-100">
-                        Hunch (±15%)
-                      </button>
-                      <button onclick="setConf('fairly', this)" class="conf-btn active rounded-lg border border-teal-600 bg-teal-50 py-1.5 text-center font-bold text-teal-800">
-                        Fairly (±8%)
-                      </button>
-                      <button onclick="setConf('very', this)" class="conf-btn rounded-lg border border-stone-200 bg-stone-50 py-1.5 text-center text-stone-600 hover:bg-stone-100">
-                        Very sure (±4%)
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Privacy Tier -->
-                  <div class="space-y-1">
-                    <div class="flex justify-between text-xs">
-                      <span class="font-semibold text-slate-700">Participation Privacy:</span>
-                      <span class="text-teal-700 font-semibold" id="tierLabel">Sealed (Organization only)</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-1 text-[11px] text-center">
-                      <button onclick="setTier('named', this)" class="tier-btn rounded border border-stone-200 bg-stone-50 py-1 hover:bg-stone-100">Named</button>
-                      <button onclick="setTier('alias', this)" class="tier-btn rounded border border-stone-200 bg-stone-50 py-1 hover:bg-stone-100">Alias</button>
-                      <button onclick="setTier('sealed', this)" class="tier-btn active rounded border border-teal-600 bg-teal-50 font-bold text-teal-800 py-1">Sealed</button>
-                      <button onclick="setTier('anon', this)" class="tier-btn rounded border border-stone-200 bg-stone-50 py-1 hover:bg-stone-100">Anon</button>
-                    </div>
-                  </div>
-
-                  <!-- Action Button -->
-                  <button id="submitEstimateBtn" onclick="submitEstimate()" class="w-full rounded-xl bg-teal-700 py-2.5 font-bold text-white shadow transition hover:bg-teal-800">
-                    Lock in my estimate (Unlocks Roundtable) →
-                  </button>
-                  <p class="text-[11px] text-stone-500 text-center">
-                    Give-to-get: reading the debate requires contributing your independent estimate first.
-                  </p>
-                </div>
-              </div>
-
-              <!-- VIEW 2: ROUNDTABLE DEBATE (UNLOCKED) -->
-              <div id="view-roundtable" class="hidden p-3.5 space-y-3.5 flex-1">
-                <div class="rounded-xl border border-emerald-300 bg-emerald-50/90 p-3 text-xs text-emerald-950 flex items-center justify-between">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-sm">🔓</span>
-                    <span class="font-bold">Roundtable Unlocked (R1043)</span>
-                  </div>
-                  <span class="rounded bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">6 Posts Active</span>
-                </div>
-
-                <div class="space-y-2.5">
-                  <h4 class="font-serif font-bold text-slate-900 text-base">
-                    The Roundtable · Expert Claims &amp; Counter-Views
-                  </h4>
-                  <p class="text-xs text-slate-600">Reactions reward <b>new information</b> and <b>changed minds</b>, not volume.</p>
-
-                  <!-- Post 1: Claim -->
-                  <div class="rounded-xl border border-stone-200 bg-white p-3 space-y-2 shadow-sm">
-                    <div class="flex items-center justify-between text-xs">
-                      <div class="flex items-center gap-1.5">
-                        <span class="rounded-full bg-sky-100 text-sky-800 font-bold px-2 py-0.2 text-[10px]">Claim</span>
-                        <b class="text-slate-900">Idriss Mahamat</b>
-                        <span class="text-stone-400 text-[10px]">(Coral Marten)</span>
-                      </div>
-                      <span class="text-stone-400 text-[10px]">2h ago</span>
-                    </div>
-                    <p class="text-xs text-slate-700 leading-relaxed">
-                      "The credible escalation path is retaliation by RSF-aligned groups after SAF drone use near Adré — not a deliberate Chadian entry into the war. Watch the northern deployments."
-                    </p>
-                    <div class="flex items-center gap-2 pt-1 border-t border-stone-100 text-[11px]">
-                      <button onclick="reactPost(this)" class="flex items-center gap-1 rounded bg-stone-50 px-2 py-1 text-stone-600 hover:bg-stone-100">
-                        <span>💡 Added new info</span> <b class="count">4</b>
-                      </button>
-                      <button onclick="reactPost(this)" class="flex items-center gap-1 rounded bg-stone-50 px-2 py-1 text-stone-600 hover:bg-stone-100">
-                        <span>🔄 Changed my mind</span> <b class="count">2</b>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Post 2: Counter-View -->
-                  <div class="rounded-xl border border-stone-200 bg-white p-3 space-y-2 shadow-sm">
-                    <div class="flex items-center justify-between text-xs">
-                      <div class="flex items-center gap-1.5">
-                        <span class="rounded-full bg-rose-100 text-rose-800 font-bold px-2 py-0.2 text-[10px]">Counter-View</span>
-                        <b class="text-slate-900">ACAPS Lead Analyst</b>
-                        <span class="text-stone-400 text-[10px]">(Moderator)</span>
-                      </div>
-                      <span class="text-stone-400 text-[10px]">1h ago</span>
-                    </div>
-                    <p class="text-xs text-slate-700 leading-relaxed">
-                      "Cross-border movement in Tiné remains open despite local clashes. Closure requires formal N'Djamena decree, which our sources suggest is being delayed."
-                    </p>
-                    <div class="flex items-center gap-2 pt-1 border-t border-stone-100 text-[11px]">
-                      <button onclick="reactPost(this)" class="flex items-center gap-1 rounded bg-stone-50 px-2 py-1 text-stone-600 hover:bg-stone-100">
-                        <span>🔍 Needs source</span> <b class="count">3</b>
-                      </button>
-                      <button onclick="reactPost(this)" class="flex items-center gap-1 rounded bg-stone-50 px-2 py-1 text-stone-600 hover:bg-stone-100">
-                        <span>💡 Added new info</span> <b class="count">5</b>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Add Contribution Button -->
-                <button onclick="alert('In the live build, this opens the Claim / Evidence / Counter-view submission modal.')" class="w-full rounded-xl border border-dashed border-teal-600 bg-teal-50/50 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-50">
-                  + Add Claim, Evidence or Counter-view
-                </button>
-              </div>
-
-              <!-- VIEW 3: SITUATION EVOLUTION -->
-              <div id="view-evolution" class="hidden p-3.5 space-y-3.5 flex-1">
-                <div class="rounded-xl border border-stone-200 bg-white p-3 space-y-2 shadow-sm">
-                  <span class="rounded bg-teal-100 text-teal-800 font-bold px-2 py-0.5 text-[10px]">Situation Evolution</span>
-                  <h4 class="font-serif font-bold text-slate-900 text-sm">Chad-Sudan Insecurity Timeline</h4>
-                  <div class="space-y-2 pt-1 text-xs text-slate-700 border-l-2 border-teal-600 pl-3">
-                    <div>
-                      <div class="font-mono text-[10px] text-teal-700 font-bold">2026-02-09</div>
-                      <div>ACAPS recorded trigger: RSF drone activity sighted east of Adré.</div>
-                    </div>
-                    <div>
-                      <div class="font-mono text-[10px] text-teal-700 font-bold">2026-01-14</div>
-                      <div>Circle panel revisions converged from 54% to 68% probability.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- VIEW 4: HONOUR ROLL -->
-              <div id="view-honour" class="hidden p-3.5 space-y-3.5 flex-1">
-                <div class="rounded-xl border border-stone-200 bg-white p-3 space-y-2 shadow-sm">
-                  <span class="rounded bg-amber-100 text-amber-800 font-bold px-2 py-0.5 text-[10px]">Honour Roll · Season 1</span>
-                  <h4 class="font-serif font-bold text-slate-900 text-sm">Craft Badges (No Public Ranks)</h4>
-                  <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="rounded-lg bg-stone-50 p-2 border border-stone-200">
-                      <div class="font-bold text-teal-800">🎯 Well Calibrated</div>
-                      <div class="text-[10px] text-stone-500">Brier score &lt; 0.18 over 10+ items</div>
-                    </div>
-                    <div class="rounded-lg bg-stone-50 p-2 border border-stone-200">
-                      <div class="font-bold text-amber-800">💡 Mind-Changer</div>
-                      <div class="text-[10px] text-stone-500">Shifted analyst view with new evidence</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- VIEW 5: MY SPACE (CALIBRATION MIRROR) -->
-              <div id="view-me" class="hidden p-3.5 space-y-3.5 flex-1">
-                <div class="rounded-xl border border-stone-200 bg-white p-3 space-y-3 shadow-sm">
-                  <div class="flex justify-between items-center">
-                    <h4 class="font-serif font-bold text-slate-900 text-sm">Personal Calibration Mirror</h4>
-                    <span class="rounded bg-teal-100 text-teal-800 font-bold px-2 py-0.5 text-[10px]">Private to You</span>
-                  </div>
-                  <p class="text-xs text-slate-600">You vs Circle vs ACAPS. Experts cannot get this feedback anywhere else:</p>
-                  <div class="rounded-lg bg-stone-50 p-2.5 text-xs font-mono space-y-1">
-                    <div class="flex justify-between"><span>Your Brier:</span> <b class="text-teal-700">0.194</b></div>
-                    <div class="flex justify-between"><span>Circle Consensus:</span> <b>0.211</b></div>
-                    <div class="flex justify-between"><span>ACAPS Baseline:</span> <b>0.217</b></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Phone Bottom Home Bar -->
-              <div class="p-2 bg-[#f6f3ee] flex justify-center border-t border-stone-200">
-                <div class="h-1 w-32 rounded-full bg-slate-400"></div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Right: Simulator Control Panel & APK Specs (5 cols) -->
-        <div class="lg:col-span-5 space-y-6">
-
-          <!-- Simulator Quick Test Card -->
-          <div class="rounded-2xl border border-gray-800 bg-gray-900/80 p-5 space-y-4">
-            <h4 class="text-sm font-bold uppercase tracking-wider text-teal-300">
-              Evaluator Test Controls
-            </h4>
-            <p class="text-xs text-gray-300 leading-relaxed">
-              Use the simulator on the left to test the primary interactions:
-            </p>
-
-            <div class="space-y-2 text-xs">
-              <button onclick="switchTab('pulse')" class="w-full text-left rounded-xl border border-gray-800 bg-gray-950 p-3 hover:border-teal-500 transition">
-                <b class="text-white block">1. Test 90-Second Delphi Forecast</b>
-                <span class="text-gray-400">Drag probability slider &amp; hit 'Lock in estimate' to unlock consensus.</span>
-              </button>
-
-              <button onclick="switchTab('roundtable')" class="w-full text-left rounded-xl border border-gray-800 bg-gray-950 p-3 hover:border-teal-500 transition">
-                <b class="text-white block">2. Inspect Unlocked Roundtable Debate</b>
-                <span class="text-gray-400">Read structured claims, evidence, and test epistemic reaction counters.</span>
-              </button>
-
-              <button onclick="switchTab('me')" class="w-full text-left rounded-xl border border-gray-800 bg-gray-950 p-3 hover:border-teal-500 transition">
-                <b class="text-white block">3. Private Calibration Mirror</b>
-                <span class="text-gray-400">Inspect personal Brier scores and anonymity retreat settings.</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Packaged APK Specs -->
-          <div class="rounded-2xl border border-gray-800 bg-gray-900/80 p-5 space-y-3">
-            <div class="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h4 class="text-sm font-bold uppercase tracking-wider text-gray-200">
-                Android APK Verified
-              </h4>
-              <span class="rounded bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-800">
-                Debug Signed
+    <!-- Header Banner -->
+    <header class="rounded-3xl border border-stone-200/90 bg-white p-6 sm:p-8 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-teal-700 text-xl font-bold text-white shadow-md shadow-teal-900/20">◉</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-teal-100 px-3 py-0.5 text-xs font-semibold text-teal-800">ACAPS × HFG #8</span>
+              <span class="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Production Web Desktop Backend Online
               </span>
             </div>
+            <h1 class="font-serif text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl mt-1">
+              Ground Truth Circle — Web Desktop Live Preview
+            </h1>
+          </div>
+        </div>
 
-            <div class="space-y-2 text-xs font-mono">
-              <div class="flex justify-between text-gray-400">
-                <span>File Name:</span> <span class="text-white">GroundTruthCircle.apk</span>
-              </div>
-              <div class="flex justify-between text-gray-400">
-                <span>File Size:</span> <span class="text-white">6.4 MB (6,678,885 bytes)</span>
-              </div>
-              <div class="flex justify-between text-gray-400">
-                <span>Target SDK:</span> <span class="text-white">Android 15 (API 35)</span>
-              </div>
-              <div class="flex justify-between text-gray-400">
-                <span>Min SDK:</span> <span class="text-white">API 26 (Android 8.0+)</span>
-              </div>
-            </div>
+        <div class="flex flex-wrap gap-2.5">
+          <a
+            id="openAppExternalBtn"
+            href="https://54080560902e24.lhr.life/pulse"
+            target="_blank"
+            class="rounded-xl bg-teal-700 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow transition hover:bg-teal-800"
+          >
+            Open Web App in New Tab ↗
+          </a>
+          <a
+            href="GroundTruthCircle.apk"
+            download
+            class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50"
+          >
+            Download APK (6.4 MB) ↓
+          </a>
+        </div>
+      </div>
 
-            <a href="GroundTruthCircle.apk" download class="block w-full text-center rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 py-2.5 text-xs font-bold text-white shadow transition hover:brightness-110">
-              📥 Download GroundTruthCircle.apk
-            </a>
+      <p class="mt-4 text-sm text-slate-600 leading-relaxed max-w-4xl">
+        This is the full web desktop application running with live PostgreSQL database connectivity. Evaluators can test the 90-second Delphi elicitation cards, interactive probability intervals, in-page persona switching across Pulse, My Space, and the 6-post active Roundtable debate (Chad / Sudan border insecurity).
+      </p>
+    </header>
 
-            <div class="rounded-lg bg-black/60 p-2.5 text-[11px] font-mono text-gray-400">
-              <span class="text-gray-500"># Direct 1-line install:</span><br/>
-              adb install -r GroundTruthCircle.apk
+    <!-- SECTION 1: INTERACTIVE DESKTOP BROWSER VIEWPORT FRAME -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>🖥️ Live Desktop Viewport</span>
+            <span class="rounded bg-teal-100 text-teal-800 text-[11px] font-semibold px-2 py-0.5">FULL INTERACTIVE APPLICATION</span>
+          </h2>
+          <p class="text-xs text-slate-500">
+            Interact with the real web application directly below or switch routes via the browser chrome:
+          </p>
+        </div>
+
+        <!-- Quick Route Switches -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-medium">
+          <button onclick="navDesktop('/pulse')" class="route-btn active rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold shadow-sm">⚡ Pulse Feed</button>
+          <button onclick="navDesktop('/risks/R1043')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">💬 Roundtable (R1043)</button>
+          <button onclick="navDesktop('/risks')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">📊 Risk Radar</button>
+          <button onclick="navDesktop('/moderator/evolution')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">📈 Evolution</button>
+          <button onclick="navDesktop('/honour')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">🏆 Honour Roll</button>
+          <button onclick="navDesktop('/me')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">👤 My Space</button>
+          <button onclick="navDesktop('/moderator')" class="route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100">🛡️ Moderator</button>
+        </div>
+      </div>
+
+      <!-- DESKTOP BROWSER CHROME CONTAINER -->
+      <div class="rounded-2xl border border-stone-300/90 bg-white shadow-xl glow-teal overflow-hidden">
+        
+        <!-- Browser Top Bar (Traffic lights + Omnibox) -->
+        <div class="flex items-center justify-between border-b border-stone-200 bg-stone-100/90 px-4 py-2.5 select-none">
+          <div class="flex items-center gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-400"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+            <div class="ml-2 flex items-center gap-1 text-stone-500">
+              <button onclick="desktopBack()" class="rounded p-1 hover:bg-stone-200 text-xs">←</button>
+              <button onclick="desktopReload()" class="rounded p-1 hover:bg-stone-200 text-xs">↻</button>
             </div>
           </div>
 
+          <!-- Omnibox URL Bar -->
+          <div class="flex flex-1 max-w-lg mx-4 items-center justify-between rounded-lg border border-stone-300 bg-white px-3 py-1 text-xs font-mono text-slate-600 shadow-inner">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="text-emerald-600 font-bold">🔒</span>
+              <span id="omniboxText" class="truncate">https://54080560902e24.lhr.life/pulse</span>
+            </div>
+            <button onclick="openCurrentInNewTab()" class="text-stone-400 hover:text-teal-700 ml-2" title="Open active route in new tab">↗</button>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs">
+            <span class="rounded bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800 text-[10px]">TLS 1.3</span>
+          </div>
+        </div>
+
+        <!-- Desktop Web App Iframe -->
+        <div class="relative w-full h-[820px] bg-[#f6f3ee]">
+          <iframe
+            id="desktopIframe"
+            src="https://54080560902e24.lhr.life/pulse"
+            class="w-full h-full border-0 bg-[#f6f3ee]"
+            title="Ground Truth Circle Desktop Application"
+          ></iframe>
         </div>
 
       </div>
     </section>
 
-    <!-- SECTION 3: ARCHITECTURE & METHODOLOGY DOSSIER -->
-    <section class="rounded-2xl border border-gray-800 bg-gray-900/40 p-6 sm:p-8 space-y-6">
-      <div class="max-w-3xl">
-        <span class="rounded-full bg-teal-950 px-3 py-1 text-xs font-bold text-teal-300 border border-teal-800">TECHNICAL DOSSIER</span>
-        <h3 class="text-2xl font-bold font-serif text-white mt-2">
-          Why Ground Truth Circle Solves the ACAPS Bottleneck
-        </h3>
-        <p class="text-sm text-gray-300 mt-1">
-          Addressing the 4 structural challenges in crisis intelligence elicitation:
-        </p>
+    <!-- SECTION 2: INTERACTIVE PERSONA SWITCHER SHORTCUTS -->
+    <section class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="font-serif text-xl font-bold text-slate-900">
+            Quick Persona Switcher Shortcuts
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Click any persona card below to instantly set the session cookie and load that identity inside the desktop frame:
+          </p>
+        </div>
+        <button
+          onclick="navDesktop('/join?returnTo=/pulse')"
+          class="rounded-xl border border-teal-700 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100"
+        >
+          + Join / Create New Profile
+        </button>
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-        <div class="rounded-xl border border-gray-800 bg-gray-950/70 p-4 space-y-2">
-          <div class="text-teal-400 font-bold text-sm">1. 90-Second Delphi Protocol</div>
-          <p class="text-gray-400 leading-relaxed">
-            Replaces 45-minute unstructured phone calls with low-friction, high-frequency interval forecasting cards tailored by country and thematic domain.
-          </p>
-        </div>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Fatime -->
+        <button
+          onclick="switchPersonaAndNav(2, '/pulse', this)"
+          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
+        >
+          <span class="text-xs font-bold uppercase text-teal-700">Alias · Local NGO</span>
+          <div class="mt-1 font-semibold text-sm text-slate-900">Fatimé Abakar</div>
+          <div class="text-xs text-stone-500">Saffron Otter · Chad</div>
+          <div class="mt-2 text-xs font-medium text-teal-700">Load Pulse Feed →</div>
+        </button>
 
-        <div class="rounded-xl border border-gray-800 bg-gray-950/70 p-4 space-y-2">
-          <div class="text-teal-400 font-bold text-sm">2. Give-to-Get Anti-Groupthink</div>
-          <p class="text-gray-400 leading-relaxed">
-            Neither ACAPS ratings nor peer forecasts are revealed until the expert commits their Round 1 estimate, guaranteeing cognitive independence.
-          </p>
-        </div>
+        <!-- Claire -->
+        <button
+          onclick="switchPersonaAndNav(4, '/me', this)"
+          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
+        >
+          <span class="text-xs font-bold uppercase text-teal-700">On The Stage · Named</span>
+          <div class="mt-1 font-semibold text-sm text-slate-900">Dr. Claire Nguema</div>
+          <div class="text-xs text-stone-500">Tidal Civet · Sahel / Chad</div>
+          <div class="mt-2 text-xs font-medium text-teal-700">Load My Space →</div>
+        </button>
 
-        <div class="rounded-xl border border-gray-800 bg-gray-950/70 p-4 space-y-2">
-          <div class="text-teal-400 font-bold text-sm">3. 4-Tier Differential Privacy</div>
-          <p class="text-gray-400 leading-relaxed">
-            Named, Alias, Sealed (known only to ACAPS), and Full Anonymous tiers with retroactive anonymity retreat protecting field personnel.
-          </p>
-        </div>
+        <!-- Idriss -->
+        <button
+          onclick="switchPersonaAndNav(3, '/risks/R1043', this)"
+          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
+        >
+          <span class="text-xs font-bold uppercase text-teal-700">Sealed · Early Warning</span>
+          <div class="mt-1 font-semibold text-sm text-slate-900">Idriss Mahamat</div>
+          <div class="text-xs text-stone-500">Coral Marten · Chad</div>
+          <div class="mt-2 text-xs font-medium text-teal-700">Load Unlocked Roundtable →</div>
+        </button>
 
-        <div class="rounded-xl border border-gray-800 bg-gray-950/70 p-4 space-y-2">
-          <div class="text-teal-400 font-bold text-sm">4. Dissent Routing Loop</div>
-          <p class="text-gray-400 leading-relaxed">
-            When expert dissent identifies a flaw in the risk trigger or definition, private impact receipts close the loop directly back to the contributor.
-          </p>
+        <!-- Moderator -->
+        <button
+          onclick="switchPersonaAndNav(1, '/moderator', this)"
+          class="persona-btn rounded-xl border border-stone-200 bg-stone-50 p-3.5 text-left transition hover:border-teal-600 hover:bg-white hover:shadow-sm"
+        >
+          <span class="text-xs font-bold uppercase text-teal-700">ACAPS Moderator</span>
+          <div class="mt-1 font-semibold text-sm text-slate-900">ACAPS Moderator</div>
+          <div class="text-xs text-stone-500">Moderator Console &amp; Lab</div>
+          <div class="mt-2 text-xs font-medium text-teal-700">Load Console →</div>
+        </button>
+      </div>
+
+      <div id="switchStatusNotice" class="hidden rounded-xl bg-teal-50 p-2.5 text-xs text-teal-800 font-medium"></div>
+    </section>
+
+    <!-- SECTION 3: QUICK NAVIGATION HUB CARDS -->
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        onclick="navDesktop('/me')"
+        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-teal-700">My Space</span>
+          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
         </div>
+        <div class="mt-1 font-semibold text-sm text-slate-900">Personal Privacy &amp; Calibration</div>
+        <div class="mt-1 text-xs text-slate-500">
+          Manage anonymity levels, edit full profile details, and inspect personal calibration mirror.
+        </div>
+      </div>
+
+      <div
+        onclick="navDesktop('/risks/R1043')"
+        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-teal-700">Roundtable (R1043)</span>
+          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
+        </div>
+        <div class="mt-1 font-semibold text-sm text-slate-900">Structured Debate</div>
+        <div class="mt-1 text-xs text-slate-500">
+          Participate as any expert persona, see unlocked debate, and switch personas inline.
+        </div>
+      </div>
+
+      <div
+        onclick="navDesktop('/pulse')"
+        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-teal-700">Pulse</span>
+          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
+        </div>
+        <div class="mt-1 font-semibold text-sm text-slate-900">Expert Asks &amp; Radar</div>
+        <div class="mt-1 text-xs text-slate-500">
+          90-second cards tailored to each expert's country and thematic domain.
+        </div>
+      </div>
+
+      <div
+        onclick="navDesktop('/moderator')"
+        class="cursor-pointer group rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-teal-700">Moderator Console</span>
+          <span class="text-stone-400 group-hover:text-teal-600">↗</span>
+        </div>
+        <div class="mt-1 font-semibold text-sm text-slate-900">Dispatch &amp; Integrity</div>
+        <div class="mt-1 text-xs text-slate-500">
+          Dispatch lab, dissent loop desk, integrity anomaly radar, and outcome resolution.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: PRODUCT DEMO SHOWCASE FILM -->
+    <section class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span>🎬 Product Demo Showcase Film</span>
+            <span class="rounded bg-teal-100 text-teal-800 text-[10px] font-mono px-2 py-0.5 font-bold">1080P · SUNO SPEECH</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Full narrative overview of the Ground Truth Circle protocol &amp; architecture:</p>
+        </div>
+        <span class="text-xs font-mono text-slate-400">Duration: 01:56</span>
+      </div>
+
+      <div class="aspect-video w-full rounded-xl bg-black overflow-hidden shadow-md">
+        <video id="demoVideo" controls poster="s01.png" class="w-full h-full object-contain">
+          <source src="ground-truth-circle-demo.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-medium">
+        <span class="text-[11px] uppercase tracking-wider text-amber-600 font-bold mr-1">Seek:</span>
+        <button onclick="seekVideo(0, this)" class="chap-btn active whitespace-nowrap rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold">0:00 · 1. Dilemma</button>
+        <button onclick="seekVideo(17.5, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:17 · 2. Participation</button>
+        <button onclick="seekVideo(35.4, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:35 · 3. 90s Forecast</button>
+        <button onclick="seekVideo(51.6, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">0:51 · 4. Consensus</button>
+        <button onclick="seekVideo(67.0, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:07 · 5. Systemic DAG</button>
+        <button onclick="seekVideo(84.2, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:24 · 6. Time Saving</button>
+        <button onclick="seekVideo(100.8, this)" class="chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100">1:40 · 7. Mobile APK</button>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="border-t border-gray-800/80 pt-6 pb-12 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
+    <footer class="pt-4 pb-12 flex flex-wrap items-center justify-between gap-4 text-xs text-stone-500 border-t border-stone-200">
       <div>
         Ground Truth Circle · Built for Hackathon for Good #8 (The Hague) · ACAPS Challenge
       </div>
       <div class="flex items-center gap-4">
-        <a href="https://github.com/knarayanareddy/benchmark" target="_blank" class="hover:text-white transition">GitHub Repository</a>
-        <a href="GroundTruthCircle.apk" download class="hover:text-white transition">APK Download</a>
+        <a href="https://github.com/knarayanareddy/benchmark" target="_blank" class="hover:text-slate-900 transition font-medium">GitHub Repository</a>
+        <a href="GroundTruthCircle.apk" download class="hover:text-slate-900 transition font-medium">Download APK (6.4 MB)</a>
       </div>
     </footer>
 
   </div>
 
-  <!-- Live Cloud Modal -->
-  <div id="cloudModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-md rounded-2xl border border-gray-700 bg-gray-900 p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h4 class="font-bold text-white text-base">Connect Live Backend / Tunnel</h4>
-        <button onclick="toggleCloudModal()" class="text-gray-400 hover:text-white">✕</button>
-      </div>
-      <p class="text-xs text-gray-300 leading-relaxed">
-        If you are running the live Next.js backend with local PostgreSQL or cloud tunnel, enter the live URL below to load it directly inside the device frame:
-      </p>
-      <input type="text" id="tunnelUrlInput" placeholder="https://your-tunnel.trycloudflare.com or http://localhost:3000" class="w-full rounded-xl border border-gray-700 bg-black/60 px-3 py-2 text-xs text-white font-mono placeholder:text-gray-600 focus:border-teal-500 focus:outline-none">
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="toggleCloudModal()" class="rounded-xl border border-gray-700 px-4 py-2 text-xs font-semibold text-gray-300 hover:bg-gray-800">
-          Cancel
-        </button>
-        <button onclick="applyTunnelUrl()" class="rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-500 shadow">
-          Connect URL
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Interactive Simulator Client Logic -->
   <script>
-    // Clock
-    function updateSimClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('simTime').textContent = `${h}:${m}`;
+    const backendBase = 'https://54080560902e24.lhr.life';
+    const iframe = document.getElementById('desktopIframe');
+    const omnibox = document.getElementById('omniboxText');
+
+    function navDesktop(path) {
+      const url = backendBase + path;
+      iframe.src = url;
+      omnibox.textContent = url;
+      document.getElementById('openAppExternalBtn').href = url;
+
+      // Update route buttons styling
+      document.querySelectorAll('.route-btn').forEach(btn => {
+        btn.className = 'route-btn rounded-lg border border-stone-300 bg-white px-2.5 py-1 text-slate-700 hover:bg-stone-100';
+      });
+      const matchingBtn = [...document.querySelectorAll('.route-btn')].find(b => b.getAttribute('onclick')?.includes(path));
+      if (matchingBtn) {
+        matchingBtn.className = 'route-btn active rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold shadow-sm';
+      }
     }
-    updateSimClock();
-    setInterval(updateSimClock, 30000);
+
+    function desktopReload() {
+      iframe.contentWindow.location.reload();
+    }
+
+    function desktopBack() {
+      try {
+        iframe.contentWindow.history.back();
+      } catch (e) {
+        navDesktop('/pulse');
+      }
+    }
+
+    function openCurrentInNewTab() {
+      window.open(omnibox.textContent, '_blank');
+    }
+
+    async function switchPersonaAndNav(id, targetPath, btn) {
+      const notice = document.getElementById('switchStatusNotice');
+      notice.classList.remove('hidden');
+      notice.textContent = `Switching persona to ID ${id} and loading ${targetPath}…`;
+
+      try {
+        await fetch(`${backendBase}/api/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expertId: id }),
+          credentials: 'include'
+        });
+      } catch (err) {
+        console.warn('Direct fetch note:', err);
+      }
+
+      navDesktop(targetPath);
+      setTimeout(() => {
+        notice.classList.add('hidden');
+      }, 2500);
+    }
 
     // Video Seek
     const video = document.getElementById('demoVideo');
     function seekVideo(sec, btn) {
       video.currentTime = sec;
       video.play();
-      document.querySelectorAll('.chap-pill').forEach(p => p.classList.remove('active', 'border-teal-500', 'bg-teal-950/70', 'text-teal-200'));
-      btn.classList.add('active', 'border-teal-500', 'bg-teal-950/70', 'text-teal-200');
-    }
-
-    // App Tab Switcher
-    function switchTab(tabId) {
-      const tabs = ['pulse', 'roundtable', 'evolution', 'honour', 'me'];
-      tabs.forEach(t => {
-        const v = document.getElementById(`view-${t}`);
-        const btn = document.getElementById(`tab-${t}`);
-        if (v) v.classList.add('hidden');
-        if (btn) {
-          btn.className = 'app-tab rounded-full px-3 py-1 bg-white border border-stone-300 text-slate-700 hover:bg-stone-100';
-        }
+      document.querySelectorAll('.chap-btn').forEach(b => {
+        b.className = 'chap-btn whitespace-nowrap rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-slate-600 hover:bg-stone-100';
       });
-      const activeV = document.getElementById(`view-${tabId}`);
-      const activeBtn = document.getElementById(`tab-${tabId}`);
-      if (activeV) activeV.classList.remove('hidden');
-      if (activeBtn) {
-        activeBtn.className = 'app-tab active rounded-full px-3 py-1 bg-slate-900 text-white shadow-sm';
-      }
-    }
-
-    // Probability Slider
-    function updateProb(val) {
-      document.getElementById('probVal').textContent = `${val}%`;
-    }
-
-    // Confidence
-    function setConf(level, btn) {
-      document.querySelectorAll('.conf-btn').forEach(b => {
-        b.className = 'conf-btn rounded-lg border border-stone-200 bg-stone-50 py-1.5 text-center text-stone-600 hover:bg-stone-100';
-      });
-      btn.className = 'conf-btn active rounded-lg border border-teal-600 bg-teal-50 py-1.5 text-center font-bold text-teal-800';
-    }
-
-    // Anonymity Tier
-    function setTier(tier, btn) {
-      document.querySelectorAll('.tier-btn').forEach(b => {
-        b.className = 'tier-btn rounded border border-stone-200 bg-stone-50 py-1 hover:bg-stone-100';
-      });
-      btn.className = 'tier-btn active rounded border border-teal-600 bg-teal-50 font-bold text-teal-800 py-1';
-      const labels = {
-        named: 'Named (Public on Stage)',
-        alias: 'Alias (Protected Pseudonym)',
-        sealed: 'Sealed (Organization only)',
-        anon: 'Fully Anonymous'
-      };
-      document.getElementById('tierLabel').textContent = labels[tier] || tier;
-    }
-
-    // Submit Estimate -> Unlocks Roundtable
-    function submitEstimate() {
-      const btn = document.getElementById('submitEstimateBtn');
-      btn.textContent = 'Submitting Round 1 Estimate…';
-      setTimeout(() => {
-        btn.textContent = 'Lock in my estimate (Unlocks Roundtable) →';
-        switchTab('roundtable');
-      }, 500);
-    }
-
-    // Epistemic Reactions Counter
-    function reactPost(btn) {
-      const countEl = btn.querySelector('.count');
-      if (countEl) {
-        let count = parseInt(countEl.textContent, 10);
-        countEl.textContent = count + 1;
-        btn.classList.add('bg-teal-100', 'text-teal-900');
-      }
-    }
-
-    // Persona Selector
-    function changePersona(p) {
-      if (p === 'mod' || p === 'idriss') {
-        // already answered -> show roundtable directly
-        switchTab('roundtable');
-      } else {
-        switchTab('pulse');
-      }
-    }
-
-    // Modal
-    function toggleCloudModal() {
-      const m = document.getElementById('cloudModal');
-      m.classList.toggle('hidden');
-    }
-
-    function applyTunnelUrl() {
-      const url = document.getElementById('tunnelUrlInput').value.trim();
-      toggleCloudModal();
-      if (!url) return;
-      const screen = document.getElementById('simScreen');
-      screen.innerHTML = `<iframe src="${url}" class="w-full h-full border-0"></iframe>`;
-      document.getElementById('modeStandaloneBtn').className = 'rounded-xl border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-300';
-      document.getElementById('modeCloudBtn').className = 'rounded-xl border border-teal-500 bg-teal-950/70 px-3 py-1.5 text-xs font-semibold text-teal-200';
+      btn.className = 'chap-btn active whitespace-nowrap rounded-lg border border-teal-600 bg-teal-50 px-2.5 py-1 text-teal-800 font-semibold';
     }
   </script>
 </body>
